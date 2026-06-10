@@ -1,0 +1,22 @@
+On the feature branch: 
+	create a branch named after name + function to be added
+		ex: eliott-signal
+		git checkout -b eliott-signal
+		git co -b eliott-signal     (co c'est short pour checkout)
+
+	ensuite sur nos branches, classique 
+		git add .
+		git commit -m "wow les nouvelles features"
+	
+	pensez a commit de temps en temps pour garder un historique des versions, et pas juste a la function
+	une fois que la fonctionnalite est prete 
+		git checkout feature
+		git pull
+		git merge <your-branch-name>
+
+	regler les conflits si besoin et delete la branche
+		git branch -d <your-branch-name>
+
+	et ensuite repeter depuis le debut
+	so possible on evite les truc du genre : git push origin feature, pour pas casser le git
+	et si on a des problemes on essaie de les resoudre plutot que de les ignorer

@@ -1,0 +1,2 @@
+pour le RFC de HTTPS 1.0, norme qu'on peut (mais pas oblige) suivre :
+	https://datatracker.ietf.org/doc/html/rfc1945
