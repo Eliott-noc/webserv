@@ -1,5 +1,5 @@
-#ifndef location_HPP
-# define location_HPP
+#ifndef LOCATION_HPP
+# define LOCATION_HPP
 
 #include "webserv.hpp"
 

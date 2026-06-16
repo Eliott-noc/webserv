@@ -1,5 +1,5 @@
-#ifndef serverConfig_HPP
-# define serverConfig_HPP
+#ifndef SERVERCONFIG_HPP
+# define SERVERCONFIG_HPP
 
 #include "webserv.hpp"
 #include "location.hpp"
