@@ -7,5 +7,8 @@ int	main(int argc, char **argv)
 	std::string	file = argv[1];
 	
 	std::cout << file << std::endl;
+	//parsing();
+	//networkInfrastructure();
+	//translator();
 	return 0;
 }
