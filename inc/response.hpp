@@ -5,6 +5,13 @@
 # include "request.hpp"
 # include "serverConfig.hpp"
 
+/*
+Permet de fabriquer le message de réponse HTTP final pour gérer l'envoi des
+ressources au client, en décidant si elle doit envoyer le contenu d'un fichier
+(200 OK), une erreur personnalisée (404 Not Found), ou le résultat d'un calcul
+dynamique, tout en formatant le texte selon les normes du web.
+*/
+
 class Response
 {
 	private:

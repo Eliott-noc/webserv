@@ -4,6 +4,13 @@
 #include "webserv.hpp"
 #include "location.hpp"
 
+/*
+permet de regrouper l'identité complète d'un serveur virtuel pour gérer les cas où
+ton programme doit écouter sur plusieurs ports en même temps (ex: 8080 et 4242) ou
+répondre à des noms de domaine différents (server_name), tout en gardant en mémoire
+les pages d'erreur personnalisées à afficher en cas de problème.
+*/
+
 class ServerConfig
 {
 	private:

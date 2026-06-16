@@ -3,6 +3,13 @@
 
 #include "webserv.hpp"
 
+/*
+Permet de décortiquer la chaîne de caractères brute envoyée par le client pour gérer
+l'interprétation du protocole HTTP, en isolant précisément ce que l'utilisateur veut
+faire (GET, POST, DELETE), quel fichier il cherche, et quelles informations
+supplémentaires il a envoyées dans les en-têtes (headers).
+*/
+
 class Request
 {
 	private:

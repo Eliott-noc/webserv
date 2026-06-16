@@ -3,6 +3,13 @@
 
 #include "webserv.hpp"
 
+/*
+Permet de stocker les règles spécifiques à une route (URL) pour gérer les cas où
+certains dossiers demandent un traitement particulier, comme autoriser uniquement
+le POST dans un dossier /upload, activer l'affichage des fichiers (autoindex) dans
+/images, ou rediriger une ancienne URL vers une nouvelle.
+*/
+
 class Location
 {
 	private:

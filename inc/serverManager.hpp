@@ -2,10 +2,16 @@
 # define SERVERMANAGER_HPP
 
 # include <poll.h>
-# include <vector>
 # include "webserv.hpp"
 # include "serverConfig.hpp"
 # include "client.hpp"
+
+/*
+Permet d'orchestrer la boucle principale du serveur (poll) pour gérer les cas de
+connexions simultanées, en surveillant toutes les sockets pour savoir instantanément
+quand un nouveau client "toque à la porte" ou quand un client déjà connecté envoie
+des données, le tout sans jamais bloquer le programme.
+*/
 
 class ServerManager
 {

@@ -5,6 +5,12 @@
 # include "request.hpp"
 # include "response.hpp"
 
+/*
+Permet de conserver l'état et les données de chaque visiteur pour gérer les cas de
+transferts lents ou fragmentés, en stockant le texte reçu petit à petit dans un
+buffer jusqu'à ce que la requête soit complète et prête à être traduite.
+*/
+
 class Client
 {
 	public:
