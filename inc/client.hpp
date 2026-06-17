@@ -1,7 +1,7 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# include "webserv.hpp"
+# include "include.hpp"
 # include "request.hpp"
 # include "response.hpp"
 
@@ -22,7 +22,7 @@ class Client
 		bool		response_is_ready;
 
 		Client(int client_fd);
-		Client(const Client &src);
+		Client(const Client &other);
 		~Client();
 		
 		Client &operator=(const Client &src);

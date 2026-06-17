@@ -1,7 +1,7 @@
 #ifndef REQUEST_HPP
 # define REQUEST_HPP
 
-#include "webserv.hpp"
+# include "include.hpp"
 
 /*
 Permet de décortiquer la chaîne de caractères brute envoyée par le client pour gérer
@@ -24,12 +24,14 @@ class Request
 
 	public:
 		Request();
-		Request(const Request &src);
+		Request(const Request &other);
 		~Request();
 		
-		Request &operator=(const Request &src);
+		Request &operator=(const Request &other);
 
-		void								parse(std::string raw_data);
+		int									parse(std::string raw_data, size_t max_body_limit);
+		void								requestLine(std::string &raw_data);
+		void								scanHeader(std::string &raw_data);
 		std::string							getMethod() const;
 		std::string							getPath() const;
 		std::string							getBody() const;

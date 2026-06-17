@@ -1,8 +1,8 @@
 #ifndef SERVERCONFIG_HPP
 # define SERVERCONFIG_HPP
 
-#include "webserv.hpp"
-#include "location.hpp"
+# include "include.hpp"
+# include "location.hpp"
 
 /*
 permet de regrouper l'identité complète d'un serveur virtuel pour gérer les cas où
@@ -23,10 +23,10 @@ class ServerConfig
 	
 	public:
 		ServerConfig();
-		ServerConfig(const ServerConfig &src);
+		ServerConfig(const ServerConfig &other);
 		~ServerConfig();
 		
-		ServerConfig	&operator=(const ServerConfig &src);
+		ServerConfig	&operator=(const ServerConfig &other);
 		// Getters et Setters
 		// ...
 		void addLocation(const Location &loc);

@@ -1,8 +1,7 @@
 #ifndef SERVERMANAGER_HPP
 # define SERVERMANAGER_HPP
 
-# include <poll.h>
-# include "webserv.hpp"
+# include "include.hpp"
 # include "serverConfig.hpp"
 # include "client.hpp"
 

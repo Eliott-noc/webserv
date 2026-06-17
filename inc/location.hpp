@@ -1,7 +1,7 @@
 #ifndef LOCATION_HPP
 # define LOCATION_HPP
 
-#include "webserv.hpp"
+# include "include.hpp"
 
 /*
 Permet de stocker les règles spécifiques à une route (URL) pour gérer les cas où
@@ -25,10 +25,10 @@ class Location
 	
 	public:
 		Location();
-		Location(const Location &src);
+		Location(const Location &other);
 		~Location();
 		
-		Location	&operator=(const Location &src);
+		Location	&operator=(const Location &other);
 		// Getters et Setters pour chaque variable
 		// ...
 };
