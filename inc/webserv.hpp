@@ -10,8 +10,8 @@
 # include "serverConfig.hpp"
 # include "serverManager.hpp"
 
-// Parsing : Travaille sur ConfigParser, ServerConfig et Location.
-// NetworkInfrastructure : Travaille sur ServerManager et Client (gestion du poll).
-// Translator : Tu travailles sur Request, Response et CGIHandler.
+// Parsing : ConfigParser, ServerConfig et Location.
+// NetworkInfrastructure : ServerManager et Client.
+// Translator : Request, Response et CGIHandler.
 
 #endif
