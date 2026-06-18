@@ -107,5 +107,10 @@ int	Request::parse(std::string raw_data, size_t max_body_limit)
 		else
 			return 400;
 	}
+
+	std::cout << _method << std::endl;
+	std::cout << _path << std::endl;
+	std::cout << _query_string << std::endl;
+	std::cout << _version << std::endl;
 	return 200;
 }

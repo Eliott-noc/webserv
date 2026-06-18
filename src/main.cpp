@@ -21,7 +21,7 @@ int	main(int argc, char **argv)
 
 	Request	r;
 
-	r.parse(line + "\r\n");
+	r.parse(line + "\r\n", 1000);
 
 	return 0;
 }
