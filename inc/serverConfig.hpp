@@ -27,8 +27,17 @@ class ServerConfig
 		~ServerConfig();
 		
 		ServerConfig	&operator=(const ServerConfig &other);
-		// Getters et Setters
-		// ...
+		
+		int							getPort() const;
+		std::string					getHost() const;
+		std::vector<std::string>	getServerNames() const;
+		size_t						getClientMaxBodySize() const;
+		std::map<int, std::string>	getErrorPages() const;
+		std::vector<Location>		getLocations() const;
+		std::string					getRoot() const;
+		int							getAutoIndex() const;
+		std::string					getIndex() const;
+
 		void addLocation(const Location &loc);
 };
 

@@ -21,14 +21,20 @@ Response	&Response::operator=(const Response &other)
 	return *this;
 }
 
+void	Response::makeResponse(Request &req, ServerConfig &config)
+{
+	
+}
+
 int	Response::_checkConfig(ServerConfig &config, int code)
 {
-	std::map<int, std::string> errorPages = config.getErrorPages();
+	std::map<int, std::string>	errorPages = config.getErrorPages();
 	
 	if (errorPages.count(code))
 	{
-		std::string path = config.getRoot() + errorPages[code];
-		std::ifstream file(path.c_str(), std::ios::binary);
+		std::string		path = config.getRoot() + errorPages[code];
+		std::ifstream	file(path.c_str(), std::ios::binary);
+
 		if (file.is_open())
 		{
 			std::stringstream ss;
@@ -93,6 +99,31 @@ void	Response::buildErrorPage(int code, ServerConfig &config)
 	_response += _body;
 
 	std::cout << "[Response] Error " << code << " generated." << std::endl;
+}
+
+void	Response::_handleGet(Request &req, ServerConfig &config)
+{
+	struct stat	s;
+	std::string	full_path = config.getHost() + req.getPath();
+	
+	if (stat(full_path.c_str(), &s) == 0)
+	{
+		if (s.st_mode & S_IFDIR)
+		{
+			//dossier
+		}
+		else if (s.st_mode & S_IFREG)
+		{
+			if (config.getIndex() != "")
+				full_path += config.getIndex();
+			else if (config.getAutoIndex() == 1)
+				//liste les fichier
+			else
+				
+		}
+	}
+	else 
+		buildErrorPage(404, config);
 }
 
 std::string Response::_getMimeType(std::string path)

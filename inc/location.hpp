@@ -29,8 +29,18 @@ class Location
 		~Location();
 		
 		Location	&operator=(const Location &other);
-		// Getters et Setters pour chaque variable
-		// ...
+		
+		std::string					getPath() const;
+		std::string					getRoot() const;
+		std::vector<std::string>	getMethods() const;
+		std::string					getIndex() const;
+		bool						getAutoIndex() const;
+		std::string					getReturn() const;
+		std::string					getCGIPath() const;
+		std::string					getCGIExt() const;
+		std::string					getUploadStore() const;
+
+
 };
 
 #endif
