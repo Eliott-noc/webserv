@@ -108,9 +108,15 @@ int	Request::parse(std::string raw_data, size_t max_body_limit)
 			return 400;
 	}
 
-	std::cout << _method << std::endl;
-	std::cout << _path << std::endl;
-	std::cout << _query_string << std::endl;
-	std::cout << _version << std::endl;
+	std::cout << "Methode:        " << _method << std::endl;
+	std::cout << "path:           " << _path << std::endl;
+	std::cout << "Query String:   " << _query_string << std::endl;
+	std::cout << "Vesrion:        " << _version << std::endl;
+	std::cout << "Host:           " << _headers["Host"] << std::endl;
+	std::cout << "Content-Length: " << _headers["Content-Length"] << std::endl;
+	std::cout << "Body            " << _body << std::endl;
+	std::cout << "Is Chunked:     " << _is_chunked << std::endl;
+	std::cout << "Content Length: " << _content_length << std::endl;
+
 	return 200;
 }

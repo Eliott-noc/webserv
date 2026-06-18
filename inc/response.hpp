@@ -36,6 +36,9 @@ class Response
 		void		_handlePost(Request &req, ServerConfig &config);
 		void		_handleDelete(Request &req, ServerConfig &config);
 		std::string	_getMimeType(std::string path);
+		std::string	_getStatusMessage(int code);
+		int			_checkConfig(ServerConfig &config, int code);
+		std::string	_getMessageError(int code);
 };
 
 #endif
