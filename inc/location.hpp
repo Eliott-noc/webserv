@@ -1,7 +1,8 @@
-#ifndef location_HPP
-# define location_HPP
+#ifndef LOCATION_HPP
+# define LOCATION_HPP
 
-#include "webserv.hpp"
+#include <string>
+#include <vector>
 
 class Location
 {
@@ -15,13 +16,13 @@ class Location
 		std::string					_cgi_path;      // chemin vers python/php
 		std::string					_cgi_ext;       // .py ou .php
 		std::string					_upload_store;  // dossier d'upload
-	
+
 	public:
 		Location();
 		Location(const Location &src);
-		~Location();
-		
 		Location	&operator=(const Location &src);
+		~Location();
+
 		// Getters et Setters pour chaque variable
 		// ...
 };

@@ -6,7 +6,7 @@ CXX         = c++
 CXXFLAGS    = -Wall -Wextra -Werror -std=c++98 -g
 RM          = rm -rf
 
-SRC         = $(wildcard *.cpp) $(wildcard src/*.cpp)
+SRC         = $(shell find src -name "*.cpp")
 OBJ_DIR     = .obj
 OBJ         = $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 
