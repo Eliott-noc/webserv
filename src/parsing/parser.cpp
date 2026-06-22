@@ -112,9 +112,9 @@ static void	findLocation(const std::vector<std::vector<std::string> > &server_bl
 				if (j + 1 >= server_blocks[i].size())
 					throw std::runtime_error("Error : location without following token");
 				if (server_blocks[i][j + 1][0] != '/')
-					throw std::runtime_error("Error : location must be followed by '/'")
-				if (server_blocks[i][j + 1][0] == '/')
-					createLocation(server_blocks, i, j);
+					throw std::runtime_error("Error : location must be followed by '/'");
+				// if (server_blocks[i][j + 1][0] == '/')
+				// 	createLocation(server_blocks, i, j);
 			}
 		}
 	}
@@ -130,7 +130,7 @@ std::vector<ServerConfig>	parseConfig(const std::string &filename)
 	content = readFile(filename);
 	tokens = getTokens(content);
 	server_blocks = extractServerBlocks(tokens);
-	createServConfig(server_blocks);
+	// createServConfig(server_blocks);
 	findLocation(server_blocks);
 
 

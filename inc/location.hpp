@@ -33,8 +33,8 @@ class Location
 		std::string					getPath() const;
 		std::string					getRoot() const;
 		std::vector<std::string>	getMethods() const;
-		std::string					getIndex() const;
 		bool						getAutoIndex() const;
+		std::string					getIndex() const;
 		std::string					getReturn() const;
 		std::string					getCGIPath() const;
 		std::string					getCGIExt() const;

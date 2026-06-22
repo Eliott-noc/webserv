@@ -5,28 +5,71 @@ Location::Location()
 {
 }
 
-Location::Location(const Location &src)
+Location::Location(const Location &other)
 {
-	*this = src;
+	*this = other;
 }
 
-Location &Location::operator=(const Location &src)
+Location &Location::operator=(const Location &other)
 {
-	if (this != &src)
+	if (this != &other)
 	{
-		_path = src._path;
-		_root = src._root;
-		_methods = src._methods;
-		_index = src._index;
-		_autoindex = src._autoindex;
-		_return = src._return;
-		_cgi_path = src._cgi_path;
-		_cgi_ext = src._cgi_ext;
-		_upload_store = src._upload_store;
+		_path = other._path;
+		_root = other._root;
+		_methods = other._methods;
+		_index = other._index;
+		_autoindex = other._autoindex;
+		_return = other._return;
+		_cgi_path = other._cgi_path;
+		_cgi_ext = other._cgi_ext;
+		_upload_store = other._upload_store;
 	}
 	return *this;
 }
 
-Location::~Location()
+Location::~Location() {}
+
+std::string	Location::getPath() const
 {
+	return _path;
+}
+
+std::string	Location::getRoot() const
+{
+	return _root;
+}
+
+std::vector<std::string>	Location::getMethods() const
+{
+	return _methods;
+}
+
+bool	Location::getAutoIndex() const
+{
+	return _autoindex;
+}
+
+std::string	Location::getIndex() const
+{
+	return _index;
+}
+
+std::string	Location::getReturn() const
+{
+	return _return;
+}
+
+std::string	Location::getCGIPath() const
+{
+	return _cgi_path;
+}
+
+std::string	Location::getCGIExt() const
+{
+	return _cgi_ext;
+}
+
+std::string	Location::getUploadStore() const
+{
+	return _upload_store;
 }
