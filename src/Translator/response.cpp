@@ -23,7 +23,8 @@ Response	&Response::operator=(const Response &other)
 
 void	Response::makeResponse(Request &req, ServerConfig &config)
 {
-	
+	(void)req;
+	(void)config;
 }
 
 int	Response::_checkConfig(ServerConfig &config, int code)
@@ -101,29 +102,73 @@ void	Response::buildErrorPage(int code, ServerConfig &config)
 	std::cout << "[Response] Error " << code << " generated." << std::endl;
 }
 
-void	Response::_handleGet(Request &req, ServerConfig &config)
+void Response::_handleGet(Request &req, ServerConfig &config)
 {
 	struct stat	s;
 	std::string	full_path = config.getRoot() + req.getPath();
 	
-	if (stat(full_path.c_str(), &s) == 0)
+	if (stat(full_path.c_str(), &s) != 0)
 	{
-		if (s.st_mode &S_IFDIR)
+		buildErrorPage(404, config);
+		return;
+	}
+
+	if (s.st_mode & S_IFDIR)
+	{
+		if (!config.getIndex().empty())
 		{
-			//dossier
+			full_path += "/" + config.getIndex();
+			if (stat(full_path.c_str(), &s) != 0)
+			{
+				buildErrorPage(404, config);
+				return;
+			}
 		}
-		else if (s.st_mode &S_IFREG)
+		else if (config.getAutoIndex() == 1)
 		{
-			if (config.getIndex() != "")
-				full_path += config.getIndex();
-			else if (config.getAutoIndex() == 1)
-				//liste les fichier
-			else
-				
+			//lister les fichiers
+			return;
+		}
+		else
+		{
+			buildErrorPage(403, config);
+			return;
 		}
 	}
-	else 
-		buildErrorPage(404, config);
+
+	if (s.st_mode & S_IFREG)
+	{
+		std::ifstream file(full_path.c_str(), std::ios::binary);
+		if (file.is_open())
+		{
+		std::stringstream ss_file;
+		ss_file << file.rdbuf();
+		_body = ss_file.str();
+		file.close();
+
+		_headers["Content-Type"] = _getMimeType(full_path);
+		
+		std::stringstream ss_len;
+		ss_len << _body.length();
+		_headers["Content-Length"] = ss_len.str();
+
+		_generateResponse(200);
+		}
+		else
+			buildErrorPage(404, config);
+	}
+}
+
+void	Response::_handlePost(Request &req, ServerConfig &config)
+{
+	(void)req;
+	(void)config;
+}
+
+void	Response::_handleDelete(Request &req, ServerConfig &config)
+{
+	(void)req;
+	(void)config;
 }
 
 std::string Response::_getMimeType(std::string path)
@@ -177,4 +222,22 @@ std::string Response::_getStatusMessage(int code)
 	if (messages.count(code))
 		return messages[code];
 	return "Unknown Error";
+}
+
+void	Response::_generateResponse(int code)
+{
+	std::stringstream ss;
+
+	_status_code = code;
+
+	ss << "HTTP/1.1 " << _status_code << " " << _getStatusMessage(_status_code) << "\r\n";
+
+	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it)
+		ss << it->first << ": " << it->second << "\r\n";
+
+	ss << "\r\n";
+
+	_response = ss.str() + _body;
+	
+	std::cout << "[Response] Status " << _status_code << " generated." << std::endl;
 }
