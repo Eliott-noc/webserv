@@ -16,7 +16,7 @@ static std::string	readFile(const std::string &filename)
 	return content;
 }
 
-std::vector<std::string>	getTokens(std::string content)
+static std::vector<std::string>	getTokens(std::string content)
 {
 	std::vector<std::string> tokens;
 	std::string token;
@@ -53,7 +53,7 @@ std::vector<std::string>	getTokens(std::string content)
 	return tokens;
 }
 
-std::vector<std::vector<std::string> > extractServerBlocks(const std::vector<std::string> &tokens)
+static std::vector<std::vector<std::string> > extractServerBlocks(const std::vector<std::string> &tokens)
 {
 	int										depth = 0;
 	bool									in_server = false;
@@ -101,6 +101,25 @@ std::vector<std::vector<std::string> > extractServerBlocks(const std::vector<std
 	return blocks;
 }
 
+static void	findLocation(const std::vector<std::vector<std::string> > &server_blocks)
+{
+	for(size_t i = 0; i < server_blocks.size(); i++)
+	{
+		for(size_t j = 0; j < server_blocks[i].size(); j++)
+		{
+			if (server_blocks[i][j] == "location")
+			{
+				if (j + 1 >= server_blocks[i].size())
+					throw std::runtime_error("Error : location without following token");
+				if (server_blocks[i][j + 1][0] != '/')
+					throw std::runtime_error("Error : location must be followed by '/'")
+				if (server_blocks[i][j + 1][0] == '/')
+					createLocation(server_blocks, i, j);
+			}
+		}
+	}
+}
+
 std::vector<ServerConfig>	parseConfig(const std::string &filename)
 {
 	std::vector<ServerConfig>	servers;
@@ -111,11 +130,9 @@ std::vector<ServerConfig>	parseConfig(const std::string &filename)
 	content = readFile(filename);
 	tokens = getTokens(content);
 	server_blocks = extractServerBlocks(tokens);
+	createServConfig(server_blocks);
+	findLocation(server_blocks);
 
-	for (size_t i = 0; i < tokens.size(); i++)
-	{
-		std::cout << "token " << i << " = " << tokens[i] << std::endl;
-	}
 
 	for(size_t i = 0; i < server_blocks.size(); i++)
 	{
