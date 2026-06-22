@@ -104,15 +104,15 @@ void	Response::buildErrorPage(int code, ServerConfig &config)
 void	Response::_handleGet(Request &req, ServerConfig &config)
 {
 	struct stat	s;
-	std::string	full_path = config.getHost() + req.getPath();
+	std::string	full_path = config.getRoot() + req.getPath();
 	
 	if (stat(full_path.c_str(), &s) == 0)
 	{
-		if (s.st_mode & S_IFDIR)
+		if (s.st_mode &S_IFDIR)
 		{
 			//dossier
 		}
-		else if (s.st_mode & S_IFREG)
+		else if (s.st_mode &S_IFREG)
 		{
 			if (config.getIndex() != "")
 				full_path += config.getIndex();
