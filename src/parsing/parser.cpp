@@ -1,4 +1,5 @@
 #include "../../inc/parser.hpp"
+#include "../../inc/utils.hpp"
 
 static std::string	readFile(const std::string &filename)
 {
@@ -72,8 +73,6 @@ static std::vector<std::vector<std::string> > extractServerBlocks(const std::vec
 					throw std::runtime_error("Error : server must be followed by '{'");
 				in_server = true;
 				current.clear();
-				current.push_back("server");
-				current.push_back("{");
 				depth = 1;
 				i++;
 			}
@@ -101,23 +100,47 @@ static std::vector<std::vector<std::string> > extractServerBlocks(const std::vec
 	return blocks;
 }
 
-static void	findLocation(const std::vector<std::vector<std::string> > &server_blocks)
+// static void	findLocation(const std::vector<std::vector<std::string> > &server_blocks)
+// {
+// 	for(size_t i = 0; i < server_blocks.size(); i++)
+// 	{
+// 		for(size_t j = 0; j < server_blocks[i].size(); j++)
+// 		{
+// 			if (server_blocks[i][j] == "location")
+// 			{
+// 				if (j + 1 >= server_blocks[i].size())
+// 					throw std::runtime_error("Error : location without following token");
+// 				if (server_blocks[i][j + 1][0] != '/')
+// 					throw std::runtime_error("Error : location must be followed by '/'")
+// 				if (server_blocks[i][j + 1][0] == '/')
+// 					createLocation(server_blocks, i, j);
+// 			}
+// 		}
+// 	}
+// }
+
+static std::vector<ServerConfig>	createServConfig(const std::vector<std::vector<std::string> > &server_blocks)
 {
-	for(size_t i = 0; i < server_blocks.size(); i++)
+	std::vector<ServerConfig>	servers;
+
+	for (size_t i = 0; i < server_blocks.size(); i++)
 	{
-		for(size_t j = 0; j < server_blocks[i].size(); j++)
-		{
-			if (server_blocks[i][j] == "location")
-			{
-				if (j + 1 >= server_blocks[i].size())
-					throw std::runtime_error("Error : location without following token");
-				if (server_blocks[i][j + 1][0] != '/')
-					throw std::runtime_error("Error : location must be followed by '/'")
-				if (server_blocks[i][j + 1][0] == '/')
-					createLocation(server_blocks, i, j);
-			}
-		}
+		ServerConfig server;
+		servers.push_back(server);
 	}
+	std::cout << "Taille server = " << servers.size() << std::endl;
+	
+	return servers;
+}
+
+static void	checkSyntax(const std::vector<std::string> &tokens)
+{
+	(void)tokens;
+	std::cout << "Checking..." << std::endl;
+	// for (size_t i = 0; i < tokens.size(); i++)
+	// {
+	// 	if (!isKeyword(to))
+	// }
 }
 
 std::vector<ServerConfig>	parseConfig(const std::string &filename)
@@ -129,10 +152,15 @@ std::vector<ServerConfig>	parseConfig(const std::string &filename)
 
 	content = readFile(filename);
 	tokens = getTokens(content);
+	checkSyntax(tokens);
 	server_blocks = extractServerBlocks(tokens);
-	createServConfig(server_blocks);
-	findLocation(server_blocks);
+	servers = parseServers(server_blocks);
+	checkServers(servers);
 
+	// for (size_t i = 0; i < tokens.size(); i++)
+	// {
+	// 	std::cout << "token " << i << " = " << tokens[i] << std::endl;
+	// }
 
 	for(size_t i = 0; i < server_blocks.size(); i++)
 	{
