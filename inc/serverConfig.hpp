@@ -33,7 +33,7 @@ class ServerConfig
 
 		void						addLocation(const Location &loc);
 
-		const Location				*getLocationForPath(std::string path);
+		const Location				*getLocationForPath(std::string const &path);
 		
 		std::vector<int>			getPort() const;
 		std::string					getHost() const;

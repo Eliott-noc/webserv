@@ -29,6 +29,11 @@ Location &Location::operator=(const Location &other)
 
 Location::~Location() {}
 
+void	Location::addMethod(std::string method)
+{
+	_methods.push_back(method);
+}
+
 std::string	Location::getPath() const
 {
 	return _path;
@@ -72,6 +77,11 @@ std::string	Location::getCGIExt() const
 std::string	Location::getUploadStore() const
 {
 	return _upload_store;
+}
+
+void	Location::setPath(std::string path)
+{
+	_path = path;
 }
 
 void	Location::setRoot(std::string root)

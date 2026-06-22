@@ -21,15 +21,29 @@ Response	&Response::operator=(const Response &other)
 	return *this;
 }
 
+bool	Response::_isMethodAllowed(std::string method, std::vector<std::string> const &allowedMethods)
+{
+	if (allowedMethods.empty())
+		return true; 
+
+	for (size_t i = 0; i < allowedMethods.size(); ++i)
+	{
+		if (method == allowedMethods[i])
+			return true;
+	}
+	return false;
+}
+
 void Response::makeResponse(Request &req, ServerConfig &config)
 {
-	const Location*	loc = config.getLocationForPath(req.getPath());
+	const Location	*loc = config.getLocationForPath(req.getPath());
 
 	if (!loc)
 	{
 		buildErrorPage(404, config);
 		return;
 	}
+
 	if (!_isMethodAllowed(req.getMethod(), loc->getMethods()))
 	{
 		buildErrorPage(405, config);
@@ -40,11 +54,8 @@ void Response::makeResponse(Request &req, ServerConfig &config)
 	std::string	full_path = root + req.getPath();
 
 	if (req.getMethod() == "GET")
-		_handleGet(req, config);
-	else if (req.getMethod() == "POST")
-		_handlePost(req, config);
-	else if (req.getMethod() == "DELETE")
-		_handleDelete(req, config);
+		_handleGet(req, config, *loc, full_path);
+	// ...
 }
 
 int	Response::_checkConfig(ServerConfig &config, int code)
@@ -127,31 +138,53 @@ std::string	Response::getRawResponse() const
 	return _response;
 }
 
-void Response::_handleGet(Request &req, ServerConfig &config)
+void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
-	struct stat	s;
-	std::string	full_path = config.getRoot() + req.getPath();
-	
+	struct stat s;
+
 	if (stat(full_path.c_str(), &s) != 0)
 	{
 		buildErrorPage(404, config);
 		return;
 	}
 
-	if (s.st_mode & S_IFDIR)
+	if (S_ISDIR(s.st_mode))
 	{
-		if (!config.getIndex().empty())
+		if (!loc.getIndex().empty())
 		{
-			full_path += "/" + config.getIndex();
-			if (stat(full_path.c_str(), &s) != 0)
+			std::string indexPath = full_path;
+			if (indexPath.at(indexPath.length() - 1) != '/')
+				indexPath += "/";
+			indexPath += loc.getIndex();
+
+			struct stat s_index;
+			if (stat(indexPath.c_str(), &s_index) == 0 && S_ISREG(s_index.st_mode))
 			{
-				buildErrorPage(404, config);
+				full_path = indexPath;
+				s = s_index;
+			}
+			else if (loc.getAutoIndex())
+			{
+				_body = "<html><body><h1>Index of " + req.getPath() + "</h1><hr><pre>Autoindex actif (en attente de code)</pre></body></html>";
+				_headers["Content-Type"] = "text/html";
+				std::stringstream ss_len; ss_len << _body.length();
+				_headers["Content-Length"] = ss_len.str();
+				_generateResponse(200);
+				return;
+			}
+			else
+			{
+				buildErrorPage(403, config);
 				return;
 			}
 		}
-		else if (config.getAutoIndex() == 1)
+		else if (loc.getAutoIndex())
 		{
-			//lister les fichiers
+			_body = "<html><body><h1>Index of " + req.getPath() + "</h1></body></html>";
+			_headers["Content-Type"] = "text/html";
+			std::stringstream ss_len; ss_len << _body.length();
+			_headers["Content-Length"] = ss_len.str();
+			_generateResponse(200);
 			return;
 		}
 		else
@@ -161,39 +194,42 @@ void Response::_handleGet(Request &req, ServerConfig &config)
 		}
 	}
 
-	if (s.st_mode & S_IFREG)
+	if (S_ISREG(s.st_mode))
 	{
 		std::ifstream file(full_path.c_str(), std::ios::binary);
 		if (file.is_open())
 		{
-		std::stringstream ss_file;
-		ss_file << file.rdbuf();
-		_body = ss_file.str();
-		file.close();
+			std::stringstream ss_file;
+			ss_file << file.rdbuf();
+			_body = ss_file.str();
+			file.close();
 
-		_headers["Content-Type"] = _getMimeType(full_path);
-		
-		std::stringstream ss_len;
-		ss_len << _body.length();
-		_headers["Content-Length"] = ss_len.str();
+			_headers["Content-Type"] = _getMimeType(full_path);
+			std::stringstream ss_len;
+			ss_len << _body.length();
+			_headers["Content-Length"] = ss_len.str();
 
-		_generateResponse(200);
+			_generateResponse(200);
 		}
 		else
-			buildErrorPage(404, config);
+			buildErrorPage(403, config);
 	}
+	else
+		buildErrorPage(404, config);
 }
 
-void	Response::_handlePost(Request &req, ServerConfig &config)
+void	Response::_handlePost(Request &req, ServerConfig &config, std::string full_path)
 {
 	(void)req;
 	(void)config;
+	(void)full_path;
 }
 
-void	Response::_handleDelete(Request &req, ServerConfig &config)
+void	Response::_handleDelete(Request &req, ServerConfig &config, std::string full_path)
 {
 	(void)req;
 	(void)config;
+	(void)full_path;
 }
 
 std::string Response::_getMimeType(std::string path)

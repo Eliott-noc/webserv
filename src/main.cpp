@@ -19,9 +19,10 @@ int main()
 	ServerConfig config;
 	Location loc;
 
+	loc.setPath("/");
 	loc.setRoot("./www");
 	loc.setIndex("index.html");
-	loc.setAutoIndex(0);
+	loc.addMethod("GET");
 	config.addLocation(loc);
 
 	{

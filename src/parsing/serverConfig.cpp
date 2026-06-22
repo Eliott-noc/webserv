@@ -31,9 +31,24 @@ void	ServerConfig::addLocation(const Location &loc)
 	_locations.push_back(loc);
 }
 
-const Location	*ServerConfig::getLocationForPath(std::string path)
+const Location	*ServerConfig::getLocationForPath(std::string const &path)
 {
-	
+	const Location	*bestMatch = NULL;
+	size_t			longestMatch = 0;
+
+	for (size_t i = 0; i < _locations.size(); ++i)
+	{
+		std::string locPath = _locations[i].getPath();
+		if (path.find(locPath) == 0)
+		{
+			if (locPath.length() >= longestMatch) 
+			{
+				longestMatch = locPath.length();
+				bestMatch = &_locations[i];
+			}
+		}
+	}
+	return bestMatch;
 }
 
 std::vector<int>	ServerConfig::getPort() const

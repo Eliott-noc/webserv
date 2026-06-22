@@ -32,9 +32,10 @@ class Response
 		std::string	getRawResponse() const;
 
 	private:
-		void		_handleGet(Request &req, ServerConfig &config);
-		void		_handlePost(Request &req, ServerConfig &config);
-		void		_handleDelete(Request &req, ServerConfig &config);
+		bool		_isMethodAllowed(std::string method, std::vector<std::string> const &allowedMethods);
+		void		_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path);
+		void		_handlePost(Request &req, ServerConfig &config, std::string full_path);
+		void		_handleDelete(Request &req, ServerConfig &config, std::string full_path);
 		std::string	_getMimeType(std::string path);
 		std::string	_getStatusMessage(int code);
 		int			_checkConfig(ServerConfig &config, int code);

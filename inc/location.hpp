@@ -29,6 +29,8 @@ class Location
 		~Location();
 		
 		Location	&operator=(const Location &other);
+
+		void						addMethod(std::string method);
 		
 		std::string					getPath() const;
 		std::string					getRoot() const;
@@ -40,6 +42,7 @@ class Location
 		std::string					getCGIExt() const;
 		std::string					getUploadStore() const;
 
+		void						setPath(std::string path);
 		void						setRoot(std::string root);
 		void						setIndex(std::string index);
 		void						setAutoIndex(bool autoIndex);
