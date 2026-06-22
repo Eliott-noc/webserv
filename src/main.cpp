@@ -1,4 +1,5 @@
 #include "../inc/webserv.hpp"
+#include "../inc/parser.hpp"
 
 // int	main(int argc, char **argv)
 // {
@@ -23,5 +24,17 @@ int	main(int argc, char **argv)
 
 	r.parse(line + "\r\n", 1000);
 
+		return (std::cout << "Usage : ./webserv <config file>" << std::endl, 1);
+	std::string	file = argv[1];
+
+	std::cout << file << std::endl;
+
+	std::vector<ServerConfig> servers;
+
+	servers = parseConfig(file);
+
+	//parsing();
+	//networkInfrastructure();
+	//translator();
 	return 0;
 }

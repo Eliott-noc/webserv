@@ -14,4 +14,16 @@
 // NetworkInfrastructure : ServerManager et Client.
 // Translator : Request, Response et CGIHandler.
 
+
+class Webserv
+{
+	private:
+		std::vector<ServerConfig> _servers;
+
+	public:
+		Webserv();
+		Webserv(std::vector<ServerConfig> servers);
+		~Webserv();
+};
+
 #endif

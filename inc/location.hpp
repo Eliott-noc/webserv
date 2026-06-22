@@ -22,7 +22,7 @@ class Location
 		std::string					_cgi_path;      // chemin vers python/php
 		std::string					_cgi_ext;       // .py ou .php
 		std::string					_upload_store;  // dossier d'upload
-	
+
 	public:
 		Location();
 		Location(const Location &other);

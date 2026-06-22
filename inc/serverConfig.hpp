@@ -14,13 +14,13 @@ les pages d'erreur personnalisées à afficher en cas de problème.
 class ServerConfig
 {
 	private:
-		int							_port;
+		std::vector<int>			_ports;
 		std::string					_host;
 		std::vector<std::string>	_server_names;
 		size_t						_client_max_body_size;
 		std::map<int, std::string>	_error_pages;
 		std::vector<Location>		_locations;
-	
+
 	public:
 		ServerConfig();
 		ServerConfig(const ServerConfig &other);
@@ -29,7 +29,7 @@ class ServerConfig
 		ServerConfig	&operator=(const ServerConfig &other);
 		// Getters et Setters
 		// ...
-		void addLocation(const Location &loc);
+		//void addLocation(const Location &loc);
 };
 
 #endif
