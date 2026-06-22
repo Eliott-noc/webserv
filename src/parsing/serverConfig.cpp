@@ -28,7 +28,12 @@ ServerConfig	&ServerConfig::operator=(const ServerConfig &other)
 
 void	ServerConfig::addLocation(const Location &loc)
 {
-	(void)loc;
+	_locations.push_back(loc);
+}
+
+const Location	*ServerConfig::getLocationForPath(std::string path)
+{
+	
 }
 
 std::vector<int>	ServerConfig::getPort() const
@@ -75,4 +80,3 @@ std::vector<Location>	ServerConfig::getLocations() const
 {
 	return _locations;
 }
-

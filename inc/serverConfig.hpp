@@ -32,6 +32,8 @@ class ServerConfig
 		ServerConfig				&operator=(const ServerConfig &other);
 
 		void						addLocation(const Location &loc);
+
+		const Location				*getLocationForPath(std::string path);
 		
 		std::vector<int>			getPort() const;
 		std::string					getHost() const;

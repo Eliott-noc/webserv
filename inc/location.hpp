@@ -17,7 +17,7 @@ class Location
 		std::string					_root;          // ex: ./www/images
 		std::vector<std::string>	_methods;       // GET, POST, DELETE
 		std::string					_index;         // index.html
-		bool						_autoindex;     // on/off
+		bool						_autoIndex;     // on/off
 		std::string					_return;        // Redirection (301)
 		std::string					_cgi_path;      // chemin vers python/php
 		std::string					_cgi_ext;       // .py ou .php
@@ -40,7 +40,9 @@ class Location
 		std::string					getCGIExt() const;
 		std::string					getUploadStore() const;
 
-
+		void						setRoot(std::string root);
+		void						setIndex(std::string index);
+		void						setAutoIndex(bool autoIndex);
 };
 
 #endif

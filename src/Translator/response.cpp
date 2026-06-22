@@ -21,10 +21,30 @@ Response	&Response::operator=(const Response &other)
 	return *this;
 }
 
-void	Response::makeResponse(Request &req, ServerConfig &config)
+void Response::makeResponse(Request &req, ServerConfig &config)
 {
-	(void)req;
-	(void)config;
+	const Location*	loc = config.getLocationForPath(req.getPath());
+
+	if (!loc)
+	{
+		buildErrorPage(404, config);
+		return;
+	}
+	if (!_isMethodAllowed(req.getMethod(), loc->getMethods()))
+	{
+		buildErrorPage(405, config);
+		return;
+	}
+
+	std::string	root = loc->getRoot().empty() ? config.getRoot() : loc->getRoot();
+	std::string	full_path = root + req.getPath();
+
+	if (req.getMethod() == "GET")
+		_handleGet(req, config);
+	else if (req.getMethod() == "POST")
+		_handlePost(req, config);
+	else if (req.getMethod() == "DELETE")
+		_handleDelete(req, config);
 }
 
 int	Response::_checkConfig(ServerConfig &config, int code)
@@ -100,6 +120,11 @@ void	Response::buildErrorPage(int code, ServerConfig &config)
 	_response += _body;
 
 	std::cout << "[Response] Error " << code << " generated." << std::endl;
+}
+
+std::string	Response::getRawResponse() const
+{
+	return _response;
 }
 
 void Response::_handleGet(Request &req, ServerConfig &config)

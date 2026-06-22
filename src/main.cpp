@@ -14,99 +14,87 @@
 // 	return 0;
 // }
 
-void print_test_header(std::string title)
-{
-	std::cout << "\n========================================" << std::endl;
-	std::cout << "TEST : " << title << std::endl;
-	std::cout << "========================================" << std::endl;
-}
-
 int main()
 {
-	ServerConfig	config;
-	Response		response;
+	ServerConfig config;
+	Location loc;
 
-	response.buildErrorPage(404, config);
-
-	size_t limit = 100;
+	loc.setRoot("./www");
+	loc.setIndex("index.html");
+	loc.setAutoIndex(0);
+	config.addLocation(loc);
 
 	{
-		print_test_header("GET Simple");
-		std::string req = "GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n";
-		Request r;
-		r.parse(req, limit);
+		std::cout << "\n=== TEST 1 : GET /index.html (200 OK) ===" << std::endl;
+		Request req;
+		std::string raw = "GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n";
+		req.parse(raw, 1000);
+
+		std::cout << "\nResponse:" << std::endl;
+		Response res;
+		res.makeResponse(req, config);
+		std::cout << res.getRawResponse() << std::endl;
 	}
 
 	{
-		print_test_header("GET avec Query String");
-		std::string req = "GET /search?query=chats&sort=desc&limit=10 HTTP/1.1\r\nHost: google.com\r\n\r\n";
-		Request r;
-		r.parse(req, limit);
+		std::cout << "\n=== TEST 2 : GET /introuvable.html (404 Not Found) ===" << std::endl;
+		Request req;
+		std::string raw = "GET /introuvable.html HTTP/1.1\r\nHost: localhost\r\n\r\n";
+		req.parse(raw, 1000);
+
+		std::cout << "\nResponse:" << std::endl;
+		Response res;
+		res.makeResponse(req, config);
+		std::cout << res.getRawResponse() << std::endl;
 	}
 
 	{
-		print_test_header("POST avec Body");
-		std::string body = "nom=william&projet=webserv";
-		std::stringstream ss;
-		ss << "POST /form HTTP/1.1\r\n";
-		ss << "Host: 127.0.0.1\r\n";
-		ss << "Content-Length: " << body.length() << "\r\n";
-		ss << "\r\n";
-		ss << body;
-		
-		Request r;
-		r.parse(ss.str(), limit);
+		std::cout << "\n=== TEST 3 : POST sur une route GET (405) ===" << std::endl;
+		Request req;
+		std::string raw = "POST /index.html HTTP/1.1\r\nHost: localhost\r\nContent-Length: 0\r\n\r\n";
+		req.parse(raw, 1000);
+
+		std::cout << "\nResponse:" << std::endl;
+		Response res;
+		res.makeResponse(req, config);
+		std::cout << res.getRawResponse() << std::endl;
 	}
 
-	{
-		print_test_header("DELETE");
-		std::string req = "DELETE /tmp/test.txt HTTP/1.1\r\nHost: localhost\r\n\r\n";
-		Request r;
-		r.parse(req, limit);
-	}
-
-	{
-		print_test_header("ERREUR 413 (Limite 100 octets)");
-		std::string long_body(150, 'A');
-		std::stringstream ss;
-		ss << "POST /big_file HTTP/1.1\r\n";
-		ss << "Content-Length: 150\r\n\r\n" << long_body;
-		
-		Request r;
-		int res = r.parse(ss.str(), limit);
-		std::cout << "CODE DE RETOUR : " << res << " (Attendu: 413)" << std::endl;
-	}
-
-	{
-		print_test_header("ERREUR 400 (Body tronqué)");
-		std::string req = "POST /fail HTTP/1.1\r\nContent-Length: 20\r\n\r\nHello";
-		Request r;
-		int res = r.parse(req, limit);
-		std::cout << "CODE DE RETOUR : " << res << " (Attendu: 400)" << std::endl;
-	}
-
-	{
-		print_test_header("Headers mal espacés");
-		std::string req = "GET / HTTP/1.1\r\n"
-						  "User-Agent:      Mozilla/5.0      \r\n"
-						  "Custom-Header:value\r\n"
-						  "\r\n";
-		Request r;
-		r.parse(req, limit);
-	}
-
-	{
-		print_test_header("Body contenant des retours à la ligne");
-		std::string body = "Ligne 1\r\nLigne 2\r\nLigne 3";
-		std::stringstream ss;
-		ss << "POST /text HTTP/1.1\r\nContent-Length: " << body.length() << "\r\n\r\n" << body;
-		
-		Request r;
-		r.parse(ss.str(), limit);
-	}
-
-	//parsing();
-	//networkInfrastructure();
-	//translator();
 	return 0;
 }
+
+//result:
+// === TEST 1 : GET /index.html (200 OK) ===
+// code Text
+
+// [Response] Status 200 generated.
+// HTTP/1.1 200 OK
+// Content-Length: [Taille de ton fichier]
+// Content-Type: text/html
+// Server: webserv/1.0
+
+// [Ici le contenu de ton fichier www/index.html]
+
+// === TEST 2 : GET /introuvable.html (404 Not Found) ===
+// code Text
+
+// [Response] Error 404 generated.
+// HTTP/1.1 404 Not Found
+// Content-Length: [Taille du HTML d'erreur]
+// Content-Type: text/html
+// Server: webserv/1.0
+
+// <html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr><center>webserv/1.0</center></body></html>
+
+// === TEST 3 : POST sur une route GET (405) ===
+
+// (Si tu as bien mis la condition pour refuser le POST ou si tu n'as pas encore codé le POST)
+// code Text
+
+// [Response] Error 405 generated.
+// HTTP/1.1 405 Method Not Allowed
+// Content-Length: [Taille du HTML d'erreur]
+// Content-Type: text/html
+// Server: webserv/1.0
+
+// <html><head><title>405 Method Not Allowed</title></head><body><center><h1>405 Method Not Allowed</h1></center><hr><center>webserv/1.0</center></body></html>

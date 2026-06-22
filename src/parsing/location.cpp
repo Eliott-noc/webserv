@@ -1,7 +1,7 @@
 #include "../../inc/location.hpp"
 
 Location::Location()
-	: _autoindex(false)
+	: _autoIndex(false)
 {
 }
 
@@ -18,7 +18,7 @@ Location &Location::operator=(const Location &other)
 		_root = other._root;
 		_methods = other._methods;
 		_index = other._index;
-		_autoindex = other._autoindex;
+		_autoIndex = other._autoIndex;
 		_return = other._return;
 		_cgi_path = other._cgi_path;
 		_cgi_ext = other._cgi_ext;
@@ -46,7 +46,7 @@ std::vector<std::string>	Location::getMethods() const
 
 bool	Location::getAutoIndex() const
 {
-	return _autoindex;
+	return _autoIndex;
 }
 
 std::string	Location::getIndex() const
@@ -72,4 +72,19 @@ std::string	Location::getCGIExt() const
 std::string	Location::getUploadStore() const
 {
 	return _upload_store;
+}
+
+void	Location::setRoot(std::string root)
+{
+	_root = root;
+}
+
+void	Location::setIndex(std::string index)
+{
+	_index = index;
+}
+
+void	Location::setAutoIndex(bool autoIndex)
+{
+	_autoIndex = autoIndex;
 }
