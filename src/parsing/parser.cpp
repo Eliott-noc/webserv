@@ -68,7 +68,7 @@ static std::vector<std::vector<std::string> > extractServerBlocks(const std::vec
 			if (tokens[i] == "server")
 			{
 				if (i + 1 >= tokens.size())
-					throw std::runtime_error("Error: server without following token");
+					throw std::runtime_error("Error : server without following token");
 				if (tokens[i + 1] != "{")
 					throw std::runtime_error("Error : server must be followed by '{'");
 				in_server = true;
@@ -76,6 +76,8 @@ static std::vector<std::vector<std::string> > extractServerBlocks(const std::vec
 				depth = 1;
 				i++;
 			}
+			else
+				throw std::runtime_error("Error : unexpected token outside server block");
 			continue ;
 		}
 		current.push_back(tokens[i]);
@@ -97,51 +99,47 @@ static std::vector<std::vector<std::string> > extractServerBlocks(const std::vec
 	}
 	if (in_server)
 		throw std::runtime_error("Error : unclosed server block");
+
 	return blocks;
 }
 
-// static void	findLocation(const std::vector<std::vector<std::string> > &server_blocks)
+// static std::vector<std::string> extractLocationBlock(const std::vector<std::string> &block, size_t i)
 // {
-// 	for(size_t i = 0; i < server_blocks.size(); i++)
+// 	std::vector<std::string>	extracted_block;
+
+// 	while (i < block.size() && block[i] != "}")
 // 	{
-// 		for(size_t j = 0; j < server_blocks[i].size(); j++)
+// 		if (block[i] == "location" || block[i] == "{")
 // 		{
-// 			if (server_blocks[i][j] == "location")
-// 			{
-// 				if (j + 1 >= server_blocks[i].size())
-// 					throw std::runtime_error("Error : location without following token");
-// 				if (server_blocks[i][j + 1][0] != '/')
-// 					throw std::runtime_error("Error : location must be followed by '/'")
-// 				if (server_blocks[i][j + 1][0] == '/')
-// 					createLocation(server_blocks, i, j);
-// 			}
+// 			i++;
+// 			continue ;
 // 		}
+// 		extracted_block.push_back(block[i]);
+// 		i++;
 // 	}
+// 	if (i == block.size())
+// 		throw std::runtime_error("Error : missing '}' in location block");
+
+// 	return extracted_block;
 // }
 
-static std::vector<ServerConfig>	createServConfig(const std::vector<std::vector<std::string> > &server_blocks)
-{
-	std::vector<ServerConfig>	servers;
+// static ServerConfig	parseServer(const std::vector<std::string> &tokens)
+// {
+// 	ServerConfig	server;
 
-	for (size_t i = 0; i < server_blocks.size(); i++)
-	{
-		ServerConfig server;
-		servers.push_back(server);
-	}
-	std::cout << "Taille server = " << servers.size() << std::endl;
-	
-	return servers;
-}
-
-static void	checkSyntax(const std::vector<std::string> &tokens)
-{
-	(void)tokens;
-	std::cout << "Checking..." << std::endl;
-	// for (size_t i = 0; i < tokens.size(); i++)
-	// {
-	// 	if (!isKeyword(to))
-	// }
-}
+// 	for (size_t i = 0; i < block.size(); i++)
+// 	{
+// 		if (block[i] == "location")
+// 		{
+// 			std::vector<std::string> location_block = extractLocationBlock(block, i);
+// 			server._locations.push_back(parseLocation(location_block));
+// 			i = skipBlock(block, i);
+// 		}
+// 		else
+// 			parseDirective(server, server_block, i);
+// 	}
+// 	return server;
+// }
 
 std::vector<ServerConfig>	parseConfig(const std::string &filename)
 {
@@ -152,15 +150,16 @@ std::vector<ServerConfig>	parseConfig(const std::string &filename)
 
 	content = readFile(filename);
 	tokens = getTokens(content);
-	checkSyntax(tokens);
 	server_blocks = extractServerBlocks(tokens);
-	servers = parseServers(server_blocks);
-	checkServers(servers);
 
-	// for (size_t i = 0; i < tokens.size(); i++)
+	// for (size_t i = 0; i < server_blocks.size(); i++)
 	// {
-	// 	std::cout << "token " << i << " = " << tokens[i] << std::endl;
+	// 	std::cout << server_blocks[i] << std::endl;
+	// 	// ServerConfig server = parseServer(server_blocks[i]);
+	// 	// servers.push_back(server);
 	// }
+
+	//checkServers(servers);
 
 	for(size_t i = 0; i < server_blocks.size(); i++)
 	{
