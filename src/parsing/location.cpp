@@ -79,27 +79,42 @@ std::string	Location::getUploadStore() const
 	return _upload_store;
 }
 
-void	Location::setPath(std::string path)
+void	Location::setPath(const std::string &path)
 {
 	_path = path;
 }
 
-void	Location::setRoot(std::string root)
+void	Location::setRoot(const std::string &root)
 {
 	_root = root;
 }
 
-void	Location::setIndex(std::string index)
+void	Location::setIndex(const std::string &index)
 {
 	_index = index;
 }
 
-void	Location::setAutoIndex(bool autoIndex)
+void	Location::setAutoIndex(const bool &autoIndex)
 {
 	_autoIndex = autoIndex;
 }
 
-void	Location::setUploadStore(std::string uploadStore)
+void	Location::setRet(const std::string &ret)
+{
+	_return = ret;
+}
+
+void	Location::setCgiPath(const std::string &cgi_path)
+{
+	_cgi_path = cgi_path;
+}
+
+void	Location::setCgiExt(const std::string &cgi_ext)
+{
+	_cgi_ext = cgi_ext;
+}
+
+void	Location::setUploadStore(const std::string &uploadStore)
 {
 	_upload_store = uploadStore;
 }

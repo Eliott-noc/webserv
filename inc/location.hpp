@@ -42,11 +42,14 @@ class Location
 		std::string					getCGIExt() const;
 		std::string					getUploadStore() const;
 
-		void						setPath(std::string path);
-		void						setRoot(std::string root);
-		void						setIndex(std::string index);
-		void						setAutoIndex(bool autoIndex);
-		void						setUploadStore(std::string uploadStore);
+		void						setPath(const std::string &path);
+		void						setRoot(const std::string &root);
+		void						setIndex(const std::string &index);
+		void						setAutoIndex(const bool &autoIndex);
+		void						setRet(const std::string &ret);
+		void						setCgiPath(const std::string &cgi_path);
+		void						setCgiExt(const std::string &cgi_ext);
+		void						setUploadStore(const std::string &uploadStore);
 };
 
 #endif
