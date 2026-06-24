@@ -17,7 +17,7 @@ class Location
 		std::string					_root;          // ex: ./www/images
 		std::vector<std::string>	_methods;       // GET, POST, DELETE
 		std::string					_index;         // index.html
-		bool						_autoIndex;     // on/off
+		bool						_auto_index;     // on/off
 		std::string					_return;        // Redirection (301)
 		std::string					_cgi_path;      // chemin vers python/php
 		std::string					_cgi_ext;       // .py ou .php

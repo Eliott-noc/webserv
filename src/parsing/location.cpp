@@ -18,7 +18,7 @@ Location &Location::operator=(const Location &other)
 		_root = other._root;
 		_methods = other._methods;
 		_index = other._index;
-		_autoIndex = other._autoIndex;
+		_auto_index = other._auto_index;
 		_return = other._return;
 		_cgi_path = other._cgi_path;
 		_cgi_ext = other._cgi_ext;
@@ -51,7 +51,7 @@ std::vector<std::string>	Location::getMethods() const
 
 bool	Location::getAutoIndex() const
 {
-	return _autoIndex;
+	return _auto_index;
 }
 
 std::string	Location::getIndex() const
@@ -94,9 +94,9 @@ void	Location::setIndex(const std::string &index)
 	_index = index;
 }
 
-void	Location::setAutoIndex(const bool &autoIndex)
+void	Location::setAutoIndex(const bool &auto_index)
 {
-	_autoIndex = autoIndex;
+	_auto_index = auto_index;
 }
 
 void	Location::setRet(const std::string &ret)
