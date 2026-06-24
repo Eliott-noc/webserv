@@ -103,43 +103,43 @@ static std::vector<std::vector<std::string> > extractServerBlocks(const std::vec
 	return blocks;
 }
 
-// static std::vector<std::string> extractLocationBlock(const std::vector<std::string> &block, size_t i)
-// {
-// 	std::vector<std::string>	extracted_block;
+static std::vector<std::string> extractLocationBlock(const std::vector<std::string> &block, size_t i)
+{
+	std::vector<std::string>	extracted_block;
 
-// 	while (i < block.size() && block[i] != "}")
-// 	{
-// 		if (block[i] == "location" || block[i] == "{")
-// 		{
-// 			i++;
-// 			continue ;
-// 		}
-// 		extracted_block.push_back(block[i]);
-// 		i++;
-// 	}
-// 	if (i == block.size())
-// 		throw std::runtime_error("Error : missing '}' in location block");
+	while (i < block.size() && block[i] != "}")
+	{
+		if (block[i] == "location" || block[i] == "{")
+		{
+			i++;
+			continue ;
+		}
+		extracted_block.push_back(block[i]);
+		i++;
+	}
+	if (i == block.size())
+		throw std::runtime_error("Error : missing '}' in location block");
 
-// 	return extracted_block;
-// }
+	return extracted_block;
+}
 
-// static ServerConfig	parseServer(const std::vector<std::string> &tokens)
-// {
-// 	ServerConfig	server;
+static ServerConfig	parseServer(const std::vector<std::string> &tokens)
+{
+	ServerConfig	server;
 
-// 	for (size_t i = 0; i < block.size(); i++)
-// 	{
-// 		if (block[i] == "location")
-// 		{
-// 			std::vector<std::string> location_block = extractLocationBlock(block, i);
-// 			server._locations.push_back(parseLocation(location_block));
-// 			i = skipBlock(block, i);
-// 		}
-// 		else
-// 			parseDirective(server, server_block, i);
-// 	}
-// 	return server;
-// }
+	for (size_t i = 0; i < block.size(); i++)
+	{
+		if (block[i] == "location")
+		{
+			std::vector<std::string> location_block = extractLocationBlock(block, i);
+			server._locations.push_back(parseLocation(location_block));
+			i = skipBlock(block, i);
+		}
+		else
+			parseDirective(server, server_block, i);
+	}
+	return server;
+}
 
 std::vector<ServerConfig>	parseConfig(const std::string &filename)
 {
@@ -152,21 +152,21 @@ std::vector<ServerConfig>	parseConfig(const std::string &filename)
 	tokens = getTokens(content);
 	server_blocks = extractServerBlocks(tokens);
 
-	// for (size_t i = 0; i < server_blocks.size(); i++)
-	// {
-	// 	std::cout << server_blocks[i] << std::endl;
-	// 	// ServerConfig server = parseServer(server_blocks[i]);
-	// 	// servers.push_back(server);
-	// }
+	for (size_t i = 0; i < server_blocks.size(); i++)
+	{
+		std::cout << server_blocks[i] << std::endl;
+		// ServerConfig server = parseServer(server_blocks[i]);
+		// servers.push_back(server);
+	}
 
 	//checkServers(servers);
 
-	for(size_t i = 0; i < server_blocks.size(); i++)
-	{
-		for(size_t j = 0; j < server_blocks[i].size(); j++)
-		{
-			std::cout << "block " << i << " token " << j << " = " << server_blocks[i][j] << std::endl;
-		}
-	}
+	// for(size_t i = 0; i < server_blocks.size(); i++)
+	// {
+	// 	for(size_t j = 0; j < server_blocks[i].size(); j++)
+	// 	{
+	// 		std::cout << "block " << i << " token " << j << " = " << server_blocks[i][j] << std::endl;
+	// 	}
+	// }
 	return servers;
 }

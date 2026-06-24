@@ -29,6 +29,7 @@ class Location
 		~Location();
 		
 		Location	&operator=(const Location &other);
+
 		// Getters et Setters pour chaque variable
 		// ...
 };
