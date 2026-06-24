@@ -44,6 +44,8 @@ class ServerConfig
 		size_t						getClientMaxBodySize() const;
 		std::map<int, std::string>	getErrorPages() const;
 		std::vector<Location>		getLocations() const;
+
+		void						setRoot(std::string root);
 };
 
 #endif

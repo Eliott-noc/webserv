@@ -10,32 +10,51 @@ faire (GET, POST, DELETE), quel fichier il cherche, et quelles informations
 supplémentaires il a envoyées dans les en-têtes (headers).
 */
 
+typedef enum	s_request_state
+{
+	READING_REQUEST_LINE,
+	READING_HEADERS,
+	READING_BODY,
+	FINISHED,
+	ERROR
+}	t_request_state;
+
 class Request
 {
 	private:
-		std::string							_method;        // GET, POST, DELETE
-		std::string							_path;          // /index.html
-		std::string							_query_string;  // ce qu'il y a après le '?' dans l'URL
-		std::string							_version;       // HTTP/1.1
-		std::map<std::string, std::string>	_headers;       // Host, Content-Type, etc.
-		std::string							_body;
+		std::string							_method;
+		std::string							_path;
+		std::string							_query_string;
+		std::string							_version;
+		std::map<std::string, std::string>	_headers;
 		bool								_is_chunked;
 		size_t								_content_length;
+		t_request_state						_state;
+		std::string							_raw_buffer;
+		std::string							_tmp_file;
+		int									_body_fd;
+		size_t								_bytes_received;
+		int									_client_fd;
 
 	public:
-		Request();
+		Request(int client_fd);
 		Request(const Request &other);
 		~Request();
 		
 		Request &operator=(const Request &other);
 
 		int									parse(std::string raw_data, size_t max_body_limit);
-		void								requestLine(std::string &raw_data);
-		void								scanHeader(std::string &raw_data);
+
 		std::string							getMethod() const;
 		std::string							getPath() const;
-		std::string							getBody() const;
 		std::map<std::string, std::string>	getHeaders() const;
+		std::string							getBodyFile() const;
+
+	private:
+
+		void								_requestLine();
+		void								_scanHeader();
+		bool								_chunked(size_t max_body_limit);
 };
 
 #endif

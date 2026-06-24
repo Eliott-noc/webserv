@@ -98,3 +98,8 @@ void	Location::setAutoIndex(bool autoIndex)
 {
 	_autoIndex = autoIndex;
 }
+
+void	Location::setUploadStore(std::string uploadStore)
+{
+	_upload_store = uploadStore;
+}

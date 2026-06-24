@@ -95,3 +95,8 @@ std::vector<Location>	ServerConfig::getLocations() const
 {
 	return _locations;
 }
+
+void	ServerConfig::setRoot(std::string root)
+{
+	_root = root;
+}

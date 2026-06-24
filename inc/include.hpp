@@ -11,5 +11,9 @@
 # include <sys/stat.h>
 # include <fcntl.h>
 # include <fstream>
+# include <dirent.h>
+# include <unistd.h>
+# include <sys/socket.h>
+# include <iomanip>
 
 #endif

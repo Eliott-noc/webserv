@@ -46,6 +46,7 @@ class Location
 		void						setRoot(std::string root);
 		void						setIndex(std::string index);
 		void						setAutoIndex(bool autoIndex);
+		void						setUploadStore(std::string uploadStore);
 };
 
 #endif
