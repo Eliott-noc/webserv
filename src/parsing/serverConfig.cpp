@@ -106,6 +106,7 @@ void	ServerConfig::setHost(const std::string &host)
 	_host = host;
 }
 
+
 void	ServerConfig::setRoot(const std::string &root)
 {
 	_root = root;

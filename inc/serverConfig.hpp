@@ -49,7 +49,7 @@ class ServerConfig
 		void						setHost(const std::string &host);
 		void						setRoot(const std::string &root);
 		void						setIndex(const std::string &index);
-		void						setAutoindex(const bool &autoindex);
+		void						setAutoIndex(const bool &auto_index);
 		void						setServerNames(const std::vector<std::string> &server_names);
 		void						setClientMaxBodySize(const size_t &error_pages);
 		void						setErrorPages(const std::map<int, std::string> &error_pages);
