@@ -27,11 +27,11 @@ class Location
 		Location();
 		Location(const Location &other);
 		~Location();
-		
+
 		Location	&operator=(const Location &other);
 
 		void						addMethod(std::string method);
-		
+
 		std::string					getPath() const;
 		std::string					getRoot() const;
 		std::vector<std::string>	getMethods() const;
@@ -44,6 +44,7 @@ class Location
 
 		void						setPath(const std::string &path);
 		void						setRoot(const std::string &root);
+		void						setMethods(const std::vector<std::string> &methods);
 		void						setIndex(const std::string &index);
 		void						setAutoIndex(const bool &autoIndex);
 		void						setRet(const std::string &ret);

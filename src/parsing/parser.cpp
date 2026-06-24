@@ -1,5 +1,7 @@
 #include "../../inc/parser.hpp"
 #include "../../inc/utils.hpp"
+#include "../../inc/location.hpp"
+#include "../../inc/locArgs.hpp"
 
 static std::string	readFile(const std::string &filename)
 {
@@ -123,13 +125,37 @@ static std::vector<std::string> extractLocationBlock(const std::vector<std::stri
 	return extracted_block;
 }
 
+static void	setLocArgs(Location &location, const std::vector<std::string> &args)
+{
+	setArgPath(args, 0);
+	for (size_t i = i; i < args.size(); i++)
+	{
+		if (args[i] == "root")
+			setArgRoot(location, args, i);
+		else if (args[i] == "allow_methods")
+			setArgMethods(location, args, i);
+		else if (args[i] == "index")
+			setArgIndex(location, args, i);
+		else if (args[i] == "autoindex")
+			setArgAutoIndex(location, args, i);
+		else if (args[i] == "return")
+			setArgRet(location, args, i);
+		else if (args[i] == "cgi_path")
+			setArgCgiPath(location, args, i);
+		else if (args[i] == "cgi_ext")
+			setArgCgiExt(location, args, i);
+		else if (args[i] == "upload_store")
+			setArgUploadStore(location, args, i);
+	}
+}
+
 static Location	parseLocation(const std::vector<std::string> &l_block)
 {
 	Location	location;
 	std::vector<std::string> args;
 
 	location.setPath(l_block[0]);
-	
+
 	for (size_t i = 1; i < l_block.size(); i++)
 	{
 		if ((i == 1 && l_block[i] == ";") || (l_block[i] == ";" && l_block[i - 1] == ";"))
@@ -141,7 +167,7 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 			args.push_back(l_block[i]);
 		else
 		{
-			setArgs(location, args);
+			setLocArgs(location, args);
 			args.clear();
 		}
 		std::cout << i << " = " << l_block[i] << std::endl;

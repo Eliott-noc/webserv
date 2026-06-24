@@ -89,6 +89,11 @@ void	Location::setRoot(const std::string &root)
 	_root = root;
 }
 
+void	Location::setMethods(const std::vector<std::string> &methods)
+{
+	_methods = methods;
+}
+
 void	Location::setIndex(const std::string &index)
 {
 	_index = index;
