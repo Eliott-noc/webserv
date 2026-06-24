@@ -107,7 +107,7 @@ void	ServerConfig::setHost(const std::string &host)
 }
 
 
-void	ServerConfig::setRoot(std::string root)
+void	ServerConfig::setRoot(const std::string &root)
 {
 	_root = root;
 }
@@ -117,7 +117,7 @@ void	ServerConfig::setIndex(const std::string &index)
 	_index = index;
 }
 
-void	ServerConfig::setAutoIndex(const std::string &auto_index)
+void	ServerConfig::setAutoIndex(const bool &auto_index)
 {
 	_auto_index = auto_index;
 }

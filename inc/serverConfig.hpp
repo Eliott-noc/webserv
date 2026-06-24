@@ -17,7 +17,7 @@ class ServerConfig
 		std::vector<int>			_ports;
 		std::string					_host;
 		std::string					_root;
-		int							_auto_index;
+		bool						_auto_index;
 		std::string					_index;
 		std::vector<std::string>	_server_names;
 		size_t						_client_max_body_size;
@@ -49,7 +49,7 @@ class ServerConfig
 		void						setHost(const std::string &host);
 		void						setRoot(const std::string &root);
 		void						setIndex(const std::string &index);
-		void						setAutoindex(const std::string &autoindex);
+		void						setAutoindex(const bool &autoindex);
 		void						setServerNames(const std::vector<std::string> &server_names);
 		void						setClientMaxBodySize(const size_t &error_pages);
 		void						setErrorPages(const std::map<int, std::string> &error_pages);
