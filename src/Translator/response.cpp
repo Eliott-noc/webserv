@@ -1,6 +1,12 @@
 #include "../../inc/response.hpp"
 
-Response::Response() : _status_code(0), _file_fd(-1), _file_size(0), _total_sent(0), _headers_sent(0), _is_finished(0) {}
+Response::Response() :
+	_status_code(0),
+	_file_fd(-1),
+	_file_size(0),
+	_total_sent(0),
+	_headers_sent(0),
+	_is_finished(0) {}
 
 Response::Response(const Response &other)
 {
@@ -30,7 +36,7 @@ Response	&Response::operator=(const Response &other)
 	return *this;
 }
 
-void Response::makeResponse(Request &req, ServerConfig &config)
+void	Response::makeResponse(Request &req, ServerConfig &config)
 {
 	const Location	*loc = config.getLocationForPath(req.getPath());
 	std::string		root;
@@ -95,19 +101,13 @@ std::string	Response::getRawResponse() const
 
 void	Response::sendResponse(int socket_fd)
 {
-
-	//temporaire car pas encore de socket valide
-	if (socket_fd == -1) {
-		_headers_sent = true;
-		_is_finished = true;
-		return;
-	}
+	int	ret;
 
 	if (!_headers_sent)
 	{
 		if (_header_buffer.empty())
 			return;
-		int ret = send(socket_fd, _header_buffer.c_str(), _header_buffer.size(), 0);
+		ret = send(socket_fd, _header_buffer.c_str(), _header_buffer.size(), 0);
 		if (ret <= 0)
 			return;
 		_headers_sent = true;
@@ -119,7 +119,7 @@ void	Response::sendResponse(int socket_fd)
 
 	if (_file_fd == -1 && !_body.empty())
 	{
-		int ret = send(socket_fd, _body.c_str(), _body.size(), 0);
+		ret = send(socket_fd, _body.c_str(), _body.size(), 0);
 		if (ret < 0)
 			return;
 		_is_finished = true;
@@ -129,12 +129,12 @@ void	Response::sendResponse(int socket_fd)
 
 	if (_file_fd != -1)
 	{
-		char buffer[8192];
-		int bytes_read = read(_file_fd, buffer, 8192);
+		char	buffer[8192];
+		int		bytes_read = read(_file_fd, buffer, 8192);
 
 		if (bytes_read > 0)
 		{
-			int ret = send(socket_fd, buffer, bytes_read, 0);
+			ret = send(socket_fd, buffer, bytes_read, 0);
 			if (ret > 0)
 				_total_sent += ret;
 		}
