@@ -1,13 +1,19 @@
 #include "../../inc/request.hpp"
 
-Request::Request() : _is_chunked(0), _content_length(0) {}
+Request::Request(int client_fd) : _is_chunked(0), _content_length(0) , _state(READING_REQUEST_LINE), _body_fd(-1), _bytes_received(0), _client_fd(client_fd) {}
 
 Request::Request(const Request &other)
 {
 	*this = other;
 }
 
-Request::~Request() {}
+Request::~Request() 
+{
+	if (_body_fd != -1)
+		close(_body_fd);
+	if (!_tmp_file.empty())
+		std::remove(_tmp_file.c_str());
+}
 
 Request	&Request::operator=(const Request &other)
 {
@@ -18,99 +24,267 @@ Request	&Request::operator=(const Request &other)
 		_query_string = other._query_string;
 		_version = other._version;
 		_headers = other._headers;
-		_body = other._body;
 		_is_chunked = other._is_chunked;
 		_content_length = other._content_length;
+		_state = other._state;
+		_raw_buffer = other._raw_buffer;
+		_tmp_file = other._tmp_file;
+		_body_fd = other._body_fd;
+		_bytes_received = other._bytes_received;
+		_client_fd = other._client_fd;
 	}
 	return *this;
 }
 
-void	Request::requestLine(std::string &raw_data)
+size_t hexToDecimal(std::string hexStr)
+{
+	size_t				x;
+	std::stringstream	ss;
+
+	ss << std::hex << hexStr;
+	ss >> x;
+
+	return x;
+}
+
+void	Request::_requestLine()
 {
 	size_t		pos;
 	size_t		i;
 	std::string	first_line;
 	
-	pos = raw_data.find("\r\n");
+	pos = _raw_buffer.find("\r\n");
 	if (pos == std::string::npos)
-		return;
+		return ;
 
-	first_line = raw_data.substr(0, pos);
+	first_line = _raw_buffer.substr(0, pos);
 
 	std::stringstream	ss(first_line);
-	ss >> _method;
-	ss >> _path;
-	ss >> _version;
+	if (!(ss >> _method >> _path >> _version))
+	{
+		_state = ERROR;
+		return ;
+	}
+	std::string	extra;
+	if (ss >> extra)
+	{
+		_state = ERROR;
+		return ;
+	}
+
 	if ((i = _path.find('?')) != std::string::npos)
 	{
 		_query_string = _path.substr(i + 1);
 		_path = _path.substr(0, i);
 	}
-	raw_data.erase(0, pos + 2);
+	_raw_buffer.erase(0, pos + 2);
+	_state = READING_HEADERS;
 }
 
-void	Request::scanHeader(std::string &raw_data)
+void Request::_scanHeader()
 {
 	size_t		pos;
-	size_t		colon_pos;
 	std::string	line;
+	size_t		colon_pos;
 	std::string	key;
 	std::string	value;
 	size_t		first;
 
-	while (1)
+	while ((pos = _raw_buffer.find("\r\n")) != std::string::npos)
 	{
-		pos = raw_data.find("\r\n");
-		if (pos == std::string::npos)
-			break;
-
-		line = raw_data.substr(0, pos);
+		line = _raw_buffer.substr(0, pos);
 		
-		if (line.empty()) 
-			break;
+		if (line.empty())
+		{
+			_raw_buffer.erase(0, 2);
+			_state = READING_BODY;
+			return	;
+		}
 
 		colon_pos = line.find(':');
 		if (colon_pos != std::string::npos)
 		{
 			key = line.substr(0, colon_pos);
 			value = line.substr(colon_pos + 1);
-			first = value.find_first_not_of(" ");
 
+			if (key == "Transfer-Encoding" && value.find("chunked") != std::string::npos)
+				_is_chunked = true;
+
+			first = value.find_first_not_of(" ");
 			if (first != std::string::npos)
 				value = value.substr(first);
-
+			
 			_headers[key] = value;
 		}
-		raw_data.erase(0, pos + 2);
+
+		_raw_buffer.erase(0, pos + 2);
 	}
 }
 
-int	Request::parse(std::string raw_data, size_t max_body_limit)
+bool Request::_chunked(size_t max_body_limit)
 {
-	requestLine(raw_data);
-	scanHeader(raw_data);
+	size_t chunkSize;
+	size_t pos = _raw_buffer.find("\r\n");
 
-	if (raw_data.substr(0, 2) == "\r\n")
-		raw_data.erase(0, 2);
+	if (pos == std::string::npos)
+		return true;
 
-	if (_headers.count("Content-Length"))
+	chunkSize = hexToDecimal(_raw_buffer.substr(0, pos));
+	
+	if (_content_length + chunkSize > max_body_limit)
 	{
-		long len = atol(_headers["Content-Length"].c_str());
-		
-		if (static_cast<size_t>(len) > max_body_limit) {
-			return 413;
-		}
-		_content_length = static_cast<size_t>(len);
-
-		if (raw_data.size() >= _content_length)
-			_body = raw_data.substr(0, _content_length);
-		else
-			return 400;
+		_state = ERROR;
+		return true;
 	}
 
-	std::cout << _method << std::endl;
-	std::cout << _path << std::endl;
-	std::cout << _query_string << std::endl;
-	std::cout << _version << std::endl;
-	return 200;
+	if (chunkSize == 0)
+	{
+		if (_body_fd != -1)
+		{
+			close(_body_fd);
+			_body_fd = -1;
+		}
+		_state = FINISHED;
+		_raw_buffer.erase(0, pos + 4);
+		return true;
+	}
+
+	if (_raw_buffer.size() < pos + 2 + chunkSize + 2)
+		return true;
+
+	if (_body_fd == -1)
+	{
+		std::stringstream	ss;
+		ss << "/tmp/body_client_" << _client_fd << ".tmp";
+		_tmp_file = ss.str();
+		_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND | O_TRUNC, 0644);
+	}
+	
+	std::string chunkData = _raw_buffer.substr(pos + 2, chunkSize);
+	
+	write(_body_fd, chunkData.c_str(), chunkData.size());
+	
+	_content_length += chunkSize;
+	_raw_buffer.erase(0, pos + 2 + chunkSize + 2);
+	return false;
+}
+
+int Request::parse(std::string chunk, size_t max_body_limit)
+{
+	_raw_buffer += chunk;
+
+	if (_state != READING_BODY && _raw_buffer.size() > 8192)
+	{
+		_state = ERROR;
+		return 431;
+	}
+
+	while (_state != FINISHED && _state != ERROR)
+	{
+		if (_state == READING_REQUEST_LINE)
+		{
+			if (_raw_buffer.find("\r\n") == std::string::npos)
+				break ;
+			_requestLine();
+		}
+		else if (_state == READING_HEADERS)
+		{
+			if (_raw_buffer.find("\r\n") == std::string::npos)
+				break;
+
+			_scanHeader();
+
+			if (_state == READING_HEADERS)
+				break;
+		}
+		else if (_state == READING_BODY)
+		{
+			if (_method == "POST" && !_headers.count("Content-Length") && !_is_chunked)
+			{
+				_state = ERROR;
+				return 411;
+			}
+
+			if (_is_chunked)
+			{
+				if (_chunked(max_body_limit) == true)
+					break;
+			}
+			else if (_headers.count("Content-Length"))
+			{
+				if (_content_length == 0)
+					_content_length = atol(_headers["Content-Length"].c_str());
+
+				if (_content_length > max_body_limit)
+				{
+					_state = ERROR;
+					return 413;
+				}
+
+				if (_body_fd == -1)
+				{
+					std::stringstream ss;
+					ss << "/tmp/body_client_" << _client_fd << ".tmp";
+					_tmp_file = ss.str();
+					_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
+				}
+
+				size_t to_write = _raw_buffer.size();
+				if (to_write > 0)
+				{
+					write(_body_fd, _raw_buffer.c_str(), to_write);
+					_bytes_received += to_write;
+					_raw_buffer.clear();
+				}
+
+				if (_bytes_received >= _content_length)
+				{
+					if (_body_fd != -1) { close(_body_fd); _body_fd = -1; }
+					_state = FINISHED;
+				}
+				else
+					break;
+			}
+			else
+			{
+				_state = FINISHED;
+			}
+		}
+	}
+
+	if (_state == FINISHED)
+	{
+		if (_headers.find("Host") == _headers.end())
+		{
+			_state = ERROR;
+			return 400;
+		}
+		return 200;
+	}
+	
+	if (_state == ERROR) return 400;
+
+	return 1;
+}
+
+//Transfer-Encoding: chunked au lieu de Content-Length
+
+std::string	Request::getMethod() const
+{
+	return _method;
+}
+
+std::string	Request::getPath() const
+{
+	return _path;
+}
+
+std::string	Request::getBodyFile() const
+{
+	return _tmp_file;
+}
+
+std::map<std::string, std::string>	Request::getHeaders() const
+{
+	return _headers;
 }

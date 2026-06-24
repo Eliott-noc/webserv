@@ -16,6 +16,9 @@ class ServerConfig
 	private:
 		std::vector<int>			_ports;
 		std::string					_host;
+		std::string					_root;
+		int							_AutoIndex;
+		std::string					_Index;
 		std::vector<std::string>	_server_names;
 		size_t						_client_max_body_size;
 		std::map<int, std::string>	_error_pages;
@@ -26,10 +29,23 @@ class ServerConfig
 		ServerConfig(const ServerConfig &other);
 		~ServerConfig();
 		
-		ServerConfig	&operator=(const ServerConfig &other);
-		// Getters et Setters
-		// ...
-		//void addLocation(const Location &loc);
+		ServerConfig				&operator=(const ServerConfig &other);
+
+		void						addLocation(const Location &loc);
+
+		const Location				*getLocationForPath(std::string const &path);
+		
+		std::vector<int>			getPort() const;
+		std::string					getHost() const;
+		std::string					getRoot() const;
+		bool						getAutoIndex() const;
+		std::string					getIndex() const;
+		std::vector<std::string>	getServerNames() const;
+		size_t						getClientMaxBodySize() const;
+		std::map<int, std::string>	getErrorPages() const;
+		std::vector<Location>		getLocations() const;
+
+		void						setRoot(std::string root);
 };
 
 #endif

@@ -7,5 +7,13 @@
 # include <sstream>
 # include <poll.h>
 # include <cstdlib>
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <fcntl.h>
+# include <fstream>
+# include <dirent.h>
+# include <unistd.h>
+# include <sys/socket.h>
+# include <iomanip>
 
 #endif

@@ -19,6 +19,12 @@ class Response
 		std::string							_body;
 		int									_status_code;
 		std::map<std::string, std::string>	_headers;
+		std::string							_header_buffer;
+		int									_file_fd;
+		size_t								_file_size;
+		size_t								_total_sent;
+		bool								_headers_sent;
+		bool								_is_finished;
 
 	public:
 		Response();
@@ -30,12 +36,20 @@ class Response
 		void		makeResponse(Request &req, ServerConfig &config);
 		void		buildErrorPage(int code, ServerConfig &config);
 		std::string	getRawResponse() const;
+		void		sendResponse(int client_socket);
+		bool		isFinished() const; 
 
 	private:
-		void		_handleGet(Request &req, ServerConfig &config);
-		void		_handlePost(Request &req, ServerConfig &config);
-		void		_handleDelete(Request &req, ServerConfig &config);
+		bool		_isMethodAllowed(std::string method, std::vector<std::string> const &allowedMethods);
+		void		_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path);
+		void		_handlePost(Request &req, ServerConfig &config, const Location &loc, std::string full_path);
+		void		_handleDelete(ServerConfig &config, std::string full_path);
 		std::string	_getMimeType(std::string path);
+		std::string	_getStatusMessage(int code);
+		int			_checkConfig(ServerConfig &config, int code);
+		std::string	_getMessageError(int code);
+		void		_generateResponse(int code);
+		std::string	_generateAutoIndex(std::string full_path, std::string request_path);
 };
 
 #endif
