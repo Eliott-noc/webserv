@@ -17,8 +17,8 @@ class ServerConfig
 		std::vector<int>			_ports;
 		std::string					_host;
 		std::string					_root;
-		int							_AutoIndex;
-		std::string					_Index;
+		bool						_auto_index;
+		std::string					_index;
 		std::vector<std::string>	_server_names;
 		size_t						_client_max_body_size;
 		std::map<int, std::string>	_error_pages;
@@ -45,7 +45,16 @@ class ServerConfig
 		std::map<int, std::string>	getErrorPages() const;
 		std::vector<Location>		getLocations() const;
 
-		void						setRoot(std::string root);
+		void						setPorts(const std::vector<int> &ports);
+		void						setHost(const std::string &host);
+		void						setRoot(const std::string &root);
+		void						setIndex(const std::string &index);
+		void						setAutoIndex(const bool &autoindex);
+		void						setServerNames(const std::vector<std::string> &server_names);
+		void						setClientMaxBodySize(const size_t &error_pages);
+		void						setErrorPages(const std::map<int, std::string> &error_pages);
+		void						setLocations(const std::vector<Location> locations);
+
 };
 
 #endif

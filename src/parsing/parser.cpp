@@ -123,20 +123,22 @@
 // 	return extracted_block;
 // }
 
-// static ServerConfig	parseServer(const std::vector<std::string> &tokens)
+// static ServerConfig	parseServer(const std::vector<std::string> &server_block)
 // {
 // 	ServerConfig	server;
 
-// 	for (size_t i = 0; i < block.size(); i++)
+// 	for (size_t i = 0; i < server_block.size(); i++)
 // 	{
-// 		if (block[i] == "location")
+// 		if (server_block[i] == "location")
 // 		{
-// 			std::vector<std::string> location_block = extractLocationBlock(block, i);
+// 			std::vector<std::string> location_block = extractLocationBlock(server_block, i);
+// 			// for (size_t j = 0; j < location_block.size(); j++)
+// 			// 	std::cout << "location " << j << " = " << location_block[j] << std::endl;
 // 			server._locations.push_back(parseLocation(location_block));
-// 			i = skipBlock(block, i);
+// 			//i = skipBlock(server_block, i);
 // 		}
-// 		else
-// 			parseDirective(server, server_block, i);
+// 		// else
+// 		// 	parseDirective(server, server_block, i);
 // 	}
 // 	return server;
 // }
@@ -152,12 +154,11 @@
 // 	tokens = getTokens(content);
 // 	server_blocks = extractServerBlocks(tokens);
 
-// 	for (size_t i = 0; i < server_blocks.size(); i++)
-// 	{
-// 		std::cout << server_blocks[i] << std::endl;
-// 		// ServerConfig server = parseServer(server_blocks[i]);
-// 		// servers.push_back(server);
-// 	}
+	// for (size_t i = 0; i < server_blocks.size(); i++)
+	// {
+	// 	ServerConfig server = parseServer(server_blocks[i]);
+	// 	// servers.push_back(server);
+	// }
 
 // 	//checkServers(servers);
 
