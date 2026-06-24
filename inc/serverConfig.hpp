@@ -45,7 +45,7 @@ class ServerConfig
 		std::map<int, std::string>	getErrorPages() const;
 		std::vector<Location>		getLocations() const;
 
-		void						setPorts(const std::vector<int> &ports)
+		void						setPorts(const std::vector<int> &ports);
 		void						setHost(const std::string &host);
 		void						setRoot(const std::string &root);
 		void						setIndex(const std::string &index);

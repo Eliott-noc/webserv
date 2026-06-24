@@ -68,12 +68,12 @@ std::string	ServerConfig::getRoot() const
 
 bool	ServerConfig::getAutoIndex() const
 {
-	return _Auto_index;
+	return _auto_index;
 }
 
 std::string	ServerConfig::getIndex() const
 {
-	return _Index;
+	return _index;
 }
 
 std::vector<std::string>	ServerConfig::getServerNames() const
@@ -105,7 +105,6 @@ void	ServerConfig::setHost(const std::string &host)
 {
 	_host = host;
 }
-
 
 void	ServerConfig::setRoot(const std::string &root)
 {

@@ -1,7 +1,7 @@
 #include "../../inc/location.hpp"
 
 Location::Location()
-	: _autoIndex(false)
+	: _auto_index(false)
 {
 }
 

@@ -1,6 +1,12 @@
 #include "../../inc/request.hpp"
 
-Request::Request(int client_fd) : _is_chunked(0), _content_length(0) , _state(READING_REQUEST_LINE), _body_fd(-1), _bytes_received(0), _client_fd(client_fd) {}
+Request::Request(int client_fd) : 
+	_is_chunked(0),
+	_content_length(0)
+	, _state(READING_REQUEST_LINE),
+	_body_fd(-1),
+	_bytes_received(0),
+	_client_fd(client_fd) {}
 
 Request::Request(const Request &other)
 {
@@ -52,6 +58,7 @@ void	Request::_requestLine()
 	size_t		pos;
 	size_t		i;
 	std::string	first_line;
+	std::string	extra;
 	
 	pos = _raw_buffer.find("\r\n");
 	if (pos == std::string::npos)
@@ -65,7 +72,6 @@ void	Request::_requestLine()
 		_state = ERROR;
 		return ;
 	}
-	std::string	extra;
 	if (ss >> extra)
 	{
 		_state = ERROR;
@@ -81,7 +87,7 @@ void	Request::_requestLine()
 	_state = READING_HEADERS;
 }
 
-void Request::_scanHeader()
+void	Request::_scanHeader()
 {
 	size_t		pos;
 	std::string	line;
@@ -121,10 +127,11 @@ void Request::_scanHeader()
 	}
 }
 
-bool Request::_chunked(size_t max_body_limit)
+bool	Request::_chunked(size_t max_body_limit)
 {
-	size_t chunkSize;
-	size_t pos = _raw_buffer.find("\r\n");
+	size_t		chunkSize;
+	size_t		pos = _raw_buffer.find("\r\n");
+	std::string	chunkData;
 
 	if (pos == std::string::npos)
 		return true;
@@ -160,7 +167,7 @@ bool Request::_chunked(size_t max_body_limit)
 		_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND | O_TRUNC, 0644);
 	}
 	
-	std::string chunkData = _raw_buffer.substr(pos + 2, chunkSize);
+	chunkData = _raw_buffer.substr(pos + 2, chunkSize);
 	
 	write(_body_fd, chunkData.c_str(), chunkData.size());
 	
@@ -169,7 +176,7 @@ bool Request::_chunked(size_t max_body_limit)
 	return false;
 }
 
-int Request::parse(std::string chunk, size_t max_body_limit)
+int	Request::parse(std::string chunk, size_t max_body_limit)
 {
 	_raw_buffer += chunk;
 
@@ -229,7 +236,7 @@ int Request::parse(std::string chunk, size_t max_body_limit)
 					_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
 				}
 
-				size_t to_write = _raw_buffer.size();
+				size_t	to_write = _raw_buffer.size();
 				if (to_write > 0)
 				{
 					write(_body_fd, _raw_buffer.c_str(), to_write);
@@ -246,9 +253,7 @@ int Request::parse(std::string chunk, size_t max_body_limit)
 					break;
 			}
 			else
-			{
 				_state = FINISHED;
-			}
 		}
 	}
 
