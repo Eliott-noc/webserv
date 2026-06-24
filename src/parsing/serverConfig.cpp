@@ -121,3 +121,23 @@ void	ServerConfig::setAutoIndex(const bool &auto_index)
 {
 	_auto_index = auto_index;
 }
+
+void	ServerConfig::setServerNames(const std::vector<std::string> &server_names)
+{
+	_server_names = server_names;
+}
+
+void	ServerConfig::setClientMaxBodySize(const size_t &client_max_body_size)
+{
+	_client_max_body_size = client_max_body_size;
+}
+
+void	ServerConfig::setErrorPages(const std::map<int, std::string> &error_pages)
+{
+	_error_pages = error_pages;
+}
+
+void	ServerConfig::setLocations(const std::vector<Location> &locations)
+{
+	_locations = locations;
+}

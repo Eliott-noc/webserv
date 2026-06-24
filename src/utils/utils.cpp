@@ -1,6 +1,6 @@
 #include "../../inc/include.hpp"
 
-int	isServerKeyword(const std::string &str)
+int	isServKeyword(const std::string &str)
 {
 	if (str == "listen" || str == "server_name" || str == "root"
 		|| str == "index" || str == "error_page" || str == "client_max_body_size"
