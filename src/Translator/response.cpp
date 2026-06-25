@@ -38,9 +38,17 @@ Response	&Response::operator=(const Response &other)
 
 void	Response::makeResponse(Request &req, ServerConfig &config)
 {
-	const Location	*loc = config.getLocationForPath(req.getPath());
 	std::string		root;
 	std::string		full_path;
+	std::string		clean_path = normalizePath(req.getPath());
+	
+	if (clean_path == "ERROR")
+	{
+		buildErrorPage(400, config);
+		return;
+	}
+	
+	const Location	*loc = config.getLocationForPath(clean_path);
 
 	if (!loc)
 	{
@@ -58,7 +66,7 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		root = config.getRoot();
 	else
 		root = loc->getRoot();
-	full_path = root + req.getPath();
+	full_path = root + clean_path;
 
 	if (req.getMethod() == "GET")
 		_handleGet(req, config, *loc, full_path);

@@ -162,6 +162,7 @@ bool	Request::_chunked(size_t max_body_limit)
 	if (_body_fd == -1)
 	{
 		std::stringstream	ss;
+		
 		ss << "/tmp/body_client_" << _client_fd << ".tmp";
 		_tmp_file = ss.str();
 		_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND | O_TRUNC, 0644);
@@ -230,7 +231,8 @@ int	Request::parse(std::string chunk, size_t max_body_limit)
 
 				if (_body_fd == -1)
 				{
-					std::stringstream ss;
+					std::stringstream	ss;
+
 					ss << "/tmp/body_client_" << _client_fd << ".tmp";
 					_tmp_file = ss.str();
 					_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
@@ -267,7 +269,8 @@ int	Request::parse(std::string chunk, size_t max_body_limit)
 		return 200;
 	}
 	
-	if (_state == ERROR) return 400;
+	if (_state == ERROR)
+		return 400;
 
 	return 1;
 }

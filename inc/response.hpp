@@ -52,4 +52,6 @@ class Response
 		std::string	_generateAutoIndex(std::string full_path, std::string request_path);
 };
 
+std::string	normalizePath(std::string path);
+
 #endif

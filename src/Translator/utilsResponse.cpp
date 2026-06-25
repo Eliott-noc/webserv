@@ -274,3 +274,36 @@ std::string	Response::_generateAutoIndex(std::string full_path, std::string requ
 	closedir(dir);
 	return html;
 }
+
+std::string	normalizePath(std::string path)
+{
+	std::vector<std::string>	stack;
+	std::stringstream			ss(path);
+	std::string					segment;
+
+	while (std::getline(ss, segment, '/'))
+	{
+		if (segment == "" || segment == ".")
+			continue;
+		
+		if (segment == "..")
+		{
+			if (!stack.empty())
+				stack.pop_back();
+			else
+				return "ERROR";
+		}
+		else
+		{
+			stack.push_back(segment);
+		}
+	}
+
+	std::string result = "";
+	for (size_t i = 0; i < stack.size(); ++i)
+	{
+		result += "/" + stack[i];
+	}
+
+	return result.empty() ? "/" : result;
+}
