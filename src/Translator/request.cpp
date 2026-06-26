@@ -42,6 +42,12 @@ Request	&Request::operator=(const Request &other)
 	return *this;
 }
 
+/*
+ * WHAT : Convertit une chaîne hexadécimale en entier (size_t).
+ * WHY : Utilisé pour le décodage du 'Transfer-Encoding: chunked' où chaque morceau 
+ * doit annoncer sa taille en format hexadécimal.
+ */
+
 size_t hexToDecimal(std::string hexStr)
 {
 	size_t				x;
@@ -52,6 +58,12 @@ size_t hexToDecimal(std::string hexStr)
 
 	return x;
 }
+
+/*
+ * WHAT : Extrait la méthode, le chemin, la Query String et la version.
+ * WHY : C'est l'ordre principal du client. On valide ici que la ligne est bien 
+ * formée (exactement 3 éléments) pour rejeter les requêtes corrompues dès le début.
+ */
 
 void	Request::_requestLine()
 {
@@ -86,6 +98,12 @@ void	Request::_requestLine()
 	_raw_buffer.erase(0, pos + 2);
 	_state = READING_HEADERS;
 }
+
+/*
+ * WHAT : Remplit la map des headers et détecte le mode 'chunked'.
+ * WHY : Les headers donnent les métadonnées (Host, Taille, Type). La limite de 8Ko 
+ * sur le buffer ici est une sécurité vitale contre les attaques par déni de service (DoS).
+ */
 
 void	Request::_scanHeader()
 {
@@ -126,6 +144,13 @@ void	Request::_scanHeader()
 		_raw_buffer.erase(0, pos + 2);
 	}
 }
+
+/*
+ * WHAT : Lit la taille en hexa, puis le morceau de données correspondant.
+ * WHY : Requis par le protocole HTTP/1.1 pour les envois dont on ne connaît pas 
+ * la taille à l'avance. On écrit direct sur disque pour la RAM.
+ * RETURN : 1 si errreur et 0 si tout est bon.
+ */
 
 bool	Request::_chunked(size_t max_body_limit)
 {
@@ -176,6 +201,13 @@ bool	Request::_chunked(size_t max_body_limit)
 	_raw_buffer.erase(0, pos + 2 + chunkSize + 2);
 	return false;
 }
+
+/*
+ * WHAT : Accumule les données reçues dans un buffer et progresse grace a _state.
+ * WHY : Pour gérer la fragmentation réseau. Si la requête arrive en plusieurs morceaux, 
+ * on ne perd rien et on reprend là où on s'était arrêté sans bloquer le serveur.
+ * RETURN : 200 (fini), 1 (en cours), ou un code d'erreur (400, 413, 431).
+ */
 
 int	Request::parse(std::string chunk, size_t max_body_limit)
 {
@@ -274,8 +306,6 @@ int	Request::parse(std::string chunk, size_t max_body_limit)
 
 	return 1;
 }
-
-//Transfer-Encoding: chunked au lieu de Content-Length
 
 std::string	Request::getMethod() const
 {
