@@ -10,10 +10,12 @@
 # include <sys/types.h>
 # include <sys/stat.h>
 # include <fcntl.h>
+# include <sys/socket.h>
 # include <fstream>
 # include <dirent.h>
 # include <unistd.h>
-# include <sys/socket.h>
 # include <iomanip>
+# include <netinet/in.h>
+# include <string.h>
 
 #endif

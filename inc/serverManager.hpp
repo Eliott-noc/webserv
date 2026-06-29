@@ -23,8 +23,8 @@ class ServerManager
 		ServerManager(std::vector<ServerConfig> configs);
 		~ServerManager();
 
-		void	initServers(); // Création des sockets listen
-		void	run();         // La boucle poll()
+		void	initServers();	// Création des sockets listen
+		void	run();			// La boucle poll()
 		
 	private:
 		void	_acceptNewConnection(int server_fd);

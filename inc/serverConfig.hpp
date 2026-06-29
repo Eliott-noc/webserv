@@ -36,6 +36,7 @@ class ServerConfig
 		const Location				*getLocationForPath(std::string const &path);
 		
 		std::vector<int>			getPort() const;
+		int							getPort(int idx) const;
 		std::string					getHost() const;
 		std::string					getRoot() const;
 		bool						getAutoIndex() const;

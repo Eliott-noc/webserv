@@ -56,6 +56,10 @@ std::vector<int>	ServerConfig::getPort() const
 	return _ports;
 }
 
+int					ServerConfig::getPort(int idx) const{
+	return _ports[idx];
+}
+
 std::string	ServerConfig::getHost() const
 {
 	return _host;
