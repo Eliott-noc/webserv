@@ -127,8 +127,9 @@ static std::vector<std::string> extractLocationBlock(const std::vector<std::stri
 
 static void	setLocArgs(Location &location, const std::vector<std::string> &args)
 {
-	setArgPath(args, 0);
-	for (size_t i = i; i < args.size(); i++)
+	size_t	zero = 0;
+	setArgPath(location, args, zero);
+	for (size_t i = 1; i < args.size(); i++)
 	{
 		if (args[i] == "root")
 			setArgRoot(location, args, i);
@@ -158,9 +159,10 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 
 	for (size_t i = 1; i < l_block.size(); i++)
 	{
+		std::cout << i << " = " << l_block[i] << std::endl;
 		if ((i == 1 && l_block[i] == ";") || (l_block[i] == ";" && l_block[i - 1] == ";"))
 			throw std::runtime_error("Error : Empty directive");
-		if (isLocKeyword(l_block[i]) && (l_block[i - 1] != ";" || l_block[i - 1] == "{"))
+		if (isLocKeyword(l_block[i]) && (l_block[i - 1] != ";" && i != 1))
 			throw std::runtime_error("Error : keyword not in start of directive");
 
 		if (l_block[i] != ";")
@@ -170,7 +172,6 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 			setLocArgs(location, args);
 			args.clear();
 		}
-		std::cout << i << " = " << l_block[i] << std::endl;
 	}
 
 
