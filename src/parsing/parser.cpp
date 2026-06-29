@@ -160,7 +160,7 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 	for (size_t i = 1; i < l_block.size(); i++)
 	{
 		std::cout << i << " = " << l_block[i] << std::endl;
-		if ((i == 1 && l_block[i] == ";") || (l_block[i] == ";" && l_block[i - 1] == ";"))
+		if ((i == 1 && l_block[i] == ";") || (l_block[i] == ";" && l_block[i - 1] == ";") || (i == l_block.size() - 1 && l_block[i] != ";"))
 			throw std::runtime_error("Error : Empty directive");
 		if (isLocKeyword(l_block[i]) && (l_block[i - 1] != ";" && i != 1))
 			throw std::runtime_error("Error : keyword not in start of directive");
