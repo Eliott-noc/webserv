@@ -55,7 +55,8 @@ void run_ultimate_test(int num, std::string title, std::vector<std::string> chun
 		std::cout << R << " [ FAIL ] " << RESET << "Got " << actual_status << " but expected " << expected_status << std::endl;
 }
 
-int main() {
+int main()
+{
 	ServerConfig config;
 	config.setRoot("./test_death");
 

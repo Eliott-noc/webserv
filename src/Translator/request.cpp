@@ -317,6 +317,11 @@ std::string	Request::getPath() const
 	return _path;
 }
 
+std::string	Request::getQueryString() const
+{
+	return _query_string;
+}
+
 std::string	Request::getBodyFile() const
 {
 	return _tmp_file;

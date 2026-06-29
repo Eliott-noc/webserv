@@ -37,7 +37,7 @@ class Response
 		void		buildErrorPage(int code, ServerConfig &config);
 		std::string	getRawResponse() const;
 		void		sendResponse(int client_socket);
-		bool		isFinished() const; 
+		bool		isFinished() const;
 
 	private:
 		bool		_isMethodAllowed(std::string method, std::vector<std::string> const &allowedMethods);

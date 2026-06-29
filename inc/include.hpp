@@ -15,5 +15,6 @@
 # include <unistd.h>
 # include <sys/socket.h>
 # include <iomanip>
+# include <cstring>
 
 #endif
