@@ -1,12 +1,13 @@
 #include "../../inc/locArgs.hpp"
 #include "../../inc/include.hpp"
 
-void	setArgPath(Location &location, const std::vector<std::string> &args, size_t &i)
+void	setArgPath(Location &location, const std::string &path)
 {
-	(void)location;
-	(void)args;
-	(void)i;
 	std::cout << "path detetected" << std::endl;
+
+	if (path[0] != '/')
+		throw std::runtime_error("Error : location path need to start with '/'");
+	location.setPath(path);
 }
 void	setArgRoot(Location &location, const std::vector<std::string> &args, size_t &i)
 {

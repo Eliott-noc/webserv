@@ -4,7 +4,7 @@
 #include "include.hpp"
 #include "../inc/serverConfig.hpp"
 
-void	setArgPath(Location &location, const std::vector<std::string> &args, size_t &i);
+void	setArgPath(Location &location, const std::string &path);
 void	setArgRoot(Location &location, const std::vector<std::string> &args, size_t &i);
 void	setArgMethods(Location &location, const std::vector<std::string> &args, size_t &i);
 void	setArgIndex(Location &location, const std::vector<std::string> &args, size_t &i);

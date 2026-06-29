@@ -127,10 +127,9 @@ static std::vector<std::string> extractLocationBlock(const std::vector<std::stri
 
 static void	setLocArgs(Location &location, const std::vector<std::string> &args)
 {
-	size_t	zero = 0;
-	setArgPath(location, args, zero);
-	for (size_t i = 1; i < args.size(); i++)
+	for (size_t i = 0; i < args.size(); i++)
 	{
+		std::cout << "args[" << i << "] = " << args[i] << std::endl;
 		if (args[i] == "root")
 			setArgRoot(location, args, i);
 		else if (args[i] == "allow_methods")
@@ -155,11 +154,11 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 	Location	location;
 	std::vector<std::string> args;
 
-	location.setPath(l_block[0]);
+	setArgPath(location, l_block[0]);
 
 	for (size_t i = 1; i < l_block.size(); i++)
 	{
-		std::cout << i << " = " << l_block[i] << std::endl;
+		//std::cout << i << " = " << l_block[i] << std::endl;
 		if ((i == 1 && l_block[i] == ";") || (l_block[i] == ";" && l_block[i - 1] == ";") || (i == l_block.size() - 1 && l_block[i] != ";"))
 			throw std::runtime_error("Error : Empty directive");
 		if (isLocKeyword(l_block[i]) && (l_block[i - 1] != ";" && i != 1))
