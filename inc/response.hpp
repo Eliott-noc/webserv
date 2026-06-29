@@ -46,10 +46,12 @@ class Response
 		void		_handleDelete(ServerConfig &config, std::string full_path);
 		std::string	_getMimeType(std::string path);
 		std::string	_getStatusMessage(int code);
-		int			_checkConfig(ServerConfig &config, int code);
+		bool		_checkConfig(ServerConfig &config, int code);
 		std::string	_getMessageError(int code);
 		void		_generateResponse(int code);
 		std::string	_generateAutoIndex(std::string full_path, std::string request_path);
 };
+
+std::string	normalizePath(std::string path);
 
 #endif

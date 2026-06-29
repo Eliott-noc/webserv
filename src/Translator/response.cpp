@@ -36,11 +36,26 @@ Response	&Response::operator=(const Response &other)
 	return *this;
 }
 
+/*
+ * WHAT : Applique la sécurité (normalizePath), cherche la 'Location' la plus précise, 
+ * vérifie les méthodes autorisées, puis utilise bon handler (GET/POST/DELETE).
+ * WHY : Centralise toute la logique pour faire la reponse au client et le respect de la
+ * configuration de l'Architecte avant toute action sur le disque dur.
+ */
+
 void	Response::makeResponse(Request &req, ServerConfig &config)
 {
-	const Location	*loc = config.getLocationForPath(req.getPath());
 	std::string		root;
 	std::string		full_path;
+	std::string		clean_path = normalizePath(req.getPath());
+	
+	if (clean_path == "ERROR")
+	{
+		buildErrorPage(400, config);
+		return;
+	}
+	
+	const Location	*loc = config.getLocationForPath(clean_path);
 
 	if (!loc)
 	{
@@ -58,7 +73,7 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		root = config.getRoot();
 	else
 		root = loc->getRoot();
-	full_path = root + req.getPath();
+	full_path = root + clean_path;
 
 	if (req.getMethod() == "GET")
 		_handleGet(req, config, *loc, full_path);
@@ -67,6 +82,12 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 	if (req.getMethod() == "DELETE")
 		_handleDelete(config, full_path);
 }
+
+/*
+ * WHAT : Cherche une page HTML personnalisée dans la config, sinon génère un HTML par défaut.
+ * WHY : Garantit que le client reçoit toujours une information claire (404, 500, etc.) 
+ * au format HTTP valide, même si le serveur rencontre une erreur.
+ */
 
 void	Response::buildErrorPage(int code, ServerConfig &config)
 {
@@ -98,6 +119,13 @@ std::string	Response::getRawResponse() const
 {
 	return _header_buffer + _body;
 }
+
+/*
+ * Moteur d'envoi itératif (Streaming).
+ * WHAT : Envoie les headers, puis le fichier par blocs de 8 Ko à chaque appel.
+ * WHY : On utilise que 8ko, parce que ca permet de ne jamais surcharger la RAM, et de
+ * quand meme envoyer assez rapidement la reponse aux clinets.
+ */
 
 void	Response::sendResponse(int socket_fd)
 {
