@@ -70,16 +70,16 @@ static std::vector<std::vector<std::string> > extractServerBlocks(const std::vec
 			if (tokens[i] == "server")
 			{
 				if (i + 1 >= tokens.size())
-					throw std::runtime_error("Error : server without following token");
+					throw std::runtime_error("Error: server without following token");
 				if (tokens[i + 1] != "{")
-					throw std::runtime_error("Error : server must be followed by '{'");
+					throw std::runtime_error("Error: server must be followed by '{'");
 				in_server = true;
 				current.clear();
 				depth = 1;
 				i++;
 			}
 			else
-				throw std::runtime_error("Error : unexpected token outside server block");
+				throw std::runtime_error("Error: unexpected token outside server block");
 			continue ;
 		}
 		current.push_back(tokens[i]);
@@ -90,7 +90,7 @@ static std::vector<std::vector<std::string> > extractServerBlocks(const std::vec
 		{
 			depth--;
 			if (depth < 0)
-				throw std::runtime_error("Error : unexpected '}'");
+				throw std::runtime_error("Error: unexpected '}'");
 		}
 		if (in_server && depth == 0)
 		{
@@ -100,7 +100,7 @@ static std::vector<std::vector<std::string> > extractServerBlocks(const std::vec
 		}
 	}
 	if (in_server)
-		throw std::runtime_error("Error : unclosed server block");
+		throw std::runtime_error("Error: unclosed server block");
 
 	return blocks;
 }
@@ -120,33 +120,29 @@ static std::vector<std::string> extractLocationBlock(const std::vector<std::stri
 		i++;
 	}
 	if (i == block.size())
-		throw std::runtime_error("Error : missing '}' in location block");
+		throw std::runtime_error("Error: missing '}' in location block");
 
 	return extracted_block;
 }
 
 static void	setLocArgs(Location &location, const std::vector<std::string> &args)
 {
-	for (size_t i = 0; i < args.size(); i++)
-	{
-		std::cout << "args[" << i << "] = " << args[i] << std::endl;
-		if (args[i] == "root")
-			setArgRoot(location, args, i);
-		else if (args[i] == "allow_methods")
-			setArgMethods(location, args, i);
-		else if (args[i] == "index")
-			setArgIndex(location, args, i);
-		else if (args[i] == "autoindex")
-			setArgAutoIndex(location, args, i);
-		else if (args[i] == "return")
-			setArgRet(location, args, i);
-		else if (args[i] == "cgi_path")
-			setArgCgiPath(location, args, i);
-		else if (args[i] == "cgi_ext")
-			setArgCgiExt(location, args, i);
-		else if (args[i] == "upload_store")
-			setArgUploadStore(location, args, i);
-	}
+		if (args[0] == "root")
+			setArgRoot(location, args);
+		else if (args[0] == "allow_methods")
+			setArgMethods(location, args);
+		else if (args[0] == "index")
+			setArgIndex(location, args);
+		else if (args[0] == "autoindex")
+			setArgAutoIndex(location, args);
+		else if (args[0] == "return")
+			setArgRet(location, args);
+		else if (args[0] == "cgi_path")
+			setArgCgiPath(location, args);
+		else if (args[0] == "cgi_ext")
+			setArgCgiExt(location, args);
+		else if (args[0] == "upload_store")
+			setArgUploadStore(location, args);
 }
 
 static Location	parseLocation(const std::vector<std::string> &l_block)
@@ -160,9 +156,9 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 	{
 		//std::cout << i << " = " << l_block[i] << std::endl;
 		if ((i == 1 && l_block[i] == ";") || (l_block[i] == ";" && l_block[i - 1] == ";") || (i == l_block.size() - 1 && l_block[i] != ";"))
-			throw std::runtime_error("Error : Empty directive");
+			throw std::runtime_error("Error: Empty directive");
 		if (isLocKeyword(l_block[i]) && (l_block[i - 1] != ";" && i != 1))
-			throw std::runtime_error("Error : keyword not in start of directive");
+			throw std::runtime_error("Error: keyword not in start of directive");
 
 		if (l_block[i] != ";")
 			args.push_back(l_block[i]);
