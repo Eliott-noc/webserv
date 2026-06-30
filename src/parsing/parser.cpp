@@ -127,26 +127,22 @@ static std::vector<std::string> extractLocationBlock(const std::vector<std::stri
 
 static void	setLocArgs(Location &location, const std::vector<std::string> &args)
 {
-	setArgPath(args, 0);
-	for (size_t i = i; i < args.size(); i++)
-	{
-		if (args[i] == "root")
-			setArgRoot(location, args, i);
-		else if (args[i] == "allow_methods")
-			setArgMethods(location, args, i);
-		else if (args[i] == "index")
-			setArgIndex(location, args, i);
-		else if (args[i] == "autoindex")
-			setArgAutoIndex(location, args, i);
-		else if (args[i] == "return")
-			setArgRet(location, args, i);
-		else if (args[i] == "cgi_path")
-			setArgCgiPath(location, args, i);
-		else if (args[i] == "cgi_ext")
-			setArgCgiExt(location, args, i);
-		else if (args[i] == "upload_store")
-			setArgUploadStore(location, args, i);
-	}
+		if (args[0] == "root")
+			setArgRoot(location, args);
+		else if (args[0] == "allow_methods")
+			setArgMethods(location, args);
+		else if (args[0] == "index")
+			setArgIndex(location, args);
+		else if (args[0] == "autoindex")
+			setArgAutoIndex(location, args);
+		else if (args[0] == "return")
+			setArgRet(location, args);
+		else if (args[0] == "cgi_path")
+			setArgCgiPath(location, args);
+		else if (args[0] == "cgi_ext")
+			setArgCgiExt(location, args);
+		else if (args[0] == "upload_store")
+			setArgUploadStore(location, args);
 }
 
 static Location	parseLocation(const std::vector<std::string> &l_block)
