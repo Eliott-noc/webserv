@@ -1,10 +1,9 @@
 #include "../../inc/locArgs.hpp"
 #include "../../inc/include.hpp"
+#include "../../inc/utils.hpp"
 
 void	setArgPath(Location &location, const std::string &path)
 {
-	std::cout << "path detected" << std::endl;
-
 	if (path[0] != '/')
 		throw std::runtime_error("Error : location path need to start with '/'");
 	location.setPath(path);
@@ -23,56 +22,60 @@ void	setArgRoot(Location &location, const std::vector<std::string> &args)
 }
 void	setArgMethods(Location &location, std::vector<std::string> &args)
 {
-	size_t	nbArgs = 0;
+	t_methods	methods;
+	methods._get = 0;
+	methods._post = 0;
+	methods._delete = 0;
+	size_t		nbArgs = 0;
 
+	std::cout << "methods detected" << std::endl;
 	args.erase(args.begin());
 	for (size_t i = 0; i < args.size(); i++)
 	{
-		std::cout << "args" << i << " = " << args[i] << std::endl;
-		if (i != 0 && (args[i] != "GET" && args[i] != "POST" && args[i] != "DELETE"))
+		if (args[i] != "GET" && args[i] != "POST" && args[i] != "DELETE")
 			throw std::runtime_error("Error: allow_methods can only have GET, POST or DELETE as arguments");
+		if (checkDuplicateMethods(args[i], &methods))
+			throw std::runtime_error("Error: duplicate methods in location");
 		nbArgs++;
 	}
-	if (nbArgs < 2)
+	if (nbArgs < 1)
 		throw std::runtime_error("Error: allow_methods must have at least one argument");
-	(void)location;
-	(void)args;
-
-	std::cout << "methods detetected" << std::endl;
+	location.setMethods(args);
 }
-void	setArgIndex(Location &location, const std::vector<std::string> &args)
+void	setArgIndex(Location &location, std::vector<std::string> &args)
 {
 	(void)location;
-	(void)args;
-	std::cout << "index detetected" << std::endl;
+	args.erase(args.begin());
+	if (args.empty())
+		throw std::runtime_error("Error: index must have at least one argument");
+	if (checkDuplicateIndex(args))
+		throw std::runtime_error("Error: duplicate index in location");
+	for (size_t i = 0; i < args.size(); i++)
+	{
+	}
 }
 void	setArgAutoIndex(Location &location, const std::vector<std::string> &args)
 {
 	(void)location;
 	(void)args;
-	std::cout << "autoindex detetected" << std::endl;
 }
 void	setArgRet(Location &location, const std::vector<std::string> &args)
 {
 	(void)location;
 	(void)args;
-	std::cout << "return detetected" << std::endl;
 }
 void	setArgCgiPath(Location &location, const std::vector<std::string> &args)
 {
 	(void)location;
 	(void)args;
-	std::cout << "cgi_path detetected" << std::endl;
 }
 void	setArgCgiExt(Location &location, const std::vector<std::string> &args)
 {
 	(void)location;
 	(void)args;
-	std::cout << "cgi_ext detetected" << std::endl;
 }
 void	setArgUploadStore(Location &location, const std::vector<std::string> &args)
 {
 	(void)location;
 	(void)args;
-	std::cout << "upload_store detetected" << std::endl;
 }
