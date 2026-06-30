@@ -10,10 +10,12 @@ ServerManager::~ServerManager(){
 
 void ServerManager::initServers(){
 	for (size_t i = 0; i < _configs.size(); i++){
+		int err_code, port;
 		for (size_t j = 0; j < _configs[i].getPort().size(); j++){
 			int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 			if (listen_fd < 0){
-				std::cerr << "Fatal: Faield to create socket." << std::endl;
+				err_code = errno;
+				printPortErr(err_code, _configs[i].getPort(j));
 				continue;
 			}
 			int opt = 1;
@@ -23,7 +25,8 @@ void ServerManager::initServers(){
 				continue;
 			}
 			if (fcntl(listen_fd, F_SETFL, O_NONBLOCK) < 0){
-				std::cerr << "Fatal: fcntl failed." << std::endl;
+				err_code = errno;
+				printPortErr(err_code, _configs[i].getPort(j));
 				close(listen_fd);
 				continue;
 			}
@@ -33,12 +36,14 @@ void ServerManager::initServers(){
 			serv_addr.sin_addr.s_addr = INADDR_ANY;
 			serv_addr.sin_port = htons(_configs[i].getPort(j));
 			if (bind(listen_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){
-				std::cerr << "Fatal: Bind failed." << std::endl;
+				err_code = errno;
+				printPortErr(err_code, _configs[i].getPort(j));
 				close(listen_fd);
-				continue;//should have a return value for error and stop the loop
+				continue;
 			}
 			if (listen(listen_fd, 5) < 0){
-				std::cerr << "Fatal: Listen failed." << std::endl;
+				err_code = errno;
+				printPortErr(err_code, _configs[i].getPort(j));
 				close(listen_fd);
 				continue;
 			}
