@@ -5,16 +5,6 @@ ServerManager::ServerManager(std::vector<ServerConfig> configs){
 }
 
 ServerManager::~ServerManager(){
-	initServers();
-	size_t	_listeningCount = _pollfds.size();
-	if (_listeningCount == 0){
-		std::cerr << "Fatal: No socket was created" << std::endl;
-		//free
-		exit;
-	}
-	while(true){
-		int ready = poll(&_pollfds[0], _pollfds.size(), -1);
-	}
 
 }
 
@@ -69,7 +59,17 @@ void ServerManager::initServers(){
 }
 
 void ServerManager::run(){
-	
+	initServers();
+	size_t	_listeningCount = _pollfds.size();
+	if (_listeningCount == 0){
+		std::cerr << "Fatal: No socket was created" << std::endl;
+		//free
+		exit;
+	}
+	while(true){
+		int ready = poll(&_pollfds[0], _pollfds.size(), -1);
+	}
+
 }
 
 void ServerManager::_acceptNewConnection(int server_fd){
