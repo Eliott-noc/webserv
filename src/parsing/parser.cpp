@@ -127,7 +127,6 @@ static std::vector<std::string> extractLocationBlock(const std::vector<std::stri
 
 static void	setLocArgs(Location &location, const std::vector<std::string> &args)
 {
-	setArgPath(args, 0);
 	for (size_t i = i; i < args.size(); i++)
 	{
 		if (args[i] == "root")
