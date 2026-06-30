@@ -6,8 +6,14 @@ ServerManager::ServerManager(std::vector<ServerConfig> configs){
 
 ServerManager::~ServerManager(){
 	initServers();
-	if (_pollfds.size() == 0){
-		std::cerr << "Fatal: "
+	size_t	_listeningCount = _pollfds.size();
+	if (_listeningCount == 0){
+		std::cerr << "Fatal: No socket was created" << std::endl;
+		//free
+		exit;
+	}
+	while(true){
+		int ready = poll(&_pollfds[0], _pollfds.size(), -1);
 	}
 
 }
