@@ -127,71 +127,64 @@ static std::vector<std::string> extractLocationBlock(const std::vector<std::stri
 	return extracted_block;
 }
 
-static int	setLocArgs(Location &location, DirectiveLocation directiveLocation, std::vector<std::string> &args)
+static int	setLocArgs(Location &location, DirectiveLocation *directiveLocation, std::vector<std::string> &args)
 {
-	std::cout << "test args[0] = " << args[0] << std::endl;
 		if (args[0] == "root")
 		{
-			if (directiveLocation.getRoot() == true)
+			if (directiveLocation->getRoot() == true)
 				return 1;
-			directiveLocation.setRoot();
+			directiveLocation->setRoot();
 			setArgRoot(location, args);
 		}
 		else if (args[0] == "allow_methods")
 		{
-			std::cout << "pouet" << std::endl;
-			if (directiveLocation.getMethods() == true)
-			{
-				std::cout << "return 1" << std::endl;
+			if (directiveLocation->getMethods() == true)
 				return 1;
-			}
-			directiveLocation.setMethods();
+			directiveLocation->setMethods();
 			setArgMethods(location, args);
 		}
 		else if (args[0] == "index")
 		{
-			if (directiveLocation.getIndex() == true)
+			if (directiveLocation->getIndex() == true)
 				return 1;
-			directiveLocation.setIndex();
+			directiveLocation->setIndex();
 			setArgIndex(location, args);
 		}
 		else if (args[0] == "autoindex")
 		{
-			if (directiveLocation.getAutoIndex() == true)
+			if (directiveLocation->getAutoIndex() == true)
 				return 1;
-			directiveLocation.setAutoIndex();
+			directiveLocation->setAutoIndex();
 			setArgAutoIndex(location, args);
 		}
 		else if (args[0] == "return")
 		{
-			if (directiveLocation.getReturn() == true)
+			if (directiveLocation->getReturn() == true)
 				return 1;
-			directiveLocation.setReturn();
+			directiveLocation->setReturn();
 			setArgRet(location, args);
 		}
 		else if (args[0] == "cgi_path")
 		{
-			if (directiveLocation.getCgiPath() == true)
+			if (directiveLocation->getCgiPath() == true)
 				return 1;
-			directiveLocation.setCgiPath();
+			directiveLocation->setCgiPath();
 			setArgCgiPath(location, args);
 		}
 		else if (args[0] == "cgi_ext")
 		{
-			if (directiveLocation.getCgiExt() == true)
+			if (directiveLocation->getCgiExt() == true)
 				return 1;
-			directiveLocation.setCgiExt();
+			directiveLocation->setCgiExt();
 			setArgCgiExt(location, args);
 		}
 		else if (args[0] == "upload_store")
 		{
-			if (directiveLocation.getUploadStore() == true)
+			if (directiveLocation->getUploadStore() == true)
 				return 1;
-			directiveLocation.setUploadStore();
+			directiveLocation->setUploadStore();
 			setArgUploadStore(location, args);
 		}
-		std::cout << "arg = " << args[0] << std::endl;
-		std::cout << "methods = " << directiveLocation.getMethods() << std::endl;
 		return 0;
 }
 
@@ -205,17 +198,19 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 
 	for (size_t i = 1; i < l_block.size(); i++)
 	{
-		//std::cout << i << " = " << l_block[i] << std::endl;
+		std::cout << i << " = " << l_block[i] << std::endl;
 		if ((i == 1 && l_block[i] == ";") || (l_block[i] == ";" && l_block[i - 1] == ";") || (i == l_block.size() - 1 && l_block[i] != ";"))
 			throw std::runtime_error("Error: Empty directive");
 		if (isLocKeyword(l_block[i]) && (l_block[i - 1] != ";" && i != 1))
 			throw std::runtime_error("Error: keyword not in start of directive");
+		if (l_block[i - 1] == ";" && !isLocKeyword(l_block[i]))
+			throw std::runtime_error("Error: no keyword at start of location directive");
 
 		if (l_block[i] != ";")
 			args.push_back(l_block[i]);
 		else
 		{
-			if (setLocArgs(location, directiveLocation, args))
+			if (setLocArgs(location, &directiveLocation, args))
 				throw std::runtime_error("Error: duplicate directive in location");
 			args.clear();
 		}

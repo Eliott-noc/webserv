@@ -28,7 +28,6 @@ void	setArgMethods(Location &location, std::vector<std::string> &args)
 	methods._delete = 0;
 	size_t		nbArgs = 0;
 
-	std::cout << "methods detected" << std::endl;
 	args.erase(args.begin());
 	for (size_t i = 0; i < args.size(); i++)
 	{

@@ -1,4 +1,5 @@
 #include "../../inc/directiveLocation.hpp"
+#include <iostream>
 
 DirectiveLocation::DirectiveLocation()
 {

@@ -50,10 +50,10 @@ int	isServKeyword(const std::string &str)
 
 int	isLocKeyword(const std::string &str)
 {
-	if (str == "autoindex" || str == "allowed_methods" || str == "root"
+	if (str == "autoindex" || str == "allow_methods" || str == "root"
 		|| str == "index" || str == "return" || str == "upload_dir"
 		|| str == "upload_store" || str == "alias" || str == "cgi"
-		|| str == "cgi_extension" || str == "cgi_pass")
+		|| str == "cgi_ext" || str == "cgi_path")
 		return 1;
 
 	return 0;
