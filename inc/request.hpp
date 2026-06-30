@@ -55,6 +55,8 @@ class Request
 		void								_requestLine();
 		void								_scanHeader();
 		bool								_chunked(size_t max_body_limit);
+		std::string							_urlDecode(std::string str);
+
 };
 
 #endif

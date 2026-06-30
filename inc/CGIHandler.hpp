@@ -3,6 +3,7 @@
 
 # include "include.hpp"
 # include "request.hpp"
+# include "location.hpp"
 
 /*
 Permet d'exécuter des programmes externes (Python, PHP, etc.) pour gérer le contenu
@@ -25,12 +26,14 @@ class CGIHandler
 
 		CGIHandler	&operator=(const CGIHandler &other);
 
-		std::string	execute(Request &req, std::string script_path);
+		std::string	execute(Request &req, std::string script_path, Location loc);
 
 	private:
-		void	_setupEnv(Request &req, std::string script_path);
-		void	_convertEnvMapToArray();
-		void	_freeEnvArray();
+		void		_setupEnv(Request &req, std::string script_path);
+		void		_convertEnvMapToArray();
+		void		_freeEnvArray();
+		void		_childProcess(Request &req, char *args[3], int pipe_out[2]);
+		std::string	_parentProcess(int pipe_out[2], int pid);
 };
 
 #endif

@@ -54,7 +54,7 @@ bool	Response::_checkConfig(ServerConfig &config, int code)
  * WHY : utils
  */
 
-std::string Response::_getMessageError(int code)
+std::string	Response::_getMessageError(int code)
 {
 	std::stringstream ss;
 	ss << code << " " << _getStatusMessage(code);
@@ -72,10 +72,31 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 {
 	struct stat	s;
 	std::string	indexPath;
+	CGIHandler	cgi;
 
 	if (stat(full_path.c_str(), &s) != 0)
 	{
 		buildErrorPage(404, config);
+		return;
+	}
+
+	if (_isCGI(full_path, loc))
+	{
+		_body = cgi.execute(req, full_path, loc);
+		
+		if (_body.empty())
+		{
+			buildErrorPage(500, config);
+			return;
+		}
+
+		_headers["Content-Type"] = "text/html";
+		std::stringstream	ss_len;
+
+		ss_len << _body.length();
+		_headers["Content-Length"] = ss_len.str();
+
+		_generateResponse(200);
 		return;
 	}
 
@@ -144,7 +165,8 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 		_file_size = s.st_size;
 
 		_headers["Content-Type"] = _getMimeType(full_path);
-		std::stringstream ss_len;
+		std::stringstream	ss_len;
+
 		ss_len << _file_size;
 		_headers["Content-Length"] = ss_len.str();
 
@@ -162,16 +184,29 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 
 void	Response::_handlePost(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
-	std::string uploadDir = loc.getUploadStore();
-	if (uploadDir.empty()) { buildErrorPage(403, config); return; }
+	std::string	uploadDir = loc.getUploadStore();
+	std::string	fileName;
+	std::string	savePath;
+	int			exists;
 
-	std::string fileName = full_path.substr(full_path.find_last_of('/') + 1);
-	std::string savePath = uploadDir + "/" + fileName;
+	if (uploadDir.empty())
+	{
+		buildErrorPage(403, config);
+		return;
+	}
+
+	fileName = full_path.substr(full_path.find_last_of('/') + 1);
+	savePath = uploadDir + "/" + fileName;
+
+	struct stat	s;
+
+	exists = (stat(savePath.c_str(), &s) == 0);
 
 	if (std::rename(req.getBodyFile().c_str(), savePath.c_str()) != 0)
 	{
-		std::ifstream src(req.getBodyFile().c_str(), std::ios::binary);
-		std::ofstream dst(savePath.c_str(), std::ios::binary);
+		std::ifstream	src(req.getBodyFile().c_str(), std::ios::binary);
+		std::ofstream	dst(savePath.c_str(), std::ios::binary);
+
 		if (!src.is_open() || !dst.is_open()) {
 			buildErrorPage(500, config);
 			return;
@@ -181,9 +216,15 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 		dst.close();
 		std::remove(req.getBodyFile().c_str());
 	}
-	_body = "<h1>Fichier cree avec succes !</h1>";
-	_headers["Content-Type"] = "text/html";
-	_generateResponse(201);
+
+	_body = "<h1>Action reussie !</h1>";
+	_headers["content-type"] = "text/html";
+	
+
+	if (exists)
+		_generateResponse(200);
+	else
+		_generateResponse(201);
 }
 
 /*
@@ -223,7 +264,7 @@ void	Response::_handleDelete(ServerConfig &config, std::string full_path)
  * lancer une vidéo ou interpréter du texte HTML.
  */
 
-std::string Response::_getMimeType(std::string path)
+std::string	Response::_getMimeType(std::string path)
 {
 	static std::map<std::string, std::string>	mimeTypes;
 	size_t										pos;
@@ -259,7 +300,7 @@ std::string Response::_getMimeType(std::string path)
  * WHY : Le protocole HTTP impose d'envoyer la description du code dans la Status Line.
  */
 
-std::string Response::_getStatusMessage(int code)
+std::string	Response::_getStatusMessage(int code)
 {
 	static std::map<int, std::string>	messages;
 
@@ -290,7 +331,7 @@ std::string Response::_getStatusMessage(int code)
 void	Response::_generateResponse(int code)
 {
 	_status_code = code;
-	std::stringstream ss;
+	std::stringstream	ss;
 
 	ss << "HTTP/1.1 " << _status_code << " " << _getStatusMessage(_status_code) << "\r\n";
 	
@@ -337,6 +378,24 @@ std::string	Response::_generateAutoIndex(std::string full_path, std::string requ
 }
 
 /*
+ * WHAT: regarde si c'est un executable.
+ * WHY: utils.
+ * RETURN: 1 si c'est un executable, sinon non.
+*/
+
+bool	Response::_isCGI(std::string const &path, const Location &loc)
+{
+	std::string	ext = loc.getCGIExt();
+
+	if (ext.empty())
+		return false;
+
+	if (path.length() >= ext.length() && path.substr(path.length() - ext.length()) == ext)
+		return true;
+	return false;
+}
+
+/*
  * WHAT : Nettoie l'URL en résolvant les ".." et les "//".
  * WHY : Empêche un pirate de sortir du dossier racine (root) pour aller lire 
  * des fichiers sensibles, comme par exemple notre mot de passe, ou notre code.
@@ -344,7 +403,7 @@ std::string	Response::_generateAutoIndex(std::string full_path, std::string requ
  * /image/chat.png/../../image, on a : /image)
  */
 
-std::string	normalizePath(std::string path)
+std::string	Response ::_normalizePath(std::string path)
 {
 	std::vector<std::string>	stack;
 	std::stringstream			ss(path);
@@ -375,4 +434,34 @@ std::string	normalizePath(std::string path)
 	}
 
 	return result.empty() ? "/" : result;
+}
+
+void	Response::_parseCGIOutput(std::string &cgi_output)
+{
+	size_t pos = cgi_output.find("\r\n\r\n");
+	if (pos != std::string::npos)
+	{
+		std::string headers_part = cgi_output.substr(0, pos);
+		
+		_body = cgi_output.substr(pos + 4);
+
+		std::stringstream ss(headers_part);
+		std::string line;
+		while (std::getline(ss, line) && line != "\r")
+		{
+			size_t colon = line.find(':');
+			if (colon != std::string::npos)
+			{
+				std::string key = line.substr(0, colon);
+				std::string value = line.substr(colon + 1);
+				// Un petit trim pour la valeur
+				size_t first = value.find_first_not_of(" \r");
+				if (first != std::string::npos)
+					value = value.substr(first, value.find_last_not_of(" \r") - first + 1);
+				_headers[key] = value;
+			}
+		}
+	}
+	else
+		_body = cgi_output;
 }

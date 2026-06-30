@@ -4,6 +4,7 @@
 # include "include.hpp"
 # include "request.hpp"
 # include "serverConfig.hpp"
+# include "CGIHandler.hpp"
 
 /*
 Permet de fabriquer le message de réponse HTTP final pour gérer l'envoi des
@@ -50,8 +51,9 @@ class Response
 		std::string	_getMessageError(int code);
 		void		_generateResponse(int code);
 		std::string	_generateAutoIndex(std::string full_path, std::string request_path);
+		bool		_isCGI(std::string const &path, const Location &loc);
+		std::string	_normalizePath(std::string path);
+		void		_parseCGIOutput(std::string &cgi_output);
 };
-
-std::string	normalizePath(std::string path);
 
 #endif

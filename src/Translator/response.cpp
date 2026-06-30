@@ -45,10 +45,12 @@ Response	&Response::operator=(const Response &other)
 
 void	Response::makeResponse(Request &req, ServerConfig &config)
 {
-	std::string		root;
-	std::string		full_path;
-	std::string		clean_path = normalizePath(req.getPath());
-	
+	std::string	clean_path = _normalizePath(req.getPath());
+	std::string root;
+	std::string	full_path;
+	CGIHandler	cgi;
+	std::string	cgi_output;
+
 	if (clean_path == "ERROR")
 	{
 		buildErrorPage(400, config);
@@ -69,17 +71,36 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		return;
 	}
 
-	if (loc->getRoot().empty())
-		root = config.getRoot();
-	else
-		root = loc->getRoot();
+	root = loc->getRoot().empty() ? config.getRoot() : loc->getRoot();
 	full_path = root + clean_path;
+
+	if (_isCGI(full_path, *loc))
+	{
+		cgi_output = cgi.execute(req, full_path, *loc);
+		
+		if (cgi_output.empty())
+		{
+			buildErrorPage(500, config);
+			return;
+		}
+
+		_parseCGIOutput(cgi_output);
+
+		std::stringstream	ss_len;
+
+		ss_len << _body.length();
+
+		_headers["content-length"] = ss_len.str();
+
+		_generateResponse(200);
+		return;
+	}
 
 	if (req.getMethod() == "GET")
 		_handleGet(req, config, *loc, full_path);
-	if (req.getMethod() == "POST")
+	else if (req.getMethod() == "POST")
 		_handlePost(req, config, *loc, full_path);
-	if (req.getMethod() == "DELETE")
+	else if (req.getMethod() == "DELETE")
 		_handleDelete(config, full_path);
 }
 
@@ -89,14 +110,13 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
  * au format HTTP valide, même si le serveur rencontre une erreur.
  */
 
-void	Response::buildErrorPage(int code, ServerConfig &config)
+void Response::buildErrorPage(int code, ServerConfig &config)
 {
-	std::string	messageError;
+	std::string	messageError = _getMessageError(code);
 
 	_status_code = code;
 	_headers.clear();
-
-	messageError = _getMessageError(code);
+	_body.clear();
 
 	if (!_checkConfig(config, code))
 	{
@@ -105,13 +125,14 @@ void	Response::buildErrorPage(int code, ServerConfig &config)
 		_body += "<hr><center>webserv/1.0</center></body></html>";
 	}
 
+	_headers["Content-Type"] = "text/html";
 	std::stringstream	ss_len;
 
 	ss_len << _body.length();
-	
-	_headers["Content-Type"] = "text/html";
+
 	_headers["Content-Length"] = ss_len.str();
 	_headers["Server"] = "webserv/1.0";
+
 	_generateResponse(code);
 }
 
@@ -130,6 +151,13 @@ std::string	Response::getRawResponse() const
 void	Response::sendResponse(int socket_fd)
 {
 	int	ret;
+
+	if (socket_fd == -1)
+	{
+		_headers_sent = true;
+		_is_finished = true;
+		return;
+	}
 
 	if (!_headers_sent)
 	{

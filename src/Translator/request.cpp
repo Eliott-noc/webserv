@@ -48,16 +48,17 @@ Request	&Request::operator=(const Request &other)
  * doit annoncer sa taille en format hexadécimal.
  */
 
-size_t hexToDecimal(std::string hexStr)
-{
-	size_t				x;
-	std::stringstream	ss;
+ size_t	hexToDecimal(std::string hexStr)
+ {
+	 size_t				x;
+	 std::stringstream	ss;
+	 
+	 ss << std::hex << hexStr;
 
-	ss << std::hex << hexStr;
-	ss >> x;
-
-	return x;
-}
+	 if (!(ss >> x))
+		 return 0xFFFFFFFF;
+	 return x;
+ }
 
 /*
  * WHAT : Extrait la méthode, le chemin, la Query String et la version.
@@ -78,12 +79,28 @@ void	Request::_requestLine()
 
 	first_line = _raw_buffer.substr(0, pos);
 
+	if (first_line.find('\t') != std::string::npos)
+	{
+		_state = ERROR;
+		return ;
+	}
+
 	std::stringstream	ss(first_line);
+
 	if (!(ss >> _method >> _path >> _version))
 	{
 		_state = ERROR;
 		return ;
 	}
+
+	_path = _urlDecode(_path);
+
+	if (_method != "GET" && _method != "POST" && _method != "DELETE")
+	{
+		_state = ERROR;
+		return ;
+	}
+
 	if (ss >> extra)
 	{
 		_state = ERROR;
@@ -95,6 +112,7 @@ void	Request::_requestLine()
 		_query_string = _path.substr(i + 1);
 		_path = _path.substr(0, i);
 	}
+
 	_raw_buffer.erase(0, pos + 2);
 	_state = READING_HEADERS;
 }
@@ -113,34 +131,38 @@ void	Request::_scanHeader()
 	std::string	key;
 	std::string	value;
 	size_t		first;
+	size_t		last;
 
 	while ((pos = _raw_buffer.find("\r\n")) != std::string::npos)
 	{
 		line = _raw_buffer.substr(0, pos);
-		
 		if (line.empty())
 		{
 			_raw_buffer.erase(0, 2);
 			_state = READING_BODY;
-			return	;
+			return;
 		}
 
 		colon_pos = line.find(':');
 		if (colon_pos != std::string::npos)
 		{
 			key = line.substr(0, colon_pos);
+			for (size_t j = 0; j < key.length(); ++j)
+				key[j] = std::tolower(key[j]);
+
 			value = line.substr(colon_pos + 1);
-
-			if (key == "Transfer-Encoding" && value.find("chunked") != std::string::npos)
-				_is_chunked = true;
-
-			first = value.find_first_not_of(" ");
+			first = value.find_first_not_of(" \t\r\n");
+			last = value.find_last_not_of(" \t\r\n");
 			if (first != std::string::npos)
-				value = value.substr(first);
+				value = value.substr(first, (last - first + 1));
+			else
+				value ="";
+
+			if (key == "transfer-encoding" && value.find("chunked") != std::string::npos)
+				_is_chunked = true;
 			
 			_headers[key] = value;
 		}
-
 		_raw_buffer.erase(0, pos + 2);
 	}
 }
@@ -162,6 +184,11 @@ bool	Request::_chunked(size_t max_body_limit)
 		return true;
 
 	chunkSize = hexToDecimal(_raw_buffer.substr(0, pos));
+	if (chunkSize == 0xFFFFFFFF)
+	{
+		_state = ERROR;
+		return true; 
+	}
 	
 	if (_content_length + chunkSize > max_body_limit)
 	{
@@ -239,43 +266,37 @@ int	Request::parse(std::string chunk, size_t max_body_limit)
 		}
 		else if (_state == READING_BODY)
 		{
-			if (_method == "POST" && !_headers.count("Content-Length") && !_is_chunked)
-			{
-				_state = ERROR;
+			if (_method == "POST" && !_headers.count("content-length") && !_is_chunked)
 				return 411;
-			}
 
 			if (_is_chunked)
 			{
 				if (_chunked(max_body_limit) == true)
 					break;
 			}
-			else if (_headers.count("Content-Length"))
+			else if (_headers.count("content-length"))
 			{
 				if (_content_length == 0)
-					_content_length = atol(_headers["Content-Length"].c_str());
+					_content_length = atol(_headers["content-length"].c_str());
 
-				if (_content_length > max_body_limit)
-				{
-					_state = ERROR;
-					return 413;
-				}
+				if (_content_length > max_body_limit) return 413;
 
 				if (_body_fd == -1)
 				{
-					std::stringstream	ss;
-
+					std::stringstream ss;
 					ss << "/tmp/body_client_" << _client_fd << ".tmp";
 					_tmp_file = ss.str();
 					_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
 				}
 
-				size_t	to_write = _raw_buffer.size();
+				size_t remaining = _content_length - _bytes_received;
+				size_t to_write = (_raw_buffer.size() < remaining) ? _raw_buffer.size() : remaining;
+
 				if (to_write > 0)
 				{
 					write(_body_fd, _raw_buffer.c_str(), to_write);
 					_bytes_received += to_write;
-					_raw_buffer.clear();
+					_raw_buffer.erase(0, to_write);
 				}
 
 				if (_bytes_received >= _content_length)
@@ -293,7 +314,9 @@ int	Request::parse(std::string chunk, size_t max_body_limit)
 
 	if (_state == FINISHED)
 	{
-		if (_headers.find("Host") == _headers.end())
+		std::map<std::string, std::string>::iterator	it = _headers.find("host");
+
+		if (it == _headers.end() || it->second.empty())
 		{
 			_state = ERROR;
 			return 400;
@@ -305,6 +328,29 @@ int	Request::parse(std::string chunk, size_t max_body_limit)
 		return 400;
 
 	return 1;
+}
+
+std::string	Request::_urlDecode(std::string str)
+{
+	std::string	res;
+	std::string	hex;
+	char		c;
+
+	for (size_t i = 0; i < str.length(); ++i)
+	{
+		if (str[i] == '%' && i + 2 < str.length())
+		{
+			hex = str.substr(i + 1, 2);
+			c = static_cast<char>(hexToDecimal(hex));
+			res += c;
+			i += 2;
+		}
+		else if (str[i] == '+')
+			res += ' ';
+		else
+			res += str[i];
+	}
+	return res;
 }
 
 std::string	Request::getMethod() const
