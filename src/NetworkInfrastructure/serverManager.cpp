@@ -63,13 +63,48 @@ void ServerManager::run(){
 	size_t	_listeningCount = _pollfds.size();
 	if (_listeningCount == 0){
 		std::cerr << "Fatal: No socket was created" << std::endl;
-		//free
-		exit;
+		// exit // return;
 	}
 	while(true){
-		int ready = poll(&_pollfds[0], _pollfds.size(), -1);
+		size_t	nfds = _pollfds.size();
+		int		err_code;
+		int		ready = poll(&_pollfds[0], nfds, 1000);
+		if (ready < 0){
+			err_code = errno;
+			std::cerr << "Fatal: " << strerror(err_code) << std::endl;
+			//exit //return
+		}
+		else if (ready == 0)
+			continue;
+		else{
+			for (size_t i = 0; i < nfds; i++){
+				if (_pollfds[i].revents & POLLIN){
+					if (i < _listeningCount){
+						_acceptNewConnection(_pollfds[i].fd);
+					}
+					else{
+						char buffer[1000];
+						ssize_t count = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
+						if (count == -1){
+							err_code = errno;
+							if (err_code == EAGAIN || err_code == EWOULDBLOCK)
+								continue;
+						}
+						else if (count == 0){
+							_removeClient(i);
+							nfds--;
+							i--;
+						}
+					}
+				}
+				else if (_pollfds[i].revents & POLLERR || _pollfds[i].revents & POLLHUP || _pollfds[i].revents & POLLNVAL){
+					_removeClient(i);
+					nfds--;
+					i--;
+				}
+			}
+		}
 	}
-
 }
 
 void ServerManager::_acceptNewConnection(int server_fd){
@@ -82,4 +117,10 @@ void ServerManager::_handleClientData(int server_fd){
 
 void ServerManager::_sendResponse(int server_fd){
 	
+}
+
+void ServerManager::_removeClient(size_t idx){
+	close(_pollfds[idx].fd);
+	_pollfds[idx] = _pollfds[_pollfds.size() - 1];
+	_pollfds.pop_back();
 }
