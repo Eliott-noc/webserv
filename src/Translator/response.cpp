@@ -60,8 +60,8 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		root = loc->getRoot();
 	full_path = root + req.getPath();
 
-	if (req.getMethod() == "GET")
-		_handleGet(req, config, *loc, full_path);
+	// if (req.getMethod() == "GET")
+	// 	_handleGet(req, config, *loc, full_path);
 	if (req.getMethod() == "POST")
 		_handlePost(req, config, *loc, full_path);
 	if (req.getMethod() == "DELETE")

@@ -42,91 +42,91 @@ std::string Response::_getMessageError(int code)
 	return ss.str(); 
 }
 
-void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
-{
-	struct stat	s;
-	std::string	indexPath;
+// void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
+// {
+// 	struct stat	s;
+// 	std::string	indexPath;
 
-	if (stat(full_path.c_str(), &s) != 0)
-	{
-		buildErrorPage(404, config);
-		return;
-	}
+// 	if (stat(full_path.c_str(), &s) != 0)
+// 	{
+// 		buildErrorPage(404, config);
+// 		return;
+// 	}
 
-	if (S_ISDIR(s.st_mode))
-	{
-		if (!loc.getIndex().empty())
-		{
-			indexPath = full_path;
-			if (indexPath.at(indexPath.length() - 1) != '/')
-				indexPath += "/";
-			indexPath += loc.getIndex();
+// 	if (S_ISDIR(s.st_mode))
+// 	{
+// 		if (!loc.getIndex().empty())
+// 		{
+// 			indexPath = full_path;
+// 			if (indexPath.at(indexPath.length() - 1) != '/')
+// 				indexPath += "/";
+// 			indexPath += loc.getIndex();
 
-			struct stat	s_index;
+// 			struct stat	s_index;
 
-			if (stat(indexPath.c_str(), &s_index) == 0 && S_ISREG(s_index.st_mode))
-			{
-				full_path = indexPath;
-				s = s_index;
-			}
-			else if (loc.getAutoIndex())
-			{
-				_body = _generateAutoIndex(full_path, req.getPath());
-				_headers["Content-Type"] = "text/html";
+// 			if (stat(indexPath.c_str(), &s_index) == 0 && S_ISREG(s_index.st_mode))
+// 			{
+// 				full_path = indexPath;
+// 				s = s_index;
+// 			}
+// 			else if (loc.getAutoIndex())
+// 			{
+// 				_body = _generateAutoIndex(full_path, req.getPath());
+// 				_headers["Content-Type"] = "text/html";
 				
-				std::stringstream	ss_len;
+// 				std::stringstream	ss_len;
 				
-				ss_len << _body.length();
-				_headers["Content-Length"] = ss_len.str();
+// 				ss_len << _body.length();
+// 				_headers["Content-Length"] = ss_len.str();
 				
-				_generateResponse(200);
-				return;
-			}
-			else
-			{
-				buildErrorPage(403, config);
-				return;
-			}
-		}
-		else if (loc.getAutoIndex())
-		{
-			_body = _generateAutoIndex(full_path, req.getPath());
-			_headers["Content-Type"] = "text/html";
+// 				_generateResponse(200);
+// 				return;
+// 			}
+// 			else
+// 			{
+// 				buildErrorPage(403, config);
+// 				return;
+// 			}
+// 		}
+// 		else if (loc.getAutoIndex())
+// 		{
+// 			_body = _generateAutoIndex(full_path, req.getPath());
+// 			_headers["Content-Type"] = "text/html";
 			
-			std::stringstream	ss_len;
+// 			std::stringstream	ss_len;
 
-			ss_len << _body.length();
-			_headers["Content-Length"] = ss_len.str();
+// 			ss_len << _body.length();
+// 			_headers["Content-Length"] = ss_len.str();
 			
-			_generateResponse(200);
-			return;
-		}
-		else
-		{
-			buildErrorPage(403, config);
-			return;
-		}
-	}
+// 			_generateResponse(200);
+// 			return;
+// 		}
+// 		else
+// 		{
+// 			buildErrorPage(403, config);
+// 			return;
+// 		}
+// 	}
 
-	if (S_ISREG(s.st_mode))
-	{
-		_file_fd = open(full_path.c_str(), O_RDONLY);
-		if (_file_fd == -1) {
-			buildErrorPage(403, config);
-			return;
-		}
-		_file_size = s.st_size;
+// 	if (S_ISREG(s.st_mode))
+// 	{
+// 		_file_fd = open(full_path.c_str(), O_RDONLY);
+// 		if (_file_fd == -1) {
+// 			buildErrorPage(403, config);
+// 			return;
+// 		}
+// 		_file_size = s.st_size;
 
-		_headers["Content-Type"] = _getMimeType(full_path);
-		std::stringstream ss_len;
-		ss_len << _file_size;
-		_headers["Content-Length"] = ss_len.str();
+// 		_headers["Content-Type"] = _getMimeType(full_path);
+// 		std::stringstream ss_len;
+// 		ss_len << _file_size;
+// 		_headers["Content-Length"] = ss_len.str();
 
-		_generateResponse(200);
-	}
-	else
-		buildErrorPage(404, config);
-}
+// 		_generateResponse(200);
+// 	}
+// 	else
+// 		buildErrorPage(404, config);
+// }
 
 void	Response::_handlePost(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {

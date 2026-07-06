@@ -2,8 +2,6 @@
 #include "../../inc/utils.hpp"
 #include "../../inc/location.hpp"
 #include "../../inc/locArgs.hpp"
-#include "../../inc/directiveServer.hpp"
-#include "../../inc/directiveLocation.hpp"
 
 static std::string	readFile(const std::string &filename)
 {
@@ -127,71 +125,45 @@ static std::vector<std::string> extractLocationBlock(const std::vector<std::stri
 	return extracted_block;
 }
 
-static int	setLocArgs(Location &location, DirectiveLocation *directiveLocation, std::vector<std::string> &args)
+static void	setLocArgs(Location &location, std::vector<std::string> &args)
 {
 		if (args[0] == "root")
 		{
-			if (directiveLocation->getRoot() == true)
-				return 1;
-			directiveLocation->setRoot();
 			setArgRoot(location, args);
 		}
 		else if (args[0] == "allow_methods")
 		{
-			if (directiveLocation->getMethods() == true)
-				return 1;
-			directiveLocation->setMethods();
 			setArgMethods(location, args);
 		}
 		else if (args[0] == "index")
 		{
-			if (directiveLocation->getIndex() == true)
-				return 1;
-			directiveLocation->setIndex();
 			setArgIndex(location, args);
 		}
 		else if (args[0] == "autoindex")
 		{
-			if (directiveLocation->getAutoIndex() == true)
-				return 1;
-			directiveLocation->setAutoIndex();
 			setArgAutoIndex(location, args);
 		}
 		else if (args[0] == "return")
 		{
-			if (directiveLocation->getReturn() == true)
-				return 1;
-			directiveLocation->setReturn();
 			setArgRet(location, args);
 		}
 		else if (args[0] == "cgi_path")
 		{
-			if (directiveLocation->getCgiPath() == true)
-				return 1;
-			directiveLocation->setCgiPath();
 			setArgCgiPath(location, args);
 		}
 		else if (args[0] == "cgi_ext")
 		{
-			if (directiveLocation->getCgiExt() == true)
-				return 1;
-			directiveLocation->setCgiExt();
 			setArgCgiExt(location, args);
 		}
 		else if (args[0] == "upload_store")
 		{
-			if (directiveLocation->getUploadStore() == true)
-				return 1;
-			directiveLocation->setUploadStore();
 			setArgUploadStore(location, args);
 		}
-		return 0;
 }
 
 static Location	parseLocation(const std::vector<std::string> &l_block)
 {
 	Location				location;
-	DirectiveLocation		directiveLocation;
 	std::vector<std::string> args;
 
 	setArgPath(location, l_block[0]);
@@ -210,8 +182,7 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 			args.push_back(l_block[i]);
 		else
 		{
-			if (setLocArgs(location, &directiveLocation, args))
-				throw std::runtime_error("Error: duplicate directive in location");
+			setLocArgs(location, args);
 			args.clear();
 		}
 	}
@@ -223,7 +194,6 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 
 static ServerConfig	parseServer(const std::vector<std::string> &s_block)
 {
-	DirectiveServer			directiveServer;
 	ServerConfig			server;
 	std::vector<Location>	locations;
 

@@ -1,6 +1,5 @@
 #include "../../inc/include.hpp"
 #include "../../inc/locArgs.hpp"
-#include "../../inc/directiveServer.hpp"
 
 int	checkDuplicateIndex(const std::vector<std::string> &args)
 {

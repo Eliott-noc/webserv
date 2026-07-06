@@ -1,4 +1,5 @@
 #include "../../inc/location.hpp"
+#include "../../inc/utils.hpp"
 
 Location::Location()
 	: _auto_index(false)
@@ -19,7 +20,8 @@ Location &Location::operator=(const Location &other)
 		_methods = other._methods;
 		_index = other._index;
 		_auto_index = other._auto_index;
-		_return = other._return;
+		_return_code = other._return_code;
+		_return_url = other._return_url;
 		_cgi_path = other._cgi_path;
 		_cgi_ext = other._cgi_ext;
 		_upload_store = other._upload_store;
@@ -54,14 +56,19 @@ bool	Location::getAutoIndex() const
 	return _auto_index;
 }
 
-std::string	Location::getIndex() const
+std::vector<std::string> Location::getIndex() const
 {
 	return _index;
 }
 
-std::string	Location::getReturn() const
+int	Location::getReturnCode() const
 {
-	return _return;
+	return _return_code;
+}
+
+std::string Location::getReturnUrl() const
+{
+	return _return_url;
 }
 
 std::string	Location::getCGIPath() const
@@ -96,7 +103,9 @@ void	Location::setMethods(const std::vector<std::string> &methods)
 
 void	Location::setIndex(const std::string &index)
 {
-	_index = index;
+	_index.push_back(index);
+	if (checkDuplicateIndex(_index))
+		throw std::runtime_error("Error: duplicate index in location");
 }
 
 void	Location::setAutoIndex(const bool &auto_index)
@@ -104,9 +113,11 @@ void	Location::setAutoIndex(const bool &auto_index)
 	_auto_index = auto_index;
 }
 
-void	Location::setRet(const std::string &ret)
+void	Location::setRet(int &ret_code, const std::string &ret_url)
 {
-	_return = ret;
+	_return_code = ret_code;
+	if (ret_url != "0")
+		_return_url = ret_url;
 }
 
 void	Location::setCgiPath(const std::string &cgi_path)
