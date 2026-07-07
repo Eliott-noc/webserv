@@ -57,6 +57,14 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 	
 	const Location	*loc = config.getLocationForPath(clean_path);
 
+	if (loc->getReturnCode() != 0)
+	{
+		_status_code = loc->getReturnCode();
+		_headers["Location"] = loc->getReturnUrl();
+		_generateResponse(_status_code);
+		return ;
+	}
+
 	if (!loc)
 	{
 		buildErrorPage(404, config);

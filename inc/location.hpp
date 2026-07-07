@@ -44,6 +44,7 @@ class Location
 		std::string					getCGIPath() const;
 		std::string					getCGIExt() const;
 		std::string					getUploadStore() const;
+		
 
 		void						setPath(const std::string &path);
 		void						setRoot(const std::string &root);
