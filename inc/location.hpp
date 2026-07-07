@@ -16,37 +16,41 @@ class Location
 		std::string					_path;          // ex: /images
 		std::string					_root;          // ex: ./www/images
 		std::vector<std::string>	_methods;       // GET, POST, DELETE
-		std::string					_index;         // index.html
+		std::vector<std::string>	_index;         // index.html
 		bool						_auto_index;     // on/off
-		std::string					_return;        // Redirection (301)
+		int							_return_code;
+		std::string					_return_url;
 		std::string					_cgi_path;      // chemin vers python/php
 		std::string					_cgi_ext;       // .py ou .php
 		std::string					_upload_store;  // dossier d'upload
+		std::map<int, std::string>	_error_pages;
 
 	public:
 		Location();
 		Location(const Location &other);
 		~Location();
-		
+
 		Location	&operator=(const Location &other);
 
 		void						addMethod(std::string method);
-		
+
 		std::string					getPath() const;
 		std::string					getRoot() const;
 		std::vector<std::string>	getMethods() const;
 		bool						getAutoIndex() const;
-		std::string					getIndex() const;
-		std::string					getReturn() const;
+		std::vector<std::string>	getIndex() const;
+		int							getReturnCode() const;
+		std::string					getReturnUrl() const;
 		std::string					getCGIPath() const;
 		std::string					getCGIExt() const;
 		std::string					getUploadStore() const;
 
 		void						setPath(const std::string &path);
 		void						setRoot(const std::string &root);
+		void						setMethods(const std::vector<std::string> &methods);
 		void						setIndex(const std::string &index);
 		void						setAutoIndex(const bool &autoIndex);
-		void						setRet(const std::string &ret);
+		void						setRet(int &ret_code, const std::string &ret_url);
 		void						setCgiPath(const std::string &cgi_path);
 		void						setCgiExt(const std::string &cgi_ext);
 		void						setUploadStore(const std::string &uploadStore);

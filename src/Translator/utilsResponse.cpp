@@ -70,8 +70,9 @@ std::string Response::_getMessageError(int code)
 
 void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
-	struct stat	s;
-	std::string	indexPath;
+	std::vector<std::string>	indexes = loc.getIndex();
+	std::string					indexPath = full_path;
+	struct stat					s;
 
 	if (stat(full_path.c_str(), &s) != 0)
 	{
@@ -81,12 +82,13 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 
 	if (S_ISDIR(s.st_mode))
 	{
-		if (!loc.getIndex().empty())
+		bool found = false;
+
+		for (size_t i = 0; i < indexes.size(); i++)
 		{
-			indexPath = full_path;
 			if (indexPath.at(indexPath.length() - 1) != '/')
 				indexPath += "/";
-			indexPath += loc.getIndex();
+			indexPath += indexes[i];
 
 			struct stat	s_index;
 
@@ -94,17 +96,21 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 			{
 				full_path = indexPath;
 				s = s_index;
+				found = true;
+				break ;
 			}
-			else if (loc.getAutoIndex())
+		}
+
+		if (!found)
+		{
+			if (loc.getAutoIndex())
 			{
 				_body = _generateAutoIndex(full_path, req.getPath());
 				_headers["Content-Type"] = "text/html";
-				
 				std::stringstream	ss_len;
-				
+
 				ss_len << _body.length();
 				_headers["Content-Length"] = ss_len.str();
-				
 				_generateResponse(200);
 				return;
 			}
@@ -113,24 +119,6 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 				buildErrorPage(403, config);
 				return;
 			}
-		}
-		else if (loc.getAutoIndex())
-		{
-			_body = _generateAutoIndex(full_path, req.getPath());
-			_headers["Content-Type"] = "text/html";
-			
-			std::stringstream	ss_len;
-
-			ss_len << _body.length();
-			_headers["Content-Length"] = ss_len.str();
-			
-			_generateResponse(200);
-			return;
-		}
-		else
-		{
-			buildErrorPage(403, config);
-			return;
 		}
 	}
 
@@ -144,7 +132,8 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 		_file_size = s.st_size;
 
 		_headers["Content-Type"] = _getMimeType(full_path);
-		std::stringstream ss_len;
+		std::stringstream	ss_len;
+
 		ss_len << _file_size;
 		_headers["Content-Length"] = ss_len.str();
 
