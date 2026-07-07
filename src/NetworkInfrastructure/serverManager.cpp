@@ -110,16 +110,21 @@ void ServerManager::run(){
 						else {
 							_clients[_pollfds[i].fd]->raw_request_buffer.append(buffer, count);
 							//send to translator
+							//Request::parse(buffer, 8192)---- config.getbodymaxsize
 							// if response_is_ready true, add POLLOUT to events
 							// (_pollfds[i].events | POLLOUT)
 							//else if request is complete, set event = POLLOUT 
 							// to only monitor for when the server is ready to read the request
-
 						}
 					}
 				}
 				else if (_pollfds[i].revents & POLLOUT){
-					
+					checked++;
+					/*
+					generate response avec makeResponse(request, config)
+					ssize_t sent = send(current_fd, response_string.c_string(), response_string.lenght(), 0);
+					send()
+					*/
 				}
 				else if (_pollfds[i].revents & POLLERR || _pollfds[i].revents & POLLHUP || _pollfds[i].revents & POLLNVAL){
 					checked++;

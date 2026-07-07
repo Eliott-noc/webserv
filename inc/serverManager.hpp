@@ -16,9 +16,10 @@ des données, le tout sans jamais bloquer le programme.
 class ServerManager
 {
 	private:
-		std::vector<ServerConfig>	_configs;
-		std::vector<struct pollfd>	_pollfds;
-		std::map<int, Client*>		_clients; // Liste des clients actifs
+		std::vector<ServerConfig>		_configs;
+		std::vector<struct pollfd>		_pollfds;
+		std::map<int, ServerConfig*>	_listenSockets;
+		std::map<int, Client*>			_clients; // Liste des clients actifs
 
 	public:
 		ServerManager(std::vector<ServerConfig> configs);
