@@ -35,7 +35,7 @@ class Response
 		Response &operator=(const Response &src);
 
 		void		makeResponse(Request &req, ServerConfig &config);
-		void		buildErrorPage(int code, ServerConfig &config);
+		void		buildErrorPage(int code, ServerConfig &config, const Location *loc);
 		std::string	getRawResponse() const;
 		void		sendResponse(int client_socket);
 		bool		isFinished() const;
@@ -44,10 +44,10 @@ class Response
 		bool		_isMethodAllowed(std::string method, std::vector<std::string> const &allowedMethods);
 		void		_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path);
 		void		_handlePost(Request &req, ServerConfig &config, const Location &loc, std::string full_path);
-		void		_handleDelete(ServerConfig &config, std::string full_path);
+		void		_handleDelete(ServerConfig &config, const Location &loc, std::string full_path);
 		std::string	_getMimeType(std::string path);
 		std::string	_getStatusMessage(int code);
-		bool		_checkConfig(ServerConfig &config, int code);
+		bool		_checkConfig(ServerConfig &config, const Location *loc, int code);
 		std::string	_getMessageError(int code);
 		void		_generateResponse(int code);
 		std::string	_generateAutoIndex(std::string full_path, std::string request_path);

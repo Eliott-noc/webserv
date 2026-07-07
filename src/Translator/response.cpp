@@ -53,21 +53,28 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 
 	if (clean_path == "ERROR")
 	{
-		buildErrorPage(400, config);
+		buildErrorPage(400, config, NULL);
 		return;
 	}
 	
 	const Location	*loc = config.getLocationForPath(clean_path);
-
 	if (!loc)
 	{
-		buildErrorPage(404, config);
+		buildErrorPage(404, config, NULL);
 		return;
+	}
+
+	if (loc->getReturnCode() != 0)
+	{
+		_status_code = loc->getReturnCode();
+		_headers["Location"] = loc->getReturnUrl();
+		_generateResponse(_status_code);
+		return ;
 	}
 
 	if (!_isMethodAllowed(req.getMethod(), loc->getMethods()))
 	{
-		buildErrorPage(405, config);
+		buildErrorPage(405, config, loc);
 		return;
 	}
 
@@ -80,7 +87,7 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		
 		if (cgi_output.empty())
 		{
-			buildErrorPage(500, config);
+			buildErrorPage(500, config, loc);
 			return;
 		}
 
@@ -101,7 +108,7 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 	else if (req.getMethod() == "POST")
 		_handlePost(req, config, *loc, full_path);
 	else if (req.getMethod() == "DELETE")
-		_handleDelete(config, full_path);
+		_handleDelete(config, *loc, full_path);
 }
 
 /*
@@ -110,15 +117,16 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
  * au format HTTP valide, même si le serveur rencontre une erreur.
  */
 
-void Response::buildErrorPage(int code, ServerConfig &config)
+void Response::buildErrorPage(int code, ServerConfig &config, const Location *loc)
 {
-	std::string	messageError = _getMessageError(code);
-
 	_status_code = code;
 	_headers.clear();
 	_body.clear();
 
-	if (!_checkConfig(config, code))
+	std::string messageError = _getMessageError(code);
+
+	// On transmet 'loc' à checkConfig
+	if (!_checkConfig(config, loc, code))
 	{
 		_body = "<html><head><title>" + messageError + "</title></head>";
 		_body += "<body><center><h1>" + messageError + "</h1></center>";
@@ -126,10 +134,8 @@ void Response::buildErrorPage(int code, ServerConfig &config)
 	}
 
 	_headers["Content-Type"] = "text/html";
-	std::stringstream	ss_len;
-
+	std::stringstream ss_len;
 	ss_len << _body.length();
-
 	_headers["Content-Length"] = ss_len.str();
 	_headers["Server"] = "webserv/1.0";
 

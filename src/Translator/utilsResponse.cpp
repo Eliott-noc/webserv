@@ -25,28 +25,40 @@ bool	Response::_isMethodAllowed(std::string method, std::vector<std::string> con
  * RETURN 1 si il existe une page dans serverConfig pour l'erreur n, sinon 0: 
  */
 
-bool	Response::_checkConfig(ServerConfig &config, int code)
+bool Response::_checkConfig(ServerConfig &config, const Location *loc, int code)
 {
-	std::string					path;
-	std::map<int, std::string>	errorPages = config.getErrorPages();
-	
-	if (errorPages.count(code))
+	std::map<int, std::string>	errorPages;
+	std::string					path = "";
+
+	if (loc)
 	{
-		path = config.getRoot() + errorPages[code];
-		std::ifstream	file(path.c_str(), std::ios::binary);
-
-		if (file.is_open())
+		errorPages = loc->getErrorPages();
+		if (errorPages.count(code))
 		{
-			std::stringstream	ss;
-
-			ss << file.rdbuf();
-			_body = ss.str();
-
-			file.close();
-			return 1;
+			path = (loc->getRoot().empty() ? config.getRoot() : loc->getRoot()) + errorPages[code];
 		}
 	}
-	return 0;
+
+	if (path.empty())
+	{
+		errorPages = config.getErrorPages();
+		if (errorPages.count(code))
+			path = config.getRoot() + errorPages[code];
+	}
+
+	if (!path.empty())
+	{
+		std::ifstream file(path.c_str(), std::ios::binary);
+		if (file.is_open())
+		{
+			std::stringstream ss;
+			ss << file.rdbuf();
+			_body = ss.str();
+			file.close();
+			return true;
+		}
+	}
+	return false;
 }
 
 /*
@@ -70,88 +82,54 @@ std::string	Response::_getMessageError(int code)
 
 void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
-	struct stat	s;
-	std::string	indexPath;
-	CGIHandler	cgi;
+	std::vector<std::string>	indexes = loc.getIndex();
+	std::string					testPath = full_path;
+	bool						found = false;
+	struct stat					s;
 
 	if (stat(full_path.c_str(), &s) != 0)
 	{
-		buildErrorPage(404, config);
-		return;
-	}
-
-	if (_isCGI(full_path, loc))
-	{
-		_body = cgi.execute(req, full_path, loc);
-		
-		if (_body.empty())
-		{
-			buildErrorPage(500, config);
-			return;
-		}
-
-		_headers["Content-Type"] = "text/html";
-		std::stringstream	ss_len;
-
-		ss_len << _body.length();
-		_headers["Content-Length"] = ss_len.str();
-
-		_generateResponse(200);
+		buildErrorPage(404, config, &loc);
 		return;
 	}
 
 	if (S_ISDIR(s.st_mode))
 	{
-		if (!loc.getIndex().empty())
+		for (size_t i = 0; i < indexes.size(); i++)
 		{
-			indexPath = full_path;
-			if (indexPath.at(indexPath.length() - 1) != '/')
-				indexPath += "/";
-			indexPath += loc.getIndex();
+			if (testPath.at(testPath.length() - 1) != '/')
+				testPath += "/";
+			testPath += indexes[i];
 
 			struct stat	s_index;
 
-			if (stat(indexPath.c_str(), &s_index) == 0 && S_ISREG(s_index.st_mode))
+			if (stat(testPath.c_str(), &s_index) == 0 && S_ISREG(s_index.st_mode))
 			{
-				full_path = indexPath;
+				full_path = testPath;
 				s = s_index;
+				found = true;
+				break ;
 			}
-			else if (loc.getAutoIndex())
+		}
+
+		if (!found)
+		{
+			if (loc.getAutoIndex())
 			{
 				_body = _generateAutoIndex(full_path, req.getPath());
 				_headers["Content-Type"] = "text/html";
-				
 				std::stringstream	ss_len;
-				
+
 				ss_len << _body.length();
 				_headers["Content-Length"] = ss_len.str();
-				
 				_generateResponse(200);
 				return;
 			}
 			else
 			{
-				buildErrorPage(403, config);
+				buildErrorPage(403, config, &loc);
 				return;
 			}
-		}
-		else if (loc.getAutoIndex())
-		{
-			_body = _generateAutoIndex(full_path, req.getPath());
-			_headers["Content-Type"] = "text/html";
-			
-			std::stringstream	ss_len;
-
-			ss_len << _body.length();
-			_headers["Content-Length"] = ss_len.str();
-			
-			_generateResponse(200);
-			return;
-		}
-		else
-		{
-			buildErrorPage(403, config);
-			return;
 		}
 	}
 
@@ -159,7 +137,7 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 	{
 		_file_fd = open(full_path.c_str(), O_RDONLY);
 		if (_file_fd == -1) {
-			buildErrorPage(403, config);
+			buildErrorPage(403, config, &loc);
 			return;
 		}
 		_file_size = s.st_size;
@@ -173,7 +151,7 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 		_generateResponse(200);
 	}
 	else
-		buildErrorPage(404, config);
+		buildErrorPage(404, config, &loc);
 }
 
 /*
@@ -191,7 +169,7 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 
 	if (uploadDir.empty())
 	{
-		buildErrorPage(403, config);
+		buildErrorPage(403, config, &loc);
 		return;
 	}
 
@@ -208,7 +186,7 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 		std::ofstream	dst(savePath.c_str(), std::ios::binary);
 
 		if (!src.is_open() || !dst.is_open()) {
-			buildErrorPage(500, config);
+			buildErrorPage(500, config, &loc);
 			return;
 		}
 		dst << src.rdbuf();
@@ -233,18 +211,18 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
  * un dossier pour éviter les suppressions accidentelles et massives.
  */
 
-void	Response::_handleDelete(ServerConfig &config, std::string full_path)
+void	Response::_handleDelete(ServerConfig &config, const Location &loc, std::string full_path)
 {
 	struct stat	s;
 
 	if (stat(full_path.c_str(), &s) != 0)
 	{
-		buildErrorPage(404, config);
+		buildErrorPage(404, config, &loc);
 		return;
 	}
 	if (S_ISDIR(s.st_mode))
 	{
-		buildErrorPage(403, config);
+		buildErrorPage(403, config, &loc);
 		return;
 	}
 
@@ -255,7 +233,7 @@ void	Response::_handleDelete(ServerConfig &config, std::string full_path)
 		_generateResponse(204);
 	}
 	else
-		buildErrorPage(500, config);
+		buildErrorPage(500, config, &loc);
 }
 
 /*

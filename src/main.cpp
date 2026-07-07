@@ -37,7 +37,7 @@ void run_test(int num, std::string title, std::vector<std::string> chunks, Serve
 
     Response res;
     if (parse_res == 200) res.makeResponse(req, config);
-    else if (parse_res > 200) res.buildErrorPage(parse_res, config);
+    else if (parse_res > 200) res.buildErrorPage(parse_res, config, NULL);
     else { std::cout << Y << " [WAITING] " << RESET << std::endl; return; }
 
     while (!res.isFinished()) res.sendResponse(-1);

@@ -16,8 +16,7 @@ ServerConfig	&ServerConfig::operator=(const ServerConfig &other)
 {
 	if (this != &other)
 	{
-		_ports = other._ports;
-		_host = other._host;
+		_listen = other._listen;
 		_server_names = other._server_names;
 		_client_max_body_size = other._client_max_body_size;
 		_error_pages = other._error_pages;
@@ -49,16 +48,6 @@ const Location	*ServerConfig::getLocationForPath(std::string const &path)
 		}
 	}
 	return bestMatch;
-}
-
-std::vector<int>	ServerConfig::getPort() const
-{
-	return _ports;
-}
-
-std::string	ServerConfig::getHost() const
-{
-	return _host;
 }
 
 std::string	ServerConfig::getRoot() const
@@ -96,16 +85,6 @@ std::vector<Location>	ServerConfig::getLocations() const
 	return _locations;
 }
 
-void	ServerConfig::setPorts(const std::vector<int> &ports)
-{
-	_ports = ports;
-}
-
-void	ServerConfig::setHost(const std::string &host)
-{
-	_host = host;
-}
-
 void	ServerConfig::setRoot(const std::string &root)
 {
 	_root = root;
@@ -119,4 +98,29 @@ void	ServerConfig::setIndex(const std::string &index)
 void	ServerConfig::setAutoIndex(const bool &auto_index)
 {
 	_auto_index = auto_index;
+}
+
+void	ServerConfig::setServerNames(const std::vector<std::string> &server_names)
+{
+	_server_names = server_names;
+}
+
+void	ServerConfig::setClientMaxBodySize(const size_t &client_max_body_size)
+{
+	_client_max_body_size = client_max_body_size;
+}
+
+void	ServerConfig::setErrorPages(const std::map<int, std::string> &error_pages)
+{
+	_error_pages = error_pages;
+}
+
+void	ServerConfig::setLocations(const std::vector<Location> &locations)
+{
+	_locations = locations;
+}
+
+void	ServerConfig::setListen(const Listen &listen)
+{
+	_listen.push_back(listen);
 }
