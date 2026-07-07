@@ -92,7 +92,7 @@ void	ServerConfig::setRoot(const std::string &root)
 
 void	ServerConfig::setIndex(const std::string &index)
 {
-	_index = index;
+	_index.push_back(index);
 }
 
 void	ServerConfig::setAutoIndex(const bool &auto_index)
@@ -100,9 +100,9 @@ void	ServerConfig::setAutoIndex(const bool &auto_index)
 	_auto_index = auto_index;
 }
 
-void	ServerConfig::setServerNames(const std::vector<std::string> &server_names)
+void	ServerConfig::setServerNames(const std::string &server_name)
 {
-	_server_names = server_names;
+	_server_names.push_back(server_name);
 }
 
 void	ServerConfig::setClientMaxBodySize(const size_t &client_max_body_size)

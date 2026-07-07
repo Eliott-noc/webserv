@@ -21,8 +21,8 @@ class ServerConfig
 	~ServerConfig();
 	
 	struct Listen {
-		std::string host;
-		int port;
+		std::string _host;
+		int 		_port;
 	};
 	
 	void						addLocation(const Location &loc);
@@ -42,7 +42,7 @@ class ServerConfig
 	void						setRoot(const std::string &root);
 	void						setIndex(const std::string &index);
 	void						setAutoIndex(const bool &auto_index);
-	void						setServerNames(const std::vector<std::string> &server_names);
+	void						setServerNames(const std::string &server_name);
 	void						setClientMaxBodySize(const size_t &error_pages);
 	void						setErrorPages(const std::map<int, std::string> &error_pages);
 	void						setLocations(const std::vector<Location> &locations);

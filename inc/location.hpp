@@ -23,7 +23,7 @@ class Location
 		std::string					_cgi_path;      // chemin vers python/php
 		std::string					_cgi_ext;       // .py ou .php
 		std::string					_upload_store;  // dossier d'upload
-		std::vector<std::string>	_error_pages;
+		std::map<int, std::string>	_error_pages;
 
 	public:
 		Location();

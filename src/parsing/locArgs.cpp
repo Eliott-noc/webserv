@@ -12,10 +12,8 @@ void	setArgPath(Location &location, const std::string &path)
 }
 void	setArgRoot(Location &location, const std::vector<std::string> &args)
 {
-	if (args.size() < 2)
-		throw std::runtime_error("Error: root must have one argument");
-	else if (args.size() > 2)
-		throw std::runtime_error("Error: root can't have more than one argument");
+	if (args.size() != 2)
+		throw std::runtime_error("Error: root must have exactly one argument");
 	location.setRoot(args[1]);
 }
 void	setArgMethods(Location &location, const std::vector<std::string> &args)
@@ -55,9 +53,11 @@ void	setArgRet(Location &location, const std::vector<std::string> &args)
 {
 	if (args.size() != 2 && args.size() != 3)
 		throw std::runtime_error("Error: return must have one or two argument");
+
 	int	code;
 	std::stringstream ss(args[1]);
 	ss >> code;
+
 	if (ss.fail() || !ss.eof())
 		throw std::runtime_error("Error: invalid number");
 	if (code < 100 || code > 599)
@@ -71,26 +71,49 @@ void	setArgCgiPath(Location &location, const std::vector<std::string> &args)
 {
 	if (args.size() != 2)
 	throw std::runtime_error("Error: cgi_path must have one argument");
+
 	const std::string &path = args[1];
+
 	if (path.empty() || path[0] != '/')
 		throw std::runtime_error("Error: cgi_path must be an absolute path");
-	location.setCgiPath(args[1]);
+	location.setCgiPath(path);
 }
 void	setArgCgiExt(Location &location, const std::vector<std::string> &args)
 {
 	if (args.size() != 2)
-	throw std::runtime_error("Error: cgi_ext must have one argument");
+		throw std::runtime_error("Error: cgi_ext must have one argument");
 	const std::string &ext = args[1];
 	if (ext.empty() || ext[0] != '.')
 		throw std::runtime_error("Error: cgi_ext must start with '.'");
-	location.setCgiExt(args[1]);
+	location.setCgiExt(ext);
 }
 void	setArgUploadStore(Location &location, const std::vector<std::string> &args)
 {
 	if (args.size() != 2)
-		throw std::runtime_error("Error: cgi_path must have one argument");
+		throw std::runtime_error("Error: upload_store must have one argument");
+
 	const std::string &upload = args[1];
+
 	if (upload.empty() || upload[0] != '/')
-		throw std::runtime_error("Error: cgi_path must be an absolute path");
-	location.setUploadStore(args[1]);
+		throw std::runtime_error("Error: upload_store must be an absolute path");
+	location.setUploadStore(upload);
 }
+
+// void	setArgErrorPage(Location &location, const std::vector<std::string> &args)
+// {
+// 	if (args.size() != 2 && args.size() != 3)
+// 		throw std::runtime_error("Error: error_page must have one or two argument");
+
+// 	int	code;
+// 	std::stringstream ss(args[1]);
+// 	ss >> code;
+
+// 	if (ss.fail() || !ss.eof())
+// 		throw std::runtime_error("Error: invalid number");
+// 	if (code < 100 || code > 599)
+// 		throw std::runtime_error("Error: invalid http code");
+// 	if (args.size() == 1)
+// 		location.setErrorPage(code , "");
+// 	else
+// 		location.setErrorPage(code, args[2]);
+// }

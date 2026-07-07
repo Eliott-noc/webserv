@@ -105,21 +105,21 @@ static std::vector<std::vector<std::string> > extractServerBlocks(const std::vec
 	return blocks;
 }
 
-static std::vector<std::string> extractLocationBlock(const std::vector<std::string> &block, size_t i)
+static std::vector<std::string> extractLocationBlock(const std::vector<std::string> &block, size_t *i)
 {
 	std::vector<std::string>	extracted_block;
 
-	while (i < block.size() && block[i] != "}")
+	while (*i < block.size() && block[*i] != "}")
 	{
-		if (block[i] == "location" || block[i] == "{")
+		if (block[*i] == "location" || block[*i] == "{")
 		{
-			i++;
+			(*i)++;
 			continue ;
 		}
-		extracted_block.push_back(block[i]);
-		i++;
+		extracted_block.push_back(block[*i]);
+		(*i)++;
 	}
-	if (i == block.size())
+	if (*i == block.size())
 		throw std::runtime_error("Error: missing '}' in location block");
 
 	return extracted_block;
@@ -127,38 +127,24 @@ static std::vector<std::string> extractLocationBlock(const std::vector<std::stri
 
 static void	setLocArgs(Location &location, std::vector<std::string> &args)
 {
-		if (args[0] == "root")
-		{
-			setArgRoot(location, args);
-		}
-		else if (args[0] == "allow_methods")
-		{
-			setArgMethods(location, args);
-		}
-		else if (args[0] == "index")
-		{
-			setArgIndex(location, args);
-		}
-		else if (args[0] == "autoindex")
-		{
-			setArgAutoIndex(location, args);
-		}
-		else if (args[0] == "return")
-		{
-			setArgRet(location, args);
-		}
-		else if (args[0] == "cgi_path")
-		{
-			setArgCgiPath(location, args);
-		}
-		else if (args[0] == "cgi_ext")
-		{
-			setArgCgiExt(location, args);
-		}
-		else if (args[0] == "upload_store")
-		{
-			setArgUploadStore(location, args);
-		}
+	if (args[0] == "root")
+		setArgRoot(location, args);
+	else if (args[0] == "allow_methods")
+		setArgMethods(location, args);
+	else if (args[0] == "index")
+		setArgIndex(location, args);
+	else if (args[0] == "autoindex")
+		setArgAutoIndex(location, args);
+	else if (args[0] == "return")
+		setArgRet(location, args);
+	else if (args[0] == "cgi_path")
+		setArgCgiPath(location, args);
+	else if (args[0] == "cgi_ext")
+		setArgCgiExt(location, args);
+	else if (args[0] == "upload_store")
+		setArgUploadStore(location, args);
+	// else if (args[0] == "error_page")
+	// 	setArgErrorpage(location, args);
 }
 
 static Location	parseLocation(const std::vector<std::string> &l_block)
@@ -170,14 +156,12 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 
 	for (size_t i = 1; i < l_block.size(); i++)
 	{
-		std::cout << i << " = " << l_block[i] << std::endl;
 		if ((i == 1 && l_block[i] == ";") || (l_block[i] == ";" && l_block[i - 1] == ";") || (i == l_block.size() - 1 && l_block[i] != ";"))
 			throw std::runtime_error("Error: Empty directive");
 		if (isLocKeyword(l_block[i]) && (l_block[i - 1] != ";" && i != 1))
 			throw std::runtime_error("Error: keyword not in start of directive");
 		if (l_block[i - 1] == ";" && !isLocKeyword(l_block[i]))
 			throw std::runtime_error("Error: no keyword at start of location directive");
-
 		if (l_block[i] != ";")
 			args.push_back(l_block[i]);
 		else
@@ -191,6 +175,23 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 	return location;
 }
 
+static void	parseServerDirective(ServerConfig &server, const std::vector<std::string> &args, size_t *i)
+{
+	if (args[0] == "listen")
+		setServerListen(server, args);
+	else if (args[0] == "server_name")
+		setServerName(server, args);
+	else if (args[0] == "root")
+		setServerRoot(server, args);
+	else if (args[0] == "index")
+		setServerIndex(server, args);
+	else if (args[0] == "error_page")
+		setServerErrorPage(server, args);
+	else if (args[0] == "client_max_body_size")
+		setServerBodySize(server, args);
+	while (args[*i] != ";")
+		(*i)++;
+}
 
 static ServerConfig	parseServer(const std::vector<std::string> &s_block)
 {
@@ -199,16 +200,14 @@ static ServerConfig	parseServer(const std::vector<std::string> &s_block)
 
 	for (size_t i = 0; i < s_block.size(); i++)
 	{
+		std::cout << "s_block[" << i << "] = " << s_block[i] << std::endl;
 		if (s_block[i] == "location")
 		{
-			std::vector<std::string> location_block = extractLocationBlock(s_block, i);
-			// for (size_t j = 0; j < location_block.size(); j++)
-			// 	std::cout << "location " << j << " = " << location_block[j] << std::endl;
+			std::vector<std::string> location_block = extractLocationBlock(s_block, &i);
 			locations.push_back(parseLocation(location_block));
-			//i = skipBlock(s_block, i);
 		}
-		// else
-		// 	parseDirective(server, s_block, i);
+		else
+			parseServerDirective(server, s_block, i);
 	}
 	server.setLocations(locations);
 	return server;

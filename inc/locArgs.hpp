@@ -20,5 +20,6 @@ void	setArgRet(Location &location, const std::vector<std::string> &args);
 void	setArgCgiPath(Location &location, const std::vector<std::string> &args);
 void	setArgCgiExt(Location &location, const std::vector<std::string> &args);
 void	setArgUploadStore(Location &location, const std::vector<std::string> &args);
+void	setArgErrorPage(Location &location, const std::vector<std::string> &args);
 
 #endif
