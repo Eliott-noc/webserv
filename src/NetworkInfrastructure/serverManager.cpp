@@ -54,6 +54,7 @@ void ServerManager::initServers(){
 			new_poll.events = POLLIN;
 			new_poll.revents = 0;
 			_pollfds.push_back(new_poll);
+			_listenSockets[listen_fd] = &_configs[i];
 		}
 	}
 }
@@ -88,18 +89,15 @@ void ServerManager::run(){
 						continue;
 					}
 					else{
-						char buffer[1000];
+						char buffer[8192];
 						ssize_t count = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
 						if (count == -1){
 							err_code = errno;
-							if (err_code == EAGAIN || err_code == EWOULDBLOCK)
-								continue;
-							else{
+							if (err_code != EAGAIN && err_code != EWOULDBLOCK){
 								printPortErr(err_code, -2);
 								_removeClient(i);
 								nfds--;
 								i--;
-								//exit //return
 							}
 						}
 						else if (count == 0){
@@ -108,23 +106,35 @@ void ServerManager::run(){
 							i--;
 						}
 						else {
-							_clients[_pollfds[i].fd]->raw_request_buffer.append(buffer, count);
-							//send to translator
-							//Request::parse(buffer, 8192)---- config.getbodymaxsize
-							// if response_is_ready true, add POLLOUT to events
-							// (_pollfds[i].events | POLLOUT)
-							//else if request is complete, set event = POLLOUT 
-							// to only monitor for when the server is ready to read the request
+							int client_fd = _pollfds[i].fd;
+							Client* client = _clients[client_fd];
+							size_t body_limit = client->config->getClientMaxBodySize();
+							std::string chunk(buffer, count);
+							int parse_status = client->request.parse(chunk, body_limit);
+							if (parse_status == 1)
+								client->request_is_complete = false;
+							else {
+								client->request_is_complete = true;
+								if (parse_status == 200)
+									client->response.makeResponse(client->request, *(client->config));
+								else
+									client->response.buildErrorPage(parse_status, *(client->config));
+								_pollfds[i].events = POLLOUT;
+							}
 						}
 					}
 				}
 				else if (_pollfds[i].revents & POLLOUT){
 					checked++;
-					/*
-					generate response avec makeResponse(request, config)
-					ssize_t sent = send(current_fd, response_string.c_string(), response_string.lenght(), 0);
-					send()
-					*/
+					int client_fd = _pollfds[i].fd;
+					Client* client = _clients[client_fd];
+
+					client->response.sendResponse(client_fd);
+					if (client->response.isFinished()){
+						_removeClient(client_fd);
+						nfds--;
+						i--;
+					}
 				}
 				else if (_pollfds[i].revents & POLLERR || _pollfds[i].revents & POLLHUP || _pollfds[i].revents & POLLNVAL){
 					checked++;
@@ -138,9 +148,30 @@ void ServerManager::run(){
 }
 
 void ServerManager::_acceptNewConnection(int server_fd){
-	Client _newClient(server_fd);
-	_clients.insert({server_fd, &_newClient});
-	//also needs to create new socket and bind it i guess
+	struct sockaddr_in	client_addr;
+	socklen_t			addr_len = sizeof(client_addr);
+	int					err_code;
+	int					client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &addr_len);
+	
+	if (client_fd < 0){
+		err_code = errno;
+		printPortErr(err_code, -2);
+		return;
+	}
+	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0){
+		err_code = errno;
+		printPortErr(err_code, -2);
+		close(client_fd);
+		return;
+	}
+	pollfd new_poll;
+	new_poll.fd = client_fd;
+	new_poll.events = POLLIN;
+	new_poll.revents = 0;
+	_pollfds.push_back(new_poll);
+	Client* _newClient = new Client(server_fd);
+	_newClient->config = _listenSockets[server_fd];
+	_clients[server_fd] = _newClient;
 }
 
 void ServerManager::_handleClientData(int server_fd){
@@ -155,5 +186,5 @@ void ServerManager::_removeClient(size_t idx){
 	close(_pollfds[idx].fd);
 	_pollfds[idx] = _pollfds[_pollfds.size() - 1];
 	_pollfds.pop_back();
-	_clients.erase(_pollfds[idx].fd);
+	_clients.erase(_pollfds[_pollfds.size() - 1].fd);
 }
