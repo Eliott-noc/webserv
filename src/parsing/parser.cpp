@@ -188,20 +188,23 @@ static Location	parseLocation(const std::vector<std::string> &l_block, const Ser
 	}
 	//checkLocation  si pas de index rempli, alors la location herite de l'index du server
 	//De william: j'ai rajoute server comme parametre de la fonction pour pouvoir get Index du server
-	if (checkLocation(location) == false)
-		location.setIndex(server.getIndex());
+	checkLocation(location);
 
 	return location;
 }
 
-bool	checkLocation(const Location &Location)
+bool	checkLocation(Location &location, const ServerConfig &server)
 {
-	std::vector<std::string>	index = Location.getIndex();
+	if (location.getIndex().empty())
+		location.setIndex(server.getIndex());
 
-	if (index.empty())
-		return false;
-	else
-		return true;
+	if (location.getRoot().empty())
+		location.setRoot(server.getRoot());
+
+	if (!location.isAutoIndexSet())
+		location.setAutoIndex(server.getAutoIndex());
+	// if (location.getMaxBody() == 0)
+	// 	location.setMaxBody(server.getClientMaxBodySize());
 }
 
 
