@@ -13,7 +13,7 @@ void ServerManager::initServers(){
 		int err_code, port;
 		for (size_t j = 0; j < _configs[i].getPort().size(); j++){
 			port = _configs[i].getPort(j);
-			int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+			int listen_fd = socket(PF_INET, SOCK_STREAM, 0);
 			if (listen_fd < 0){
 				err_code = errno;
 				printPortErr(err_code, port);
@@ -35,8 +35,9 @@ void ServerManager::initServers(){
 			struct sockaddr_in serv_addr;
 			bzero((char*)&serv_addr, sizeof(serv_addr));
 			serv_addr.sin_family = AF_INET;
-			serv_addr.sin_addr.s_addr = INADDR_ANY;
 			serv_addr.sin_port = htons(port);
+			serv_addr.sin_addr.s_addr = INADDR_ANY; // lookup for inet_addr for byte order in case of different than 0
+			// serv_addr.sin_addr.s_addr = inet_addr(IP address);
 			if (bind(listen_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){
 				err_code = errno;
 				printPortErr(err_code, port);
@@ -112,9 +113,8 @@ void ServerManager::run(){
 							std::string chunk(buffer, count);
 							int parse_status = client->request.parse(chunk, body_limit);
 							if (parse_status == 1)
-								client->request_is_complete = false;
+								continue;
 							else {
-								client->request_is_complete = true;
 								if (parse_status == 200)
 									client->response.makeResponse(client->request, *(client->config));
 								else

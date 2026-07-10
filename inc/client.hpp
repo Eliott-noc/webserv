@@ -19,7 +19,6 @@ class Client
 		std::string		raw_request_buffer; // Ce que le moteur lit du socket
 		Request			request;
 		Response		response;
-		bool			request_is_complete;
 		bool			response_is_ready;
 
 		Client(int client_fd);
