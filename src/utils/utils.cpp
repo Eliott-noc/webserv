@@ -4,8 +4,8 @@
 
 bool	checkLocation(Location &location, const ServerConfig &server)
 {
-	if (location.getIndex().empty())
-		location.setIndex(server.getIndex());
+	// if (location.getIndex().empty())
+	// 	location.setIndex(server.getIndex());
 
 	if (location.getRoot().empty())
 		location.setRoot(server.getRoot());
@@ -14,6 +14,7 @@ bool	checkLocation(Location &location, const ServerConfig &server)
 		location.setAutoIndex(server.getAutoIndex());
 	// if (location.getMaxBody() == 0)
 	// 	location.setMaxBody(server.getClientMaxBodySize());
+	return 0;
 }
 
 int checkInt(const std::string &str)

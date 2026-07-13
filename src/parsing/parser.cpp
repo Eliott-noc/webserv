@@ -148,21 +148,6 @@ static void	setLocArgs(Location &location, std::vector<std::string> &args)
 	// 	setArgErrorpage(location, args);
 }
 
-bool	checkLocation(Location &location, const ServerConfig &server)
-{
-	if (location.getIndex().empty())
-		location.setIndex(server.getIndex());
-
-	if (location.getRoot().empty())
-		location.setRoot(server.getRoot());
-
-	if (!location.isAutoIndexSet())
-		location.setAutoIndex(server.getAutoIndex());
-	// if (location.getMaxBody() == 0)
-	// 	location.setMaxBody(server.getClientMaxBodySize());
-	return 0;
-}
-
 static Location	parseLocation(const std::vector<std::string> &l_block, const ServerConfig &server)
 {
 	Location				location;
@@ -233,7 +218,7 @@ static ServerConfig	parseServer(std::vector<std::string> &s_block)
 		if (s_block[i] == "location")
 		{
 			std::vector<std::string> location_block = extractLocationBlock(s_block, &i);
-			locations.push_back(parseLocation(server, location_block));
+			locations.push_back(parseLocation(location_block, server));
 		}
 		else
 		{
