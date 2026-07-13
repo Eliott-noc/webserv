@@ -10,9 +10,22 @@ ton programme doit écouter sur plusieurs ports en même temps (ex: 8080 et 4242
 répondre à des noms de domaine différents (server_name), tout en gardant en mémoire
 les pages d'erreur personnalisées à afficher en cas de problème.
 */
+struct Listen {
+	std::string _host;
+	int 		_port;
+};
 
 class ServerConfig
 {
+	private:
+		std::vector<Listen>			_listen;
+		std::string					_root;
+		std::vector<std::string>	_index;
+		bool						_auto_index;
+		std::vector<std::string>	_server_names;
+		size_t						_client_max_body_size;
+		std::map<int, std::string>	_error_pages;
+		std::vector<Location>		_locations;
 	
 	public:
 	ServerConfig();
@@ -20,10 +33,6 @@ class ServerConfig
 	ServerConfig				&operator=(const ServerConfig &other);
 	~ServerConfig();
 	
-	struct Listen {
-		std::string _host;
-		int 		_port;
-	};
 	
 	void						addLocation(const Location &loc);
 	
@@ -32,7 +41,7 @@ class ServerConfig
 	std::vector<Listen>			getListens() const;
 	std::string					getRoot() const;
 	bool						getAutoIndex() const;
-	std::string					getIndex() const;
+	std::vector<std::string>	getIndex() const;
 	std::vector<std::string>	getServerNames() const;
 	size_t						getClientMaxBodySize() const;
 	std::map<int, std::string>	getErrorPages() const;
@@ -47,15 +56,6 @@ class ServerConfig
 	void						setErrorPages(const std::map<int, std::string> &error_pages);
 	void						setLocations(const std::vector<Location> &locations);
 	
-	private:
-		std::vector<Listen>			_listen;
-		std::string					_root;
-		std::string					_index;
-		bool						_auto_index;
-		std::vector<std::string>	_server_names;
-		size_t						_client_max_body_size;
-		std::map<int, std::string>	_error_pages;
-		std::vector<Location>		_locations;
 };
 
 #endif

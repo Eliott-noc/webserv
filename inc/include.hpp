@@ -1,6 +1,7 @@
 #ifndef INCLUDE_HPP
 # define 	INCLUDE_HPP
 
+#include <string>
 # include <iostream>
 # include <vector>
 # include <map>

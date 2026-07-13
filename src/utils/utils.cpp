@@ -1,5 +1,62 @@
 #include "../../inc/include.hpp"
 #include "../../inc/locArgs.hpp"
+#include "../../inc/serverConfig.hpp"
+
+int checkInt(const std::string &str)
+{
+	for (size_t i = 0; i < str.size(); i++)
+	{
+		if (str[i] < '0' && str[i] > '9')
+			return 1;
+	}
+	return 0;
+}
+
+size_t parseSize(const std::string& str)
+{
+	size_t multiplier = 1;
+	std::string number = str;
+
+	char unit = str[str.size() - 1];
+
+	if (unit == 'K' || unit == 'k')
+	{
+		multiplier = 1024;
+		number = str.substr(0, str.size() - 1);
+	}
+	else if (unit == 'M' || unit == 'm')
+	{
+		multiplier = 1024 * 1024;
+		number = str.substr(0, str.size() - 1);
+	}
+	else if (unit == 'G' || unit == 'g')
+	{
+		multiplier = 1024 * 1024 * 1024;
+		number = str.substr(0, str.size() - 1);
+	}
+
+	if (checkInt(number))
+		throw std::runtime_error("Invalid body size");
+
+	return std::atoi(number.c_str()) * multiplier;
+}
+
+
+int	checkDuplicateListen(const std::vector<Listen> &listen_block)
+{
+	for (size_t i = 0; i < listen_block.size(); i++)
+	{
+		if (i + 1 < listen_block.size() - 1)
+		{
+			for (size_t j = i + 1; j < listen_block.size(); j++)
+			{
+				if ((listen_block[i]._host == listen_block[j]._host) && (listen_block[i]._port == listen_block[j]._port))
+					return 1;
+			}
+		}
+	}
+	return 0;
+}
 
 int	checkDuplicateIndex(const std::vector<std::string> &args)
 {

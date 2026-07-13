@@ -1,7 +1,10 @@
 #ifndef SERVERARGS_HPP
 #define SERVERARGS_HPP
 
-void	setServerListen(ServerConfig &server, const std::vector<std::string> &args);
+#include "serverConfig.hpp"
+
+
+void	setServerListen(ServerConfig &server, std::vector<std::string> &args);
 void	setServerName(ServerConfig &server, const std::vector<std::string> &args);
 void	setServerRoot(ServerConfig &server, const std::vector<std::string> &args);
 void	setServerIndex(ServerConfig &server, const std::vector<std::string> &args);

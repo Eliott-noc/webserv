@@ -50,6 +50,11 @@ const Location	*ServerConfig::getLocationForPath(std::string const &path)
 	return bestMatch;
 }
 
+std::vector<Listen> ServerConfig::getListens() const
+{
+	return _listen;
+}
+
 std::string	ServerConfig::getRoot() const
 {
 	return _root;
@@ -60,7 +65,7 @@ bool	ServerConfig::getAutoIndex() const
 	return _auto_index;
 }
 
-std::string	ServerConfig::getIndex() const
+std::vector<std::string>	ServerConfig::getIndex() const
 {
 	return _index;
 }

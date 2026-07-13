@@ -2,7 +2,7 @@
 #define LOCARGS_HPP
 
 #include "include.hpp"
-#include "../inc/serverConfig.hpp"
+#include "serverConfig.hpp"
 
 typedef struct	s_methods
 {

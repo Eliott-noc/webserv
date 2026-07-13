@@ -2,6 +2,7 @@
 #include "../../inc/utils.hpp"
 #include "../../inc/location.hpp"
 #include "../../inc/locArgs.hpp"
+#include "../../inc/serverArgs.hpp"
 
 static std::string	readFile(const std::string &filename)
 {
@@ -175,7 +176,7 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 	return location;
 }
 
-static void	parseServerDirective(ServerConfig &server, const std::vector<std::string> &args, size_t *i)
+static void	parseServerDirective(ServerConfig &server, std::vector<std::string> &args)
 {
 	if (args[0] == "listen")
 		setServerListen(server, args);
@@ -189,25 +190,39 @@ static void	parseServerDirective(ServerConfig &server, const std::vector<std::st
 		setServerErrorPage(server, args);
 	else if (args[0] == "client_max_body_size")
 		setServerBodySize(server, args);
-	while (args[*i] != ";")
-		(*i)++;
 }
 
-static ServerConfig	parseServer(const std::vector<std::string> &s_block)
+static std::vector<std::string> extractServerDirective(const std::vector<std::string> &block, size_t *i)
+{
+	std::vector<std::string>	extracted_block;
+
+	while (*i < block.size())
+	{
+		if (block[*i] == ";")
+			break ;
+		extracted_block.push_back(block[*i]);
+		(*i)++;
+	}
+	return extracted_block;
+}
+
+static ServerConfig	parseServer(std::vector<std::string> &s_block)
 {
 	ServerConfig			server;
 	std::vector<Location>	locations;
 
 	for (size_t i = 0; i < s_block.size(); i++)
 	{
-		std::cout << "s_block[" << i << "] = " << s_block[i] << std::endl;
 		if (s_block[i] == "location")
 		{
 			std::vector<std::string> location_block = extractLocationBlock(s_block, &i);
 			locations.push_back(parseLocation(location_block));
 		}
 		else
-			parseServerDirective(server, s_block, i);
+		{
+			std::vector<std::string> serverDirective = extractServerDirective(s_block, &i);
+			parseServerDirective(server, serverDirective);
+		}
 	}
 	server.setLocations(locations);
 	return server;
@@ -227,17 +242,17 @@ std::vector<ServerConfig>	parseConfig(const std::string &filename)
 	for (size_t i = 0; i < server_blocks.size(); i++)
 	{
 		ServerConfig server = parseServer(server_blocks[i]);
-		// servers.push_back(server);
+		servers.push_back(server);
 	}
 
 	//checkServers(servers);
 
-	// for(size_t i = 0; i < server_blocks.size(); i++)
-	// {
-	// 	for(size_t j = 0; j < server_blocks[i].size(); j++)
-	// 	{
-	// 		std::cout << "block " << i << " token " << j << " = " << server_blocks[i][j] << std::endl;
-	// 	}
-	// }
+	for(size_t i = 0; i < server_blocks.size(); i++)
+	{
+		for(size_t j = 0; j < server_blocks[i].size(); j++)
+		{
+			std::cout << "block " << i << " token " << j << " = " << server_blocks[i][j] << std::endl;
+		}
+	}
 	return servers;
 }
