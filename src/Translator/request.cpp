@@ -240,14 +240,20 @@ int	Request::parse(std::string chunk, size_t max_body_limit)
 {
 	_raw_buffer += chunk;
 
-	if (_state != READING_BODY && _raw_buffer.size() > 8192)
-	{
-		_state = ERROR;
-		return 431;
-	}
-
 	while (_state != FINISHED && _state != ERROR)
 	{
+		if (_state == READING_REQUEST_LINE || _state == READING_HEADERS)
+		{
+			size_t	end_headers = _raw_buffer.find("\r\n\r\n");
+
+			if ((end_headers == std::string::npos && _raw_buffer.size() > 8192) ||
+				(end_headers != std::string::npos && end_headers > 8192))
+			{
+				_state = ERROR;
+				return 431;
+			}
+		}
+
 		if (_state == READING_REQUEST_LINE)
 		{
 			if (_raw_buffer.find("\r\n") == std::string::npos)
@@ -279,18 +285,23 @@ int	Request::parse(std::string chunk, size_t max_body_limit)
 				if (_content_length == 0)
 					_content_length = atol(_headers["content-length"].c_str());
 
-				if (_content_length > max_body_limit) return 413;
+				if (_content_length > max_body_limit)
+				{
+					_state = ERROR;
+					return 413;
+				}
 
 				if (_body_fd == -1)
 				{
-					std::stringstream ss;
+					std::stringstream	ss;
+
 					ss << "/tmp/body_client_" << _client_fd << ".tmp";
 					_tmp_file = ss.str();
 					_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
 				}
 
-				size_t remaining = _content_length - _bytes_received;
-				size_t to_write = (_raw_buffer.size() < remaining) ? _raw_buffer.size() : remaining;
+				size_t	remaining = _content_length - _bytes_received;
+				size_t	to_write = (_raw_buffer.size() < remaining) ? _raw_buffer.size() : remaining;
 
 				if (to_write > 0)
 				{
@@ -315,7 +326,6 @@ int	Request::parse(std::string chunk, size_t max_body_limit)
 	if (_state == FINISHED)
 	{
 		std::map<std::string, std::string>::iterator	it = _headers.find("host");
-
 		if (it == _headers.end() || it->second.empty())
 		{
 			_state = ERROR;

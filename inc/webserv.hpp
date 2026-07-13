@@ -9,6 +9,8 @@
 # include "response.hpp"
 # include "serverConfig.hpp"
 # include "serverManager.hpp"
+#include "parser.hpp"
+#include "utils.hpp"
 
 // Parsing : ConfigParser, ServerConfig et Location.
 // NetworkInfrastructure : ServerManager et Client.
