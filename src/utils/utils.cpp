@@ -2,6 +2,20 @@
 #include "../../inc/locArgs.hpp"
 #include "../../inc/serverConfig.hpp"
 
+bool	checkLocation(Location &location, const ServerConfig &server)
+{
+	if (location.getIndex().empty())
+		location.setIndex(server.getIndex());
+
+	if (location.getRoot().empty())
+		location.setRoot(server.getRoot());
+
+	if (!location.isAutoIndexSet())
+		location.setAutoIndex(server.getAutoIndex());
+	// if (location.getMaxBody() == 0)
+	// 	location.setMaxBody(server.getClientMaxBodySize());
+}
+
 int checkInt(const std::string &str)
 {
 	for (size_t i = 0; i < str.size(); i++)
