@@ -148,7 +148,7 @@ static void	setLocArgs(Location &location, std::vector<std::string> &args)
 	// 	setArgErrorpage(location, args);
 }
 
-static Location	parseLocation(const std::vector<std::string> &l_block)
+static Location	parseLocation(ServerConfig &server, const std::vector<std::string> &l_block)
 {
 	Location				location;
 	std::vector<std::string> args;
@@ -171,7 +171,7 @@ static Location	parseLocation(const std::vector<std::string> &l_block)
 			args.clear();
 		}
 	}
-	//checkLocation  si pas de index rempli, alors la location herite de l'index du server
+	checkLocation(location, server);
 
 	return location;
 }
@@ -216,7 +216,7 @@ static ServerConfig	parseServer(std::vector<std::string> &s_block)
 		if (s_block[i] == "location")
 		{
 			std::vector<std::string> location_block = extractLocationBlock(s_block, &i);
-			locations.push_back(parseLocation(location_block));
+			locations.push_back(parseLocation(server, location_block));
 		}
 		else
 		{
