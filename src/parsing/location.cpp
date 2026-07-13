@@ -2,7 +2,7 @@
 #include "../../inc/utils.hpp"
 
 Location::Location()
-	: _auto_index(false)
+	: _auto_index(false), _isAutoIndexSet(false),_return_code(0)
 {
 }
 
@@ -86,6 +86,12 @@ std::string	Location::getUploadStore() const
 	return _upload_store;
 }
 
+std::map<int, std::string>	Location::getErrorPages() const
+{
+	return _error_pages;
+}
+
+
 void	Location::setPath(const std::string &path)
 {
 	_path = path;
@@ -111,6 +117,12 @@ void	Location::setIndex(const std::string &index)
 void	Location::setAutoIndex(const bool &auto_index)
 {
 	_auto_index = auto_index;
+	_isAutoIndexSet = true;
+}
+
+bool Location::isAutoIndexSet() const
+{
+	return _isAutoIndexSet;
 }
 
 void	Location::setRet(int &ret_code, const std::string &ret_url)

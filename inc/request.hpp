@@ -47,14 +47,16 @@ class Request
 
 		std::string							getMethod() const;
 		std::string							getPath() const;
+		std::string							getQueryString() const;
 		std::map<std::string, std::string>	getHeaders() const;
 		std::string							getBodyFile() const;
 
 	private:
-
 		void								_requestLine();
 		void								_scanHeader();
 		bool								_chunked(size_t max_body_limit);
+		std::string							_urlDecode(std::string str);
+
 };
 
 #endif

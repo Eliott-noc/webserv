@@ -18,6 +18,7 @@ class Location
 		std::vector<std::string>	_methods;       // GET, POST, DELETE
 		std::vector<std::string>	_index;         // index.html
 		bool						_auto_index;     // on/off
+		bool						_isAutoIndexSet;
 		int							_return_code;
 		std::string					_return_url;
 		std::string					_cgi_path;      // chemin vers python/php
@@ -44,12 +45,15 @@ class Location
 		std::string					getCGIPath() const;
 		std::string					getCGIExt() const;
 		std::string					getUploadStore() const;
+		std::map<int, std::string>	getErrorPages() const;
+		
 
 		void						setPath(const std::string &path);
 		void						setRoot(const std::string &root);
 		void						setMethods(const std::vector<std::string> &methods);
 		void						setIndex(const std::string &index);
 		void						setAutoIndex(const bool &autoIndex);
+		bool						isAutoIndexSet() const;
 		void						setRet(int &ret_code, const std::string &ret_url);
 		void						setCgiPath(const std::string &cgi_path);
 		void						setCgiExt(const std::string &cgi_ext);

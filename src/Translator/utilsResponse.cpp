@@ -1,5 +1,11 @@
 #include "../../inc/response.hpp"
 
+/*
+ * WHAT : Vérifie si la methode est autoriser (GET, POST, ou DELETE).
+ * WHY : utils
+ * RETURN : 1 si c'est autorise, sinon 0
+ */
+
 bool	Response::_isMethodAllowed(std::string method, std::vector<std::string> const &allowedMethods)
 {
 	if (allowedMethods.empty())
@@ -11,137 +17,176 @@ bool	Response::_isMethodAllowed(std::string method, std::vector<std::string> con
 	return false;
 }
 
-int	Response::_checkConfig(ServerConfig &config, int code)
+/*
+ * WHAT : regarde si dans le .conf, il y avait une page d'erreur deja prete pour le
+ * message d'erreur n, qui se trouve dans serverConfig, remplie par julien.
+ * WHY : Permet à l'administrateur du serveur de proposer un design propre pour ses 
+ * erreurs au lieu d'utiliser le HTML de base que j'ai fais.
+ * RETURN 1 si il existe une page dans serverConfig pour l'erreur n, sinon 0: 
+ */
+
+bool Response::_checkConfig(ServerConfig &config, const Location *loc, int code)
 {
-	std::string					path;
-	std::map<int, std::string>	errorPages = config.getErrorPages();
-	
-	if (errorPages.count(code))
+	std::map<int, std::string>	errorPages;
+	std::string					path = "";
+
+	if (loc)
 	{
-		path = config.getRoot() + errorPages[code];
-		std::ifstream	file(path.c_str(), std::ios::binary);
-
-		if (file.is_open())
+		errorPages = loc->getErrorPages();
+		if (errorPages.count(code))
 		{
-			std::stringstream	ss;
-
-			ss << file.rdbuf();
-			_body = ss.str();
-
-			file.close();
-			return 1;
+			path = (loc->getRoot().empty() ? config.getRoot() : loc->getRoot()) + errorPages[code];
 		}
 	}
-	return 0;
+
+	if (path.empty())
+	{
+		errorPages = config.getErrorPages();
+		if (errorPages.count(code))
+			path = config.getRoot() + errorPages[code];
+	}
+
+	if (!path.empty())
+	{
+		std::ifstream file(path.c_str(), std::ios::binary);
+		if (file.is_open())
+		{
+			std::stringstream ss;
+			ss << file.rdbuf();
+			_body = ss.str();
+			file.close();
+			return true;
+		}
+	}
+	return false;
 }
 
-std::string Response::_getMessageError(int code)
+/*
+ * WHAT : Construit le message d'erreur (ex: 404 + not found)
+ * WHY : utils
+ */
+
+std::string	Response::_getMessageError(int code)
 {
 	std::stringstream ss;
 	ss << code << " " << _getStatusMessage(code);
 	return ss.str(); 
 }
 
-// void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
-// {
-// 	struct stat	s;
-// 	std::string	indexPath;
+/*
+ * WHAT : Distingue fichier et dossier. Si c'est un dossier, il va chercher l'index ou
+ * lancer l'Autoindex.
+ * WHY : Fonction utiliser si la methode est GET (verifie si le chemin est un fichier ou
+ * dossier, et on fonction de ca, il generera une reponse).
+ */
 
-// 	if (stat(full_path.c_str(), &s) != 0)
-// 	{
-// 		buildErrorPage(404, config);
-// 		return;
-// 	}
+void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
+{
+	std::vector<std::string>	indexes = loc.getIndex();
+	std::string					testPath = full_path;
+	bool						found = false;
+	struct stat					s;
 
-// 	if (S_ISDIR(s.st_mode))
-// 	{
-// 		if (!loc.getIndex().empty())
-// 		{
-// 			indexPath = full_path;
-// 			if (indexPath.at(indexPath.length() - 1) != '/')
-// 				indexPath += "/";
-// 			indexPath += loc.getIndex();
+	if (stat(full_path.c_str(), &s) != 0)
+	{
+		buildErrorPage(404, config, &loc);
+		return;
+	}
 
-// 			struct stat	s_index;
+	if (S_ISDIR(s.st_mode))
+	{
+		for (size_t i = 0; i < indexes.size(); i++)
+		{
+			if (testPath.at(testPath.length() - 1) != '/')
+				testPath += "/";
+			testPath += indexes[i];
 
-// 			if (stat(indexPath.c_str(), &s_index) == 0 && S_ISREG(s_index.st_mode))
-// 			{
-// 				full_path = indexPath;
-// 				s = s_index;
-// 			}
-// 			else if (loc.getAutoIndex())
-// 			{
-// 				_body = _generateAutoIndex(full_path, req.getPath());
-// 				_headers["Content-Type"] = "text/html";
-				
-// 				std::stringstream	ss_len;
-				
-// 				ss_len << _body.length();
-// 				_headers["Content-Length"] = ss_len.str();
-				
-// 				_generateResponse(200);
-// 				return;
-// 			}
-// 			else
-// 			{
-// 				buildErrorPage(403, config);
-// 				return;
-// 			}
-// 		}
-// 		else if (loc.getAutoIndex())
-// 		{
-// 			_body = _generateAutoIndex(full_path, req.getPath());
-// 			_headers["Content-Type"] = "text/html";
-			
-// 			std::stringstream	ss_len;
+			struct stat	s_index;
 
-// 			ss_len << _body.length();
-// 			_headers["Content-Length"] = ss_len.str();
-			
-// 			_generateResponse(200);
-// 			return;
-// 		}
-// 		else
-// 		{
-// 			buildErrorPage(403, config);
-// 			return;
-// 		}
-// 	}
+			if (stat(testPath.c_str(), &s_index) == 0 && S_ISREG(s_index.st_mode))
+			{
+				full_path = testPath;
+				s = s_index;
+				found = true;
+				break ;
+			}
+		}
 
-// 	if (S_ISREG(s.st_mode))
-// 	{
-// 		_file_fd = open(full_path.c_str(), O_RDONLY);
-// 		if (_file_fd == -1) {
-// 			buildErrorPage(403, config);
-// 			return;
-// 		}
-// 		_file_size = s.st_size;
+		if (!found)
+		{
+			if (loc.getAutoIndex())
+			{
+				_body = _generateAutoIndex(full_path, req.getPath());
+				_headers["Content-Type"] = "text/html";
+				std::stringstream	ss_len;
 
-// 		_headers["Content-Type"] = _getMimeType(full_path);
-// 		std::stringstream ss_len;
-// 		ss_len << _file_size;
-// 		_headers["Content-Length"] = ss_len.str();
+				ss_len << _body.length();
+				_headers["Content-Length"] = ss_len.str();
+				_generateResponse(200);
+				return;
+			}
+			else
+			{
+				buildErrorPage(403, config, &loc);
+				return;
+			}
+		}
+	}
 
-// 		_generateResponse(200);
-// 	}
-// 	else
-// 		buildErrorPage(404, config);
-// }
+	if (S_ISREG(s.st_mode))
+	{
+		_file_fd = open(full_path.c_str(), O_RDONLY);
+		if (_file_fd == -1) {
+			buildErrorPage(403, config, &loc);
+			return;
+		}
+		_file_size = s.st_size;
+
+		_headers["Content-Type"] = _getMimeType(full_path);
+		std::stringstream	ss_len;
+
+		ss_len << _file_size;
+		_headers["Content-Length"] = ss_len.str();
+
+		_generateResponse(200);
+	}
+	else
+		buildErrorPage(404, config, &loc);
+}
+
+/*
+ * WHAT : Déplace le fichier temporaire de la Request vers sa destination finale (rename).
+ * WHY : L'utilisation de 'rename' est atomique et instantanée, ce qui est 
+ * tres secur et rapide comparer a une copie manuelle pour les fichiers de plusieurs Go.
+ */
 
 void	Response::_handlePost(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
-	std::string uploadDir = loc.getUploadStore();
-	if (uploadDir.empty()) { buildErrorPage(403, config); return; }
+	std::string	uploadDir = loc.getUploadStore();
+	std::string	fileName;
+	std::string	savePath;
+	int			exists;
 
-	std::string fileName = full_path.substr(full_path.find_last_of('/') + 1);
-	std::string savePath = uploadDir + "/" + fileName;
+	if (uploadDir.empty())
+	{
+		buildErrorPage(403, config, &loc);
+		return;
+	}
+
+	fileName = full_path.substr(full_path.find_last_of('/') + 1);
+	savePath = uploadDir + "/" + fileName;
+
+	struct stat	s;
+
+	exists = (stat(savePath.c_str(), &s) == 0);
 
 	if (std::rename(req.getBodyFile().c_str(), savePath.c_str()) != 0)
 	{
-		std::ifstream src(req.getBodyFile().c_str(), std::ios::binary);
-		std::ofstream dst(savePath.c_str(), std::ios::binary);
+		std::ifstream	src(req.getBodyFile().c_str(), std::ios::binary);
+		std::ofstream	dst(savePath.c_str(), std::ios::binary);
+
 		if (!src.is_open() || !dst.is_open()) {
-			buildErrorPage(500, config);
+			buildErrorPage(500, config, &loc);
 			return;
 		}
 		dst << src.rdbuf();
@@ -149,23 +194,35 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 		dst.close();
 		std::remove(req.getBodyFile().c_str());
 	}
-	_body = "<h1>Fichier cree avec succes !</h1>";
-	_headers["Content-Type"] = "text/html";
-	_generateResponse(201);
+
+	_body = "<h1>Action reussie !</h1>";
+	_headers["content-type"] = "text/html";
+	
+
+	if (exists)
+		_generateResponse(200);
+	else
+		_generateResponse(201);
 }
 
-void	Response::_handleDelete(ServerConfig &config, std::string full_path)
+/*
+ * WHAT : Supprime un fichier du serveur.
+ * WHY : Implémente la méthode HTTP DELETE. Vérifie d'abord que la cible n'est pas 
+ * un dossier pour éviter les suppressions accidentelles et massives.
+ */
+
+void	Response::_handleDelete(ServerConfig &config, const Location &loc, std::string full_path)
 {
 	struct stat	s;
 
 	if (stat(full_path.c_str(), &s) != 0)
 	{
-		buildErrorPage(404, config);
+		buildErrorPage(404, config, &loc);
 		return;
 	}
 	if (S_ISDIR(s.st_mode))
 	{
-		buildErrorPage(403, config);
+		buildErrorPage(403, config, &loc);
 		return;
 	}
 
@@ -176,10 +233,16 @@ void	Response::_handleDelete(ServerConfig &config, std::string full_path)
 		_generateResponse(204);
 	}
 	else
-		buildErrorPage(500, config);
+		buildErrorPage(500, config, &loc);
 }
 
-std::string Response::_getMimeType(std::string path)
+/*
+ * WHAT : Détermine le type de contenu (MIME) en fonction de l'extension du fichier.
+ * WHY : Indispensable pour que le navigateur sache s'il doit afficher une image, 
+ * lancer une vidéo ou interpréter du texte HTML.
+ */
+
+std::string	Response::_getMimeType(std::string path)
 {
 	static std::map<std::string, std::string>	mimeTypes;
 	size_t										pos;
@@ -210,7 +273,12 @@ std::string Response::_getMimeType(std::string path)
 	return "application/octet-stream";
 }
 
-std::string Response::_getStatusMessage(int code)
+/*
+ * WHAT : Convertit un code numérique (ex: 404) en message texte (ex: Not Found).
+ * WHY : Le protocole HTTP impose d'envoyer la description du code dans la Status Line.
+ */
+
+std::string	Response::_getStatusMessage(int code)
 {
 	static std::map<int, std::string>	messages;
 
@@ -232,10 +300,16 @@ std::string Response::_getStatusMessage(int code)
 	return "Unknown Error";
 }
 
+/*
+ * WHAT : Assemble la ligne de statut et tous les headers dans le buffer d'en-tête.
+ * WHY : Prépare la "première partie" de la réponse. En mode streaming, on doit
+ * separer les headers du contenu pour pouvoir les envoyer en premier.
+ */
+
 void	Response::_generateResponse(int code)
 {
 	_status_code = code;
-	std::stringstream ss;
+	std::stringstream	ss;
 
 	ss << "HTTP/1.1 " << _status_code << " " << _getStatusMessage(_status_code) << "\r\n";
 	
@@ -245,6 +319,12 @@ void	Response::_generateResponse(int code)
 	ss << "\r\n";
 	_header_buffer = ss.str();
 }
+
+/*
+ * WHAT : Produit une page HTML listant les fichiers d'un dossier.
+ * WHY : Fonctionnalité "Directory Listing" requise par le sujet. Permet la navigation 
+ * dans les fichiers quand aucun fichier index n'est présent.
+ */
 
 std::string	Response::_generateAutoIndex(std::string full_path, std::string request_path)
 {
@@ -273,4 +353,93 @@ std::string	Response::_generateAutoIndex(std::string full_path, std::string requ
 
 	closedir(dir);
 	return html;
+}
+
+/*
+ * WHAT: regarde si c'est un executable.
+ * WHY: utils.
+ * RETURN: 1 si c'est un executable, sinon non.
+*/
+
+bool	Response::_isCGI(std::string const &path, const Location &loc)
+{
+	std::string	ext = loc.getCGIExt();
+
+	if (ext.empty())
+		return false;
+
+	if (path.length() >= ext.length() && path.substr(path.length() - ext.length()) == ext)
+		return true;
+	return false;
+}
+
+/*
+ * WHAT : Nettoie l'URL en résolvant les ".." et les "//".
+ * WHY : Empêche un pirate de sortir du dossier racine (root) pour aller lire 
+ * des fichiers sensibles, comme par exemple notre mot de passe, ou notre code.
+ * RETURN : Error si erreur, ou une simplification de path (au lieux de :
+ * /image/chat.png/../../image, on a : /image)
+ */
+
+std::string	Response ::_normalizePath(std::string path)
+{
+	std::vector<std::string>	stack;
+	std::stringstream			ss(path);
+	std::string					segment;
+
+	while (std::getline(ss, segment, '/'))
+	{
+		if (segment == "" || segment == ".")
+			continue;
+		
+		if (segment == "..")
+		{
+			if (!stack.empty())
+				stack.pop_back();
+			else
+				return "ERROR";
+		}
+		else
+		{
+			stack.push_back(segment);
+		}
+	}
+
+	std::string result = "";
+	for (size_t i = 0; i < stack.size(); ++i)
+	{
+		result += "/" + stack[i];
+	}
+
+	return result.empty() ? "/" : result;
+}
+
+void	Response::_parseCGIOutput(std::string &cgi_output)
+{
+	size_t pos = cgi_output.find("\r\n\r\n");
+	if (pos != std::string::npos)
+	{
+		std::string headers_part = cgi_output.substr(0, pos);
+		
+		_body = cgi_output.substr(pos + 4);
+
+		std::stringstream ss(headers_part);
+		std::string line;
+		while (std::getline(ss, line) && line != "\r")
+		{
+			size_t colon = line.find(':');
+			if (colon != std::string::npos)
+			{
+				std::string key = line.substr(0, colon);
+				std::string value = line.substr(colon + 1);
+				// Un petit trim pour la valeur
+				size_t first = value.find_first_not_of(" \r");
+				if (first != std::string::npos)
+					value = value.substr(first, value.find_last_not_of(" \r") - first + 1);
+				_headers[key] = value;
+			}
+		}
+	}
+	else
+		_body = cgi_output;
 }

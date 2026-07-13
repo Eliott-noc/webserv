@@ -148,7 +148,22 @@ static void	setLocArgs(Location &location, std::vector<std::string> &args)
 	// 	setArgErrorpage(location, args);
 }
 
-static Location	parseLocation(ServerConfig &server, const std::vector<std::string> &l_block)
+bool	checkLocation(Location &location, const ServerConfig &server)
+{
+	if (location.getIndex().empty())
+		location.setIndex(server.getIndex());
+
+	if (location.getRoot().empty())
+		location.setRoot(server.getRoot());
+
+	if (!location.isAutoIndexSet())
+		location.setAutoIndex(server.getAutoIndex());
+	// if (location.getMaxBody() == 0)
+	// 	location.setMaxBody(server.getClientMaxBodySize());
+	return 0;
+}
+
+static Location	parseLocation(const std::vector<std::string> &l_block, const ServerConfig &server)
 {
 	Location				location;
 	std::vector<std::string> args;
@@ -171,6 +186,8 @@ static Location	parseLocation(ServerConfig &server, const std::vector<std::strin
 			args.clear();
 		}
 	}
+	//checkLocation  si pas de index rempli, alors la location herite de l'index du server
+	//De william: j'ai rajoute server comme parametre de la fonction pour pouvoir get Index du server
 	checkLocation(location, server);
 
 	return location;

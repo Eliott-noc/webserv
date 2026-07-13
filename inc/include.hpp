@@ -16,5 +16,8 @@
 # include <unistd.h>
 # include <sys/socket.h>
 # include <iomanip>
+# include <cstring>
+# include <sys/types.h>
+# include <sys/wait.h>
 
 #endif

@@ -4,6 +4,7 @@
 # include "include.hpp"
 # include "request.hpp"
 # include "serverConfig.hpp"
+# include "CGIHandler.hpp"
 
 /*
 Permet de fabriquer le message de réponse HTTP final pour gérer l'envoi des
@@ -34,22 +35,25 @@ class Response
 		Response &operator=(const Response &src);
 
 		void		makeResponse(Request &req, ServerConfig &config);
-		void		buildErrorPage(int code, ServerConfig &config);
+		void		buildErrorPage(int code, ServerConfig &config, const Location *loc);
 		std::string	getRawResponse() const;
 		void		sendResponse(int client_socket);
-		bool		isFinished() const; 
+		bool		isFinished() const;
 
 	private:
 		bool		_isMethodAllowed(std::string method, std::vector<std::string> const &allowedMethods);
 		void		_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path);
 		void		_handlePost(Request &req, ServerConfig &config, const Location &loc, std::string full_path);
-		void		_handleDelete(ServerConfig &config, std::string full_path);
+		void		_handleDelete(ServerConfig &config, const Location &loc, std::string full_path);
 		std::string	_getMimeType(std::string path);
 		std::string	_getStatusMessage(int code);
-		int			_checkConfig(ServerConfig &config, int code);
+		bool		_checkConfig(ServerConfig &config, const Location *loc, int code);
 		std::string	_getMessageError(int code);
 		void		_generateResponse(int code);
 		std::string	_generateAutoIndex(std::string full_path, std::string request_path);
+		bool		_isCGI(std::string const &path, const Location &loc);
+		std::string	_normalizePath(std::string path);
+		void		_parseCGIOutput(std::string &cgi_output);
 };
 
 #endif
