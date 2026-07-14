@@ -9,13 +9,11 @@ void	setServerListen(ServerConfig &server, std::vector<std::string> &args)
 	std::string	port;
 	size_t		pos;
 
-	std::cout << "pouet" << std::endl;
 	if (args.size() != 2)
 		throw std::runtime_error("Error: listen must have one argument");
 	pos = args[1].find(':');
 	if (pos == std::string::npos)
 	{
-		std::cout << "pouet1" << std::endl;
 		if (server.getHost().empty())
 			listen._host = "0.0.0.0";
 		else
@@ -35,7 +33,6 @@ void	setServerListen(ServerConfig &server, std::vector<std::string> &args)
 			throw std::runtime_error("Error: Invalid port");
 		listen._port = std::atoi(port.c_str());
 	}
-	std::cout << "pouet3" << std::endl;
 	server.setListen(listen);
 	if (checkDuplicateListen(server.getListens()))
 		throw std::runtime_error("Error: duplicate listen in server block");
