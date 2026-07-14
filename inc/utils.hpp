@@ -3,8 +3,10 @@
 
 #include "locArgs.hpp"
 
-size_t 	parseSize(const std::string& str);
-int 	checkInt(const std::string &str);
+bool	checkInt(const std::string &str);
+bool	isValidPort(const std::string &str);
+bool	isValidHost(const std::string &host);
+size_t	parseSize(const std::string& str);
 int		checkDuplicateListen(const std::vector<Listen> &listen_block);
 int		checkDuplicateIndex(const std::vector<std::string> &args);
 int		checkDuplicateMethods(const std::string &arg, t_methods *methods);

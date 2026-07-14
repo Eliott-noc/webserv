@@ -1,6 +1,6 @@
 #include "../../inc/serverConfig.hpp"
 
-ServerConfig::ServerConfig() 
+ServerConfig::ServerConfig()
 {
 
 }
@@ -40,7 +40,7 @@ const Location	*ServerConfig::getLocationForPath(std::string const &path)
 		std::string locPath = _locations[i].getPath();
 		if (path.find(locPath) == 0)
 		{
-			if (locPath.length() >= longestMatch) 
+			if (locPath.length() >= longestMatch)
 			{
 				longestMatch = locPath.length();
 				bestMatch = &_locations[i];
@@ -53,6 +53,13 @@ const Location	*ServerConfig::getLocationForPath(std::string const &path)
 std::vector<Listen> ServerConfig::getListens() const
 {
 	return _listen;
+}
+
+std::string	ServerConfig::getHost() const
+{
+	if (_listen.empty())
+		return "";
+	return _listen[0]._host;
 }
 
 std::string	ServerConfig::getRoot() const
@@ -128,4 +135,10 @@ void	ServerConfig::setLocations(const std::vector<Location> &locations)
 void	ServerConfig::setListen(const Listen &listen)
 {
 	_listen.push_back(listen);
+}
+
+void	ServerConfig::setHost(const std::string &host)
+{
+	for (size_t i = 0; i < _listen.size(); i++)
+		_listen[i]._host = host;
 }

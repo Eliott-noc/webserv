@@ -180,8 +180,12 @@ static Location	parseLocation(const std::vector<std::string> &l_block, const Ser
 
 static void	parseServerDirective(ServerConfig &server, std::vector<std::string> &args)
 {
+	for (size_t i = 0; i < args.size(); i++)
+		std::cout << "args[" << i << "] = " << args[i] << std::endl;
 	if (args[0] == "listen")
 		setServerListen(server, args);
+	else if (args[0] == "host")
+		setServerHost(server, args);
 	else if (args[0] == "server_name")
 		setServerName(server, args);
 	else if (args[0] == "root")

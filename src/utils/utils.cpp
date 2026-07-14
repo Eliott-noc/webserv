@@ -2,6 +2,28 @@
 #include "../../inc/locArgs.hpp"
 #include "../../inc/serverConfig.hpp"
 
+bool	checkInt(const std::string &str)
+{
+	if (str.empty())
+		return false;
+
+	size_t i = 0;
+
+	if (str[0] == '+' || str[0] == '-')
+	{
+		if (str.size() == 1)
+			return false;
+		i = 1;
+	}
+	while (i < str.size())
+	{
+		if (!std::isdigit(str[i]))
+			return false;
+		i++;
+	}
+	return true;
+}
+
 bool	checkLocation(Location &location, const ServerConfig &server)
 {
 	// if (location.getIndex().empty())
@@ -17,14 +39,65 @@ bool	checkLocation(Location &location, const ServerConfig &server)
 	return 0;
 }
 
-int checkInt(const std::string &str)
+bool	isValidHost(const std::string &host)
 {
+	if (host.empty())
+		return false;
+
+	int parts = 0;
+	size_t start = 0;
+
+	while (start < host.size())
+	{
+		size_t end = host.find('.', start);
+		std::string part;
+
+		if (end == std::string::npos)
+			part = host.substr(start);
+		else
+			part = host.substr(start, end - start);
+
+		if (part.empty())
+			return false;
+
+		for (size_t i = 0; i < part.size(); i++)
+		{
+			if (!std::isdigit(static_cast<unsigned char>(part[i])))
+				return false;
+		}
+
+		if (part.size() > 1 && part[0] == '0')
+			return false;
+
+		int value = std::atoi(part.c_str());
+
+		if (value < 0 || value > 255)
+			return false;
+
+		parts++;
+
+		if (end == std::string::npos)
+			break ;
+
+		start = end + 1;
+	}
+
+	return (parts == 4);
+}
+
+bool	isValidPort(const std::string &str)
+{
+	if (str.empty())
+		return false;
+
 	for (size_t i = 0; i < str.size(); i++)
 	{
-		if (str[i] < '0' && str[i] > '9')
-			return 1;
+		if (!std::isdigit(str[i]))
+			return false;
 	}
-	return 0;
+	int port = std::atoi(str.c_str());
+
+	return (port >= 1 && port <= 65535);
 }
 
 size_t parseSize(const std::string& str)
@@ -50,7 +123,7 @@ size_t parseSize(const std::string& str)
 		number = str.substr(0, str.size() - 1);
 	}
 
-	if (checkInt(number))
+	if (!checkInt(number))
 		throw std::runtime_error("Invalid body size");
 
 	return std::atoi(number.c_str()) * multiplier;

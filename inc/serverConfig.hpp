@@ -26,19 +26,20 @@ class ServerConfig
 		size_t						_client_max_body_size;
 		std::map<int, std::string>	_error_pages;
 		std::vector<Location>		_locations;
-	
+
 	public:
 	ServerConfig();
 	ServerConfig(const ServerConfig &other);
 	ServerConfig				&operator=(const ServerConfig &other);
 	~ServerConfig();
-	
-	
+
+
 	void						addLocation(const Location &loc);
-	
+
 	const Location				*getLocationForPath(std::string const &path);
-	
+
 	std::vector<Listen>			getListens() const;
+	std::string					getHost() const;
 	std::string					getRoot() const;
 	bool						getAutoIndex() const;
 	std::vector<std::string>	getIndex() const;
@@ -46,8 +47,9 @@ class ServerConfig
 	size_t						getClientMaxBodySize() const;
 	std::map<int, std::string>	getErrorPages() const;
 	std::vector<Location>		getLocations() const;
-	
+
 	void						setListen(const Listen &listen);
+	void						setHost(const std::string &host);
 	void						setRoot(const std::string &root);
 	void						setIndex(const std::string &index);
 	void						setAutoIndex(const bool &auto_index);
@@ -55,7 +57,7 @@ class ServerConfig
 	void						setClientMaxBodySize(const size_t &error_pages);
 	void						setErrorPages(const std::map<int, std::string> &error_pages);
 	void						setLocations(const std::vector<Location> &locations);
-	
+
 };
 
 #endif
