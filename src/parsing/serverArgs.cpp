@@ -47,6 +47,25 @@ void	setServerHost(ServerConfig &server, const std::vector<std::string> &args)
 	server.setHost(args[1]);
 }
 
+void	setServerRet(ServerConfig &server, const std::vector<std::string> &args)
+{
+	if (args.size() != 2 && args.size() != 3)
+		throw std::runtime_error("Error: return must have one or two argument");
+
+	int	code;
+	std::stringstream ss(args[1]);
+	ss >> code;
+
+	if (ss.fail() || !ss.eof())
+		throw std::runtime_error("Error: invalid number");
+	if (code < 200 || code > 599)
+		throw std::runtime_error("Error: invalid http code");
+	if (args.size() == 2)
+		server.setRet(code , "");
+	else
+		server.setRet(code, args[2]);
+}
+
 void	setServerName(ServerConfig &server, const std::vector<std::string> &args)
 {
 	if (args.size() < 2)
@@ -88,12 +107,12 @@ void	setServerErrorPage(ServerConfig &server, const std::vector<std::string> &ar
 	if (path.empty() || path[0] != '/')
 		throw std::runtime_error("Error: invalid path for error_page");
 
-	for (size_t i = 1; i < args.size(); i++)
+	for (size_t i = 1; i < args.size() - 1; i++)
 	{
 		if (!checkInt(args[i]))
 			throw std::runtime_error("Error: invalid error code");
 		int code = std::atoi(args[i].c_str());
-		if (code < 400 || code > 500)
+		if (code < 400 || code > 599)
 			throw std::runtime_error("Error: invalid HTTP error code");
 		error_pages[code] = path;
 	}

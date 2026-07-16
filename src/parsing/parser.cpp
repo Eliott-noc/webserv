@@ -1,5 +1,6 @@
 #include "../../inc/parser.hpp"
 #include "../../inc/utils.hpp"
+#include "../../inc/serverConfig.hpp"
 #include "../../inc/location.hpp"
 #include "../../inc/locArgs.hpp"
 #include "../../inc/serverArgs.hpp"
@@ -59,6 +60,8 @@ static void printLocation(const Location& location)
               << (location.isAutoIndexSet() ? "yes" : "no")
               << '\n';
 
+	std::cout << "Client max body size: "
+			  << location.getClientMaxBodySize() << std::endl;
 
     // Return
     std::cout << "Return code       : "
@@ -146,6 +149,7 @@ static void printServer(const ServerConfig& server)
             std::cout << "  " << i << " : " << indexes[i] << '\n';
     }
 
+	std::cout << "RETURN : " << server.getReturnCode() << ", " << server.getReturnUrl() << std::endl;
     // Autoindex
     std::cout << "\n[AUTOINDEX]\n";
     std::cout << "  " << (server.getAutoIndex() ? "on" : "off") << '\n';
@@ -343,8 +347,8 @@ static void	setLocArgs(Location &location, std::vector<std::string> &args)
 		setArgCgiExt(location, args);
 	else if (args[0] == "upload_store")
 		setArgUploadStore(location, args);
-	// else if (args[0] == "error_page")
-	// 	setArgErrorpage(location, args);
+	else if (args[0] == "error_page")
+		setArgErrorPage(location, args);
 }
 
 static Location	parseLocation(const std::vector<std::string> &l_block, const ServerConfig &server)
@@ -394,6 +398,8 @@ static void	parseServerDirective(ServerConfig &server, std::vector<std::string> 
 		setServerErrorPage(server, args);
 	else if (args[0] == "client_max_body_size")
 		setServerBodySize(server, args);
+	else if (args[0] == "return")
+		setServerRet(server, args);
 }
 
 static std::vector<std::string> extractServerDirective(const std::vector<std::string> &block, size_t *i)
@@ -448,10 +454,8 @@ std::vector<ServerConfig>	parseConfig(const std::string &filename)
 		ServerConfig server = parseServer(server_blocks[i]);
 		std::vector<Location> locations = server.getLocations();
 		for (size_t j = 0; j < locations.size(); j++)
-		{
 			checkLocation(&locations[j], server);
-			std::cout << "location root AFTER function = " << locations[j].getRoot() << std::endl;
-		}
+		server.setLocations(locations);
 		servers.push_back(server);
 	}
 

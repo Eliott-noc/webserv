@@ -25,6 +25,8 @@ ServerConfig	&ServerConfig::operator=(const ServerConfig &other)
 		_client_max_body_size = other._client_max_body_size;
 		_error_pages = other._error_pages;
 		_locations = other._locations;
+		_return_code = other._return_code;
+		_return_url = other._return_url;
 	}
 	return *this;
 }
@@ -86,6 +88,16 @@ size_t	ServerConfig::getClientMaxBodySize() const
 	return _client_max_body_size;
 }
 
+int	ServerConfig::getReturnCode() const
+{
+	return _return_code;
+}
+
+std::string ServerConfig::getReturnUrl() const
+{
+	return _return_url;
+}
+
 std::map<int, std::string>	ServerConfig::getErrorPages() const
 {
 	return _error_pages;
@@ -119,6 +131,13 @@ void	ServerConfig::setServerNames(const std::string &server_name)
 void	ServerConfig::setClientMaxBodySize(const size_t &client_max_body_size)
 {
 	_client_max_body_size = client_max_body_size;
+}
+
+void	ServerConfig::setRet(int &ret_code, const std::string &ret_url)
+{
+	_return_code = ret_code;
+	if (ret_url != "")	
+		_return_url = ret_url;
 }
 
 void	ServerConfig::setErrorPages(const std::map<int, std::string> &error_pages)

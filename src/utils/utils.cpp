@@ -26,20 +26,21 @@ bool	checkInt(const std::string &str)
 
 bool	checkLocation(Location *location, const ServerConfig &server)
 {
-	// if (location.getIndex().empty())
-	// 	location.setIndex(server.getIndex());
+	if (location->getIndex().empty())
+		location->setIndex(server.getIndex());
 
-	std::cout << "server root start = " << server.getRoot() << std::endl;
-	std::cout << "location root start = " << location->getRoot() << std::endl;
 	if (location->getRoot().empty())
 		location->setRoot(server.getRoot());
 
-	if (!location->isAutoIndexSet())
-		location->setAutoIndex(server.getAutoIndex());
-	// if (location.getMaxBody() == 0)
-	// 	location.setMaxBody(server.getClientMaxBodySize());
-	std::cout << "server root end = " << server.getRoot() << std::endl;
-	std::cout << "location root end = " << location->getRoot() << std::endl;
+	if (location->getClientMaxBodySize() == 0)
+		location->setClientMaxBodySize(server.getClientMaxBodySize());
+
+	if (location->getErrorPages().empty())
+		location->setErrorPages(server.getErrorPages());
+
+	//allow_methode
+	//cgi
+
 	return 0;
 }
 
@@ -201,7 +202,7 @@ int	isLocKeyword(const std::string &str)
 	if (str == "autoindex" || str == "allow_methods" || str == "root"
 		|| str == "index" || str == "return" || str == "upload_dir"
 		|| str == "upload_store" || str == "alias" || str == "cgi"
-		|| str == "cgi_ext" || str == "cgi_path")
+		|| str == "cgi_ext" || str == "cgi_path" || str == "error_page")
 		return 1;
 
 	return 0;
