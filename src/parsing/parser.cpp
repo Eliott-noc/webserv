@@ -1,8 +1,211 @@
 #include "../../inc/parser.hpp"
 #include "../../inc/utils.hpp"
+#include "../../inc/serverConfig.hpp"
 #include "../../inc/location.hpp"
 #include "../../inc/locArgs.hpp"
 #include "../../inc/serverArgs.hpp"
+
+static void printLocation(const Location& location)
+{
+    std::cout << "\n";
+    std::cout << "----------------------------------------\n";
+    std::cout << "              LOCATION CONFIG           \n";
+    std::cout << "----------------------------------------\n";
+
+    // Path
+    std::cout << "Path              : "
+              << location.getPath()
+              << '\n';
+
+    // Root
+    std::cout << "Root              : "
+              << location.getRoot()
+              << '\n';
+
+
+    // Methods
+    std::vector<std::string> methods = location.getMethods();
+
+    std::cout << "Methods           : ";
+    if (methods.empty())
+        std::cout << "(none)";
+    else
+    {
+        for (size_t i = 0; i < methods.size(); i++)
+            std::cout << methods[i] << " ";
+    }
+    std::cout << '\n';
+
+
+    // Index
+    std::vector<std::string> index = location.getIndex();
+
+    std::cout << "Index             : ";
+    if (index.empty())
+        std::cout << "(none)";
+    else
+    {
+        for (size_t i = 0; i < index.size(); i++)
+            std::cout << index[i] << " ";
+    }
+    std::cout << '\n';
+
+
+    // Auto index
+    std::cout << "Auto index        : "
+              << (location.getAutoIndex() ? "on" : "off")
+              << '\n';
+
+    std::cout << "Auto index set    : "
+              << (location.isAutoIndexSet() ? "yes" : "no")
+              << '\n';
+
+	std::cout << "Client max body size: "
+			  << location.getClientMaxBodySize() << std::endl;
+
+    // Return
+    std::cout << "Return code       : "
+              << location.getReturnCode()
+              << '\n';
+
+    std::cout << "Return URL        : "
+              << location.getReturnUrl()
+              << '\n';
+
+
+    // CGI
+    std::cout << "CGI path          : "
+              << location.getCGIPath()
+              << '\n';
+
+    std::cout << "CGI extension     : "
+              << location.getCGIExt()
+              << '\n';
+
+
+    // Upload
+    std::cout << "Upload store      : "
+              << location.getUploadStore()
+              << '\n';
+
+
+    // Error pages
+    std::map<int, std::string> errors = location.getErrorPages();
+
+    std::cout << "Error pages       :\n";
+
+    if (errors.empty())
+    {
+        std::cout << "  (none)\n";
+    }
+    else
+    {
+        for (std::map<int, std::string>::iterator it = errors.begin();
+             it != errors.end();
+             ++it)
+        {
+            std::cout << "  "
+                      << it->first
+                      << " -> "
+                      << it->second
+                      << '\n';
+        }
+    }
+
+    std::cout << "----------------------------------------\n";
+}
+
+static void printServer(const ServerConfig& server)
+{
+    std::cout << "\n";
+    std::cout << "========================================\n";
+    std::cout << "              SERVER CONFIG             \n";
+    std::cout << "========================================\n";
+
+    // Listen
+    const std::vector<Listen>& listens = server.getListens();
+
+    std::cout << "\n[LISTEN]\n";
+    for (size_t i = 0; i < listens.size(); ++i)
+    {
+        std::cout << "  Listen #" << i << '\n';
+        std::cout << "    Host : " << listens[i]._host << '\n';
+        std::cout << "    Port : " << listens[i]._port << '\n';
+    }
+
+    // Root
+    std::cout << "\n[ROOT]\n";
+    std::cout << "  " << server.getRoot() << '\n';
+
+    // Index
+    const std::vector<std::string>& indexes = server.getIndex();
+
+    std::cout << "\n[INDEX]\n";
+    if (indexes.empty())
+        std::cout << "  (none)\n";
+    else
+    {
+        for (size_t i = 0; i < indexes.size(); ++i)
+            std::cout << "  " << i << " : " << indexes[i] << '\n';
+    }
+
+	std::cout << "RETURN : " << server.getReturnCode() << ", " << server.getReturnUrl() << std::endl;
+    // Autoindex
+    std::cout << "\n[AUTOINDEX]\n";
+    std::cout << "  " << (server.getAutoIndex() ? "on" : "off") << '\n';
+
+    // Server names
+    const std::vector<std::string>& names = server.getServerNames();
+
+    std::cout << "\n[SERVER NAMES]\n";
+    if (names.empty())
+        std::cout << "  (none)\n";
+    else
+    {
+        for (size_t i = 0; i < names.size(); ++i)
+            std::cout << "  " << i << " : " << names[i] << '\n';
+    }
+
+    // Client body size
+    std::cout << "\n[CLIENT MAX BODY SIZE]\n";
+    std::cout << "  " << server.getClientMaxBodySize() << '\n';
+
+    // Error pages
+    const std::map<int, std::string>& errorPages = server.getErrorPages();
+
+    std::cout << "\n[ERROR PAGES]\n";
+
+    if (errorPages.empty())
+        std::cout << "  (none)\n";
+    else
+    {
+        for (std::map<int, std::string>::const_iterator it = errorPages.begin();
+             it != errorPages.end();
+             ++it)
+        {
+            std::cout << "  " << it->first
+                      << " -> "
+                      << it->second
+                      << '\n';
+        }
+    }
+
+    // Locations
+    const std::vector<Location>& locations = server.getLocations();
+
+    std::cout << "\n[LOCATIONS] (" << locations.size() << ")\n";
+
+    for (size_t i = 0; i < locations.size(); ++i)
+    {
+        std::cout << "\n----------------------------------------\n";
+        std::cout << "Location #" << i << '\n';
+        std::cout << "----------------------------------------\n";
+
+        printLocation(locations[i]);
+    }
+
+    std::cout << "========================================\n";
+}
 
 static std::string	readFile(const std::string &filename)
 {
@@ -144,14 +347,15 @@ static void	setLocArgs(Location &location, std::vector<std::string> &args)
 		setArgCgiExt(location, args);
 	else if (args[0] == "upload_store")
 		setArgUploadStore(location, args);
-	// else if (args[0] == "error_page")
-	// 	setArgErrorpage(location, args);
+	else if (args[0] == "error_page")
+		setArgErrorPage(location, args);
 }
 
 static Location	parseLocation(const std::vector<std::string> &l_block, const ServerConfig &server)
 {
 	Location				location;
 	std::vector<std::string> args;
+	(void)server;
 
 	setArgPath(location, l_block[0]);
 
@@ -173,7 +377,7 @@ static Location	parseLocation(const std::vector<std::string> &l_block, const Ser
 	}
 	//checkLocation  si pas de index rempli, alors la location herite de l'index du server
 	//De william: j'ai rajoute server comme parametre de la fonction pour pouvoir get Index du server
-	checkLocation(location, server);
+	//checkLocation(location, server);
 
 	return location;
 }
@@ -182,6 +386,8 @@ static void	parseServerDirective(ServerConfig &server, std::vector<std::string> 
 {
 	if (args[0] == "listen")
 		setServerListen(server, args);
+	else if (args[0] == "host")
+		setServerHost(server, args);
 	else if (args[0] == "server_name")
 		setServerName(server, args);
 	else if (args[0] == "root")
@@ -192,6 +398,8 @@ static void	parseServerDirective(ServerConfig &server, std::vector<std::string> 
 		setServerErrorPage(server, args);
 	else if (args[0] == "client_max_body_size")
 		setServerBodySize(server, args);
+	else if (args[0] == "return")
+		setServerRet(server, args);
 }
 
 static std::vector<std::string> extractServerDirective(const std::vector<std::string> &block, size_t *i)
@@ -244,17 +452,20 @@ std::vector<ServerConfig>	parseConfig(const std::string &filename)
 	for (size_t i = 0; i < server_blocks.size(); i++)
 	{
 		ServerConfig server = parseServer(server_blocks[i]);
+		std::vector<Location> locations = server.getLocations();
+		for (size_t j = 0; j < locations.size(); j++)
+			checkLocation(&locations[j], server);
+		server.setLocations(locations);
 		servers.push_back(server);
 	}
 
 	//checkServers(servers);
 
-	for(size_t i = 0; i < server_blocks.size(); i++)
+	for (size_t i = 0; i < servers.size(); i++)
 	{
-		for(size_t j = 0; j < server_blocks[i].size(); j++)
-		{
-			std::cout << "block " << i << " token " << j << " = " << server_blocks[i][j] << std::endl;
-		}
+		std::cout << "====SERVER NUMERO " << i << "====" << std::endl;
+		printServer(servers[i]);
 	}
+
 	return servers;
 }

@@ -13,7 +13,7 @@ typedef struct	s_methods
 
 void	setArgPath(Location &location, const std::string &path);
 void	setArgRoot(Location &location, const std::vector<std::string> &args);
-void	setArgMethods(Location &location, const std::vector<std::string> &args);
+void	setArgMethods(Location &location, std::vector<std::string> &args);
 void	setArgIndex(Location &location, const std::vector<std::string> &args);
 void	setArgAutoIndex(Location &location, const std::vector<std::string> &args);
 void	setArgRet(Location &location, const std::vector<std::string> &args);

@@ -2,7 +2,7 @@
 #include "../../inc/utils.hpp"
 
 Location::Location()
-	: _auto_index(false), _isAutoIndexSet(false),_return_code(0)
+	: _auto_index(false), _isAutoIndexSet(false), _client_max_body_size(0), _return_code(0)
 {
 }
 
@@ -20,11 +20,13 @@ Location &Location::operator=(const Location &other)
 		_methods = other._methods;
 		_index = other._index;
 		_auto_index = other._auto_index;
+		_client_max_body_size = other._client_max_body_size;
 		_return_code = other._return_code;
 		_return_url = other._return_url;
 		_cgi_path = other._cgi_path;
 		_cgi_ext = other._cgi_ext;
 		_upload_store = other._upload_store;
+		_error_pages = other._error_pages;
 	}
 	return *this;
 }
@@ -59,6 +61,11 @@ bool	Location::getAutoIndex() const
 std::vector<std::string> Location::getIndex() const
 {
 	return _index;
+}
+
+size_t	Location::getClientMaxBodySize() const
+{
+	return _client_max_body_size;
 }
 
 int	Location::getReturnCode() const
@@ -114,6 +121,12 @@ void	Location::setIndex(const std::string &index)
 		throw std::runtime_error("Error: duplicate index in location");
 }
 
+void	Location::setIndex(const std::vector<std::string> &index)
+{
+	_index = index;
+}
+
+
 void	Location::setAutoIndex(const bool &auto_index)
 {
 	_auto_index = auto_index;
@@ -125,10 +138,15 @@ bool Location::isAutoIndexSet() const
 	return _isAutoIndexSet;
 }
 
+void	Location::setClientMaxBodySize(const size_t &client_max_body_size)
+{
+	_client_max_body_size = client_max_body_size;
+}
+
 void	Location::setRet(int &ret_code, const std::string &ret_url)
 {
 	_return_code = ret_code;
-	if (ret_url != "0")
+	if (ret_url != "")	
 		_return_url = ret_url;
 }
 
@@ -145,4 +163,9 @@ void	Location::setCgiExt(const std::string &cgi_ext)
 void	Location::setUploadStore(const std::string &uploadStore)
 {
 	_upload_store = uploadStore;
+}
+
+void	Location::setErrorPages(const std::map<int, std::string> &error_pages)
+{
+	_error_pages = error_pages;
 }
