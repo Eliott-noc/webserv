@@ -351,6 +351,7 @@ static Location	parseLocation(const std::vector<std::string> &l_block, const Ser
 {
 	Location				location;
 	std::vector<std::string> args;
+	(void)server;
 
 	setArgPath(location, l_block[0]);
 
@@ -372,7 +373,7 @@ static Location	parseLocation(const std::vector<std::string> &l_block, const Ser
 	}
 	//checkLocation  si pas de index rempli, alors la location herite de l'index du server
 	//De william: j'ai rajoute server comme parametre de la fonction pour pouvoir get Index du server
-	checkLocation(location, server);
+	//checkLocation(location, server);
 
 	return location;
 }
@@ -445,6 +446,12 @@ std::vector<ServerConfig>	parseConfig(const std::string &filename)
 	for (size_t i = 0; i < server_blocks.size(); i++)
 	{
 		ServerConfig server = parseServer(server_blocks[i]);
+		std::vector<Location> locations = server.getLocations();
+		for (size_t j = 0; j < locations.size(); j++)
+		{
+			checkLocation(&locations[j], server);
+			std::cout << "location root AFTER function = " << locations[j].getRoot() << std::endl;
+		}
 		servers.push_back(server);
 	}
 

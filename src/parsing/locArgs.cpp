@@ -16,13 +16,14 @@ void	setArgRoot(Location &location, const std::vector<std::string> &args)
 		throw std::runtime_error("Error: root must have exactly one argument");
 	location.setRoot(args[1]);
 }
-void	setArgMethods(Location &location, const std::vector<std::string> &args)
+void	setArgMethods(Location &location, std::vector<std::string> &args)
 {
 	t_methods	methods;
 	methods._get = 0;
 	methods._post = 0;
 	methods._delete = 0;
 
+	args.erase(args.begin());
 	for (size_t i = 1; i < args.size(); i++)
 	{
 		if (args[i] != "GET" && args[i] != "POST" && args[i] != "DELETE")

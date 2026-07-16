@@ -24,18 +24,22 @@ bool	checkInt(const std::string &str)
 	return true;
 }
 
-bool	checkLocation(Location &location, const ServerConfig &server)
+bool	checkLocation(Location *location, const ServerConfig &server)
 {
 	// if (location.getIndex().empty())
 	// 	location.setIndex(server.getIndex());
 
-	if (location.getRoot().empty())
-		location.setRoot(server.getRoot());
+	std::cout << "server root start = " << server.getRoot() << std::endl;
+	std::cout << "location root start = " << location->getRoot() << std::endl;
+	if (location->getRoot().empty())
+		location->setRoot(server.getRoot());
 
-	if (!location.isAutoIndexSet())
-		location.setAutoIndex(server.getAutoIndex());
+	if (!location->isAutoIndexSet())
+		location->setAutoIndex(server.getAutoIndex());
 	// if (location.getMaxBody() == 0)
 	// 	location.setMaxBody(server.getClientMaxBodySize());
+	std::cout << "server root end = " << server.getRoot() << std::endl;
+	std::cout << "location root end = " << location->getRoot() << std::endl;
 	return 0;
 }
 
