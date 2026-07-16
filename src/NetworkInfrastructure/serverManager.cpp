@@ -70,7 +70,7 @@ void ServerManager::run(){
 	while(true){
 		size_t	nfds = _pollfds.size();
 		int		err_code;
-		int		ready = poll(&_pollfds[0], nfds, 1000);
+		int		ready = poll(&_pollfds[0], nfds, 2500);
 		if (ready < 0){
 			err_code = errno;
 			printPortErr(err_code, -2);
@@ -148,10 +148,10 @@ void ServerManager::run(){
 }
 
 void ServerManager::_acceptNewConnection(int server_fd){
-	struct sockaddr_in	client_addr;
-	socklen_t			addr_len = sizeof(client_addr);
-	int					err_code;
-	int					client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &addr_len);
+	struct sockaddr_storage	client_addr;
+	socklen_t				addr_len = sizeof(client_addr);
+	int						err_code;
+	int						client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &addr_len);
 	
 	if (client_fd < 0){
 		err_code = errno;
@@ -169,9 +169,9 @@ void ServerManager::_acceptNewConnection(int server_fd){
 	new_poll.events = POLLIN;
 	new_poll.revents = 0;
 	_pollfds.push_back(new_poll);
-	Client* _newClient = new Client(server_fd);
+	Client* _newClient = new Client(client_fd);
 	_newClient->config = _listenSockets[server_fd];
-	_clients[server_fd] = _newClient;
+	_clients[client_fd] = _newClient;
 }
 
 void ServerManager::_handleClientData(int server_fd){
