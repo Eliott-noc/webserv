@@ -1,6 +1,7 @@
 #include "../../inc/serverConfig.hpp"
 
 ServerConfig::ServerConfig()
+	: _auto_index(false), _client_max_body_size(0)
 {
 
 }
@@ -17,17 +18,15 @@ ServerConfig	&ServerConfig::operator=(const ServerConfig &other)
 	if (this != &other)
 	{
 		_listen = other._listen;
+		_root = other._root;
+		_index = other._index;
+		_auto_index = other._auto_index;
 		_server_names = other._server_names;
 		_client_max_body_size = other._client_max_body_size;
 		_error_pages = other._error_pages;
 		_locations = other._locations;
 	}
 	return *this;
-}
-
-void	ServerConfig::addLocation(const Location &loc)
-{
-	_locations.push_back(loc);
 }
 
 const Location	*ServerConfig::getLocationForPath(std::string const &path)

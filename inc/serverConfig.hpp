@@ -33,9 +33,6 @@ class ServerConfig
 	ServerConfig				&operator=(const ServerConfig &other);
 	~ServerConfig();
 
-
-	void						addLocation(const Location &loc);
-
 	const Location				*getLocationForPath(std::string const &path);
 
 	std::vector<Listen>			getListens() const;

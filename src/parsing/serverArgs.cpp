@@ -71,6 +71,7 @@ void	setServerIndex(ServerConfig &server, const std::vector<std::string> &args)
 {
 	if (args.size() < 2)
 		throw std::runtime_error("Error: index must have at least one argument");
+	std::cout << "PARSING INDEX" << std::endl;
 	for (size_t i = 1; i < args.size(); i++)
 	{
 		if (args[i].empty())
