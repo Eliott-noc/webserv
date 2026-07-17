@@ -125,7 +125,6 @@ void Response::buildErrorPage(int code, ServerConfig &config, const Location *lo
 
 	std::string messageError = _getMessageError(code);
 
-	// On transmet 'loc' à checkConfig
 	if (!_checkConfig(config, loc, code))
 	{
 		_body = "<html><head><title>" + messageError + "</title></head>";
