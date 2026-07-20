@@ -207,3 +207,12 @@ int	isLocKeyword(const std::string &str)
 
 	return 0;
 }
+
+bool	isServerKeyword(const std::string& token)
+{
+	if (token == "listen" || token == "host" || token == "server_name" || 
+		token == "root" || token == "index" || token == "error_page" || 
+		token == "client_max_body_size" || token == "return" || token == "location")
+		return true;
+	return false;
+}

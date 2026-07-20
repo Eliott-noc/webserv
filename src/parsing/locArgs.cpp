@@ -38,9 +38,11 @@ void	setArgMethods(Location &location, std::vector<std::string> &args)
 
 void	setArgIndex(Location &location, const std::vector<std::string> &args)
 {
-	if (args.size() != 2)
-		throw std::runtime_error("Error: location index must have one argument");
-	location.setIndex(args[1]);
+	if (args.size() < 2)
+		throw std::runtime_error("Error: location index needs at least one argument");
+	
+	for (size_t i = 1; i < args.size(); i++)
+		location.setIndex(args[i]);
 }
 
 void	setArgAutoIndex(Location &location, const std::vector<std::string> &args)
