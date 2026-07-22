@@ -131,7 +131,7 @@ void ServerManager::run(){
 
 					client->response.sendResponse(client_fd);
 					if (client->response.isFinished()){
-						_removeClient(client_fd);
+						_removeClient(i);
 						nfds--;
 						i--;
 					}
@@ -174,17 +174,18 @@ void ServerManager::_acceptNewConnection(int server_fd){
 	_clients[client_fd] = _newClient;
 }
 
-void ServerManager::_handleClientData(int server_fd){
+// void ServerManager::_handleClientData(int server_fd){
 	
-}
+// }
 
-void ServerManager::_sendResponse(int server_fd){
+// void ServerManager::_sendResponse(int server_fd){
 	
-}
+// }
 
 void ServerManager::_removeClient(size_t idx){
 	close(_pollfds[idx].fd);
 	_pollfds[idx] = _pollfds[_pollfds.size() - 1];
 	_pollfds.pop_back();
 	_clients.erase(_pollfds[_pollfds.size() - 1].fd);
+
 }
