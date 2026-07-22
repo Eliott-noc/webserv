@@ -6,9 +6,9 @@ int	main(int argc, char **argv)
 		return (std::cout << "Error:\nUsage: ./webserv <config file>" << std::endl, 1);
 	std::string	file = argv[1];
 
-	// std::vector<ServerConfig> servers = parseConfig(file);
 	try {
-        std::vector<ServerConfig> configs;
+		// std::vector<ServerConfig> configs;
+		std::vector<ServerConfig> servers = parseConfig(file);
 
         // 3. INTEGRATE YOUR CONFIG PARSER HERE
         // Replace "ConfigParser" with the actual class name of your parser.
@@ -24,16 +24,16 @@ int	main(int argc, char **argv)
 
         // For compiling and testing before your parser is fully integrated,
         // you can temporarily use your old manual config-building code here:
-        ServerConfig config1;
-        Listen interface1;
-        interface1._host = "127.0.0.1";
-        interface1._port = 8080;
-        config1.setListen(interface1); // Or whichever setter you used
-        configs.push_back(config1);
+        // ServerConfig config1;
+        // Listen interface1;
+        // interface1._host = "127.0.0.1";
+        // interface1._port = 8080;
+        // config1.setListen(interface1); // Or whichever setter you used
+        // configs.push_back(config1);
 
 
         // 4. Initialize and run the ServerManager
-        ServerManager manager(configs);
+        ServerManager manager(servers);
         manager.run();
 
     } catch (const std::exception& e) {
