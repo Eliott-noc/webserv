@@ -162,12 +162,21 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 
 void	Response::_handlePost(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
+	struct stat	s;
 	std::string	uploadDir = loc.getUploadStore();
 	std::string	fileName;
 	std::string	savePath;
+	std::string	dirPath;
 	int			exists;
 
-	if (uploadDir.empty())
+	dirPath = full_path.substr(0, full_path.find_last_of('/'));
+	if (stat(dirPath.c_str(), &s) != 0) 
+	{
+		buildErrorPage(404, config, &loc);
+		return;
+	}
+
+	if (uploadDir.empty()) 
 	{
 		buildErrorPage(403, config, &loc);
 		return;
@@ -175,8 +184,6 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 
 	fileName = full_path.substr(full_path.find_last_of('/') + 1);
 	savePath = uploadDir + "/" + fileName;
-
-	struct stat	s;
 
 	exists = (stat(savePath.c_str(), &s) == 0);
 
@@ -198,7 +205,6 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 	_body = "<h1>Action reussie !</h1>";
 	_headers["content-type"] = "text/html";
 	
-
 	if (exists)
 		_generateResponse(200);
 	else
