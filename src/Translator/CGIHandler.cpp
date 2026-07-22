@@ -36,7 +36,9 @@ std::string	CGIHandler::execute(Request &req, std::string script_path, Location 
 	_setupEnv(req, script_path);
 	_convertEnvMapToArray();
 
-	args[0] = (char *)loc.getCGIPath().c_str();
+	std::string interpreter = loc.getCGIPath();
+	
+	args[0] = (char *)interpreter.c_str(); 
 	args[1] = (char *)script_path.c_str();
 	args[2] = NULL;
 
@@ -156,7 +158,9 @@ void	CGIHandler::_childProcess(Request &req, char *args[3], int pipe_out[2])
 	close(pipe_out[0]);
 	close(pipe_out[1]);
 
+	std::cerr << "[DEBUG FILILS] Lancement de : " << args[0] << " avec le script : " << args[1] << std::endl;
 	execve(args[0], args, _envArray);
+	perror("execve failed");
 	exit(1);
 }
 
