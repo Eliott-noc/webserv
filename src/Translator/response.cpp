@@ -46,7 +46,7 @@ Response	&Response::operator=(const Response &other)
 void	Response::makeResponse(Request &req, ServerConfig &config)
 {
 	std::string	clean_path = _normalizePath(req.getPath());
-	std::string root;
+	std::string	root;
 	std::string	full_path;
 	CGIHandler	cgi;
 	std::string	cgi_output;
@@ -58,10 +58,21 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 	}
 	
 	const Location	*loc = config.getLocationForPath(clean_path);
+	Location defaultLoc; 
 	if (!loc)
 	{
-		buildErrorPage(404, config, NULL);
-		return;
+		defaultLoc.setPath("/"); 
+		defaultLoc.setRoot(config.getRoot());
+		
+		std::vector<std::string> serverIndexes = config.getIndex();
+		for (size_t i = 0; i < serverIndexes.size(); ++i)
+			defaultLoc.setIndex(serverIndexes[i]);
+
+		defaultLoc.setAutoIndex(config.getAutoIndex());
+		
+		defaultLoc.addMethod("GET");
+
+		loc = &defaultLoc;
 	}
 
 	if (loc->getReturnCode() != 0)
@@ -130,9 +141,7 @@ void Response::buildErrorPage(int code, ServerConfig &config, const Location *lo
 	_body += "<hr><center>webserv/1.0</center></body></html>";
 
 	if (loc != NULL)
-	{
 		_checkConfig(config, loc, code);
-	}
 
 	_headers["Content-Type"] = "text/html";
 	std::stringstream ss_len;
