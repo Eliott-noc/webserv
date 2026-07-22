@@ -1,0 +1,162 @@
+#include "../../inc/serverConfig.hpp"
+
+ServerConfig::ServerConfig()
+	: _auto_index(false), _client_max_body_size(0)
+{
+
+}
+
+ServerConfig::ServerConfig(const ServerConfig &other)
+{
+	*this = other;
+}
+
+ServerConfig::~ServerConfig() {}
+
+ServerConfig	&ServerConfig::operator=(const ServerConfig &other)
+{
+	if (this != &other)
+	{
+		_listen = other._listen;
+		_root = other._root;
+		_index = other._index;
+		_auto_index = other._auto_index;
+		_server_names = other._server_names;
+		_client_max_body_size = other._client_max_body_size;
+		_error_pages = other._error_pages;
+		_locations = other._locations;
+		_return_code = other._return_code;
+		_return_url = other._return_url;
+	}
+	return *this;
+}
+
+const Location	*ServerConfig::getLocationForPath(std::string const &path)
+{
+	const Location	*bestMatch = NULL;
+	size_t			longestMatch = 0;
+
+	for (size_t i = 0; i < _locations.size(); ++i)
+	{
+		std::string locPath = _locations[i].getPath();
+		if (path.find(locPath) == 0)
+		{
+			if (locPath.length() >= longestMatch)
+			{
+				longestMatch = locPath.length();
+				bestMatch = &_locations[i];
+			}
+		}
+	}
+	return bestMatch;
+}
+
+std::vector<Listen> ServerConfig::getListens() const
+{
+	return _listen;
+}
+
+std::string	ServerConfig::getHost() const
+{
+	if (_listen.empty())
+		return "";
+	return _listen[0]._host;
+}
+
+std::string	ServerConfig::getRoot() const
+{
+	return _root;
+}
+
+bool	ServerConfig::getAutoIndex() const
+{
+	return _auto_index;
+}
+
+std::vector<std::string>	ServerConfig::getIndex() const
+{
+	return _index;
+}
+
+std::vector<std::string>	ServerConfig::getServerNames() const
+{
+	return _server_names;
+}
+
+size_t	ServerConfig::getClientMaxBodySize() const
+{
+	return _client_max_body_size;
+}
+
+int	ServerConfig::getReturnCode() const
+{
+	return _return_code;
+}
+
+std::string ServerConfig::getReturnUrl() const
+{
+	return _return_url;
+}
+
+std::map<int, std::string>	ServerConfig::getErrorPages() const
+{
+	return _error_pages;
+}
+
+std::vector<Location>	ServerConfig::getLocations() const
+{
+	return _locations;
+}
+
+void	ServerConfig::setRoot(const std::string &root)
+{
+	_root = root;
+}
+
+void	ServerConfig::setIndex(const std::string &index)
+{
+	_index.push_back(index);
+}
+
+void	ServerConfig::setAutoIndex(const bool &auto_index)
+{
+	_auto_index = auto_index;
+}
+
+void	ServerConfig::setServerNames(const std::string &server_name)
+{
+	_server_names.push_back(server_name);
+}
+
+void	ServerConfig::setClientMaxBodySize(const size_t &client_max_body_size)
+{
+	_client_max_body_size = client_max_body_size;
+}
+
+void	ServerConfig::setRet(int &ret_code, const std::string &ret_url)
+{
+	_return_code = ret_code;
+	if (ret_url != "")	
+		_return_url = ret_url;
+}
+
+void	ServerConfig::setErrorPages(const std::map<int, std::string> &error_pages)
+{
+	_error_pages = error_pages;
+}
+
+void	ServerConfig::setLocations(const std::vector<Location> &locations)
+{
+	_locations = locations;
+}
+
+void	ServerConfig::setListen(const Listen &listen)
+{
+	_listen.push_back(listen);
+}
+
+void	ServerConfig::setHost(const std::string &host)
+{
+	for (size_t i = 0; i < _listen.size(); i++)
+		_listen[i]._host = host;
+}

@@ -2,7 +2,6 @@ On the feature branch:
 	create a branch named after name + function to be added
 		ex: eliott-signal
 		git checkout -b eliott-signal
-		git co -b eliott-signal     (co c'est short pour checkout)
 
 	ensuite sur nos branches, classique 
 		git add .
