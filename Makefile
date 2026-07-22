@@ -3,7 +3,7 @@ SHELL       = /bin/bash
 # ====== CONFIG ======
 NAME        = webserv
 CXX         = c++
-CXXFLAGS    = -Wall -Wextra -Werror -std=c++98 -g
+CXXFLAGS    = -Wall -Wextra -Werror -Iinc -std=c++98 -g
 RM          = rm -rf
 
 SRC         = $(shell find src -name "*.cpp")

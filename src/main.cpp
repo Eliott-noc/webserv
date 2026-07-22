@@ -1,18 +1,48 @@
 #include "../inc/webserv.hpp"
 
-// int	main(int argc, char **argv)
-// {
-// 	if (argc != 2)
-// 		return (std::cout << "Error:\nUsage: ./webserv <config file>" << std::endl, 1);
-// 	std::string	file = argv[1];
+int	main(int argc, char **argv)
+{
+	if (argc != 2)
+		return (std::cout << "Error:\nUsage: ./webserv <config file>" << std::endl, 1);
+	std::string	file = argv[1];
 
-// 	std::vector<ServerConfig> servers = parseConfig(file);
+	// std::vector<ServerConfig> servers = parseConfig(file);
+	try {
+        std::vector<ServerConfig> configs;
 
-// 	//parsing();
-// 	//networkInfrastructure();
-// 	//translator();
-// 	return 0;
-// }
+        // 3. INTEGRATE YOUR CONFIG PARSER HERE
+        // Replace "ConfigParser" with the actual class name of your parser.
+        // Usually, the flow looks like this:
+        /*
+        ConfigParser parser;
+        if (!parser.parse(config_file)) {
+            std::cerr << "[FATAL] Failed to parse configuration file: " << config_file << std::endl;
+            return 1;
+        }
+        configs = parser.getConfigs();
+        */
+
+        // For compiling and testing before your parser is fully integrated,
+        // you can temporarily use your old manual config-building code here:
+        ServerConfig config1;
+        Listen interface1;
+        interface1._host = "127.0.0.1";
+        interface1._port = 8080;
+        config1.setListen(interface1); // Or whichever setter you used
+        configs.push_back(config1);
+
+
+        // 4. Initialize and run the ServerManager
+        ServerManager manager(configs);
+        manager.run();
+
+    } catch (const std::exception& e) {
+        std::cerr << "[FATAL] An unhandled exception occurred: " << e.what() << std::endl;
+        return 1;
+    }
+
+    return 0;
+}
 
 
 // #define R "\033[31m"
@@ -227,3 +257,5 @@
 
 // 	return 0;
 // }
+
+

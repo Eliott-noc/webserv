@@ -125,6 +125,17 @@ void Response::buildErrorPage(int code, ServerConfig &config, const Location *lo
 
 	std::string messageError = _getMessageError(code);
 
+	if (loc == NULL){
+		_headers["Content-Type"] = "text/html";
+		std::stringstream ss_len;
+		ss_len << _body.length();
+		_headers["Content-Length"] = ss_len.str();
+		_headers["Server"] = "webserv/1.0";
+	
+		_generateResponse(code);
+		return;
+		// a revoir pour loc == NULL
+	}
 	if (!_checkConfig(config, loc, code))
 	{
 		_body = "<html><head><title>" + messageError + "</title></head>";

@@ -56,10 +56,6 @@ std::vector<Listen> ServerConfig::getListens() const
 	return _listen;
 }
 
-int					ServerConfig::getPort(int idx) const{
-	return _ports[idx];
-}
-
 std::string	ServerConfig::getHost() const
 {
 	if (_listen.empty())

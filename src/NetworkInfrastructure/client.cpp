@@ -1,6 +1,6 @@
 #include "client.hpp"
 
-Client::Client(int client_fd) : request(client_fd), fd(client_fd){
+Client::Client(int client_fd) : fd(client_fd), request(client_fd){
 
 }
 

@@ -1,5 +1,5 @@
-#ifndef UTILSERROR_HPP
-# define UTILSERROR_HPP
+#ifndef UTILSERRORS_HPP
+# define UTILSERRORS_HPP
 #include "include.hpp"
 
 void	printPortErr(int errcode, int port);

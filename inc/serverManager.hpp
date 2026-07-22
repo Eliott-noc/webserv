@@ -4,7 +4,7 @@
 # include "include.hpp"
 # include "serverConfig.hpp"
 # include "client.hpp"
-# include "utilsError.hpp"
+# include "utilsErrors.hpp"
 
 /*
 Permet d'orchestrer la boucle principale du serveur (poll) pour gérer les cas de
