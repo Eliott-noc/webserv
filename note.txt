@@ -1,0 +1,108 @@
+HTTP:
+
+	request/response paradigm
+	client establish connection with server, then send a request
+	server respond
+
+	HTTP is technicly just a transport system,
+	connection is established by the client before request, and close after sending the response by the server
+
+		when creating the socket :
+		int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+		fcntl(listen_fd, F_SETFL, O_NONBLOCK); ----> will make it non blocking
+
+	but when non blocking, recv() and read() will return -1 in case of nothing to read
+	using errno macro --> EAGAIN or EWOULDBLOCK to avoid this moment.
+
+--------------poll()----------------------
+
+	int poll(struct polldf *fds, nfds_t nfds, int timeout)
+
+	using std::vector to hold the array fds
+		std::vector::data ----> get the pointer raw adress of a vector
+		std::vector::size ----> get the size needed for poll() : nfds_t nfds;
+
+	std::vector<struct pollfd>
+
+	struct pollfd {
+		int		fd;			/* file descriptor */
+		short	events;		/* requested events */
+		short	revents;	/* returned events */
+	};
+
+	if all the struct pollfd are looped over, we go back to the beginning,
+	declaring the array we want to listen to, and then poll();
+	when something changes, poll() wakes up
+
+
+	to remove an element from the array of sockets :
+		keep nbr of active fd : nfds
+		array[i] = array[ndfs - 1]
+		vector.pop_back --------> remove last one
+		nfds--;
+		needs to listen to the current one again because it changed so 
+		is array[i] connected ?
+
+
+Memory Address: [ 0x00 ]   [ 0x08 ]   [ 0x10 ]   [ 0x18 ]   [ 0x20 ]
+Vector Index:   [   0  ]   [   1  ]   [   2  ]   [   3  ]   [   4  ]
+Data (pollfd):  [ List ]   [ CltA ]   [ CltB ]   [ CltC ]   [ CltD ]
+                                         ^                      ^
+                                   Target to Remove         Last Element
+
+----------------multiplexing event loop--------------
+1. Prepare array of struct pollfd:
+	main server listening sockets, currently connected sockets, setting the mask (POLLIN, POLLOUT)
+
+2. Suspension phase:
+	poll(), puts the program to sleep until an event occurs
+
+3. Event happens:
+	network events (new client or request), changing the revent of the corresponding pollfd.
+
+4. Execution phase:
+	loop through pollfds, checks revents bitmask
+
+	If (revents & POLLIN)
+	{
+		If (listening_set.find(current_fd) != listening_set.end())
+			// This is a listening socket -> Call accept()
+		Else
+			// This is a client socket -> Call recv()
+	}
+
+5. Back to 1.
+
+
+during execution phase, we need to know if its a listening socket or a new connection. to do so
+	use std::set<int> to store all the main listening socket from the config file.
+
+	If (revents & POLLIN)
+	{
+		If (listening_set.find(current_fd) != listening_set.end())
+			// This is a listening socket -> Call accept()
+		Else
+			// This is a client socket -> Call recv()
+	}
+
+after making sure its a listening socket, to keep track of every message send, even when it connects and cut before the end of the message
+we store the different strings using std::map
+	std::map<int, std::string> ----> int is the fd of the socket and string is the message.
+
+when accept(), create a new map for the newly connected socket
+when poll() flags for POLLIN, add the result of recv() to the string
+
+when recv() returns 0 (EOF) or error, we remove it from the vector of poll fd with the swap and pop, we need to send the string forward
+for william to decipher, and then we can remove it from the map.
+
+we need to search for : 
+	std::string::find("\r\n\r\n")
+to know that the full header was sent. 
+then we need to parse to find 
+	Content-Length: x
+
+and then continue adding to the string until : 
+	string.size() - (blankline_index + 4) >= x
+
+
+

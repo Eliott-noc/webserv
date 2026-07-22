@@ -11,13 +11,15 @@
 # include <sys/types.h>
 # include <sys/stat.h>
 # include <fcntl.h>
+# include <sys/socket.h>
 # include <fstream>
 # include <dirent.h>
 # include <unistd.h>
-# include <sys/socket.h>
 # include <iomanip>
 # include <cstring>
-# include <sys/types.h>
 # include <sys/wait.h>
+# include <netinet/in.h>
+# include <string.h>
+
 
 #endif
