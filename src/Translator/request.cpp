@@ -2,6 +2,7 @@
 
 Request::Request(int client_fd) : 
 	_is_chunked(0),
+	_keep_alive(0),
 	_content_length(0)
 	, _state(READING_REQUEST_LINE),
 	_body_fd(-1),
@@ -151,6 +152,8 @@ void	Request::_scanHeader()
 				key[j] = std::tolower(key[j]);
 
 			value = line.substr(colon_pos + 1);
+			if (key == "Connection:" && value == "Keep-Alive")
+				_keep_alive = true;
 			first = value.find_first_not_of(" \t\r\n");
 			last = value.find_last_not_of(" \t\r\n");
 			if (first != std::string::npos)
@@ -386,4 +389,9 @@ std::string	Request::getBodyFile() const
 std::map<std::string, std::string>	Request::getHeaders() const
 {
 	return _headers;
+}
+
+bool	Request::getKeepAlive() const
+{
+	return _keep_alive;
 }

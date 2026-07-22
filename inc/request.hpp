@@ -28,6 +28,7 @@ class Request
 		std::string							_version;
 		std::map<std::string, std::string>	_headers;
 		bool								_is_chunked;
+		bool								_keep_alive;
 		size_t								_content_length;
 		t_request_state						_state;
 		std::string							_raw_buffer;
@@ -49,6 +50,7 @@ class Request
 		std::string							getPath() const;
 		std::string							getQueryString() const;
 		std::map<std::string, std::string>	getHeaders() const;
+		bool								getKeepAlive() const;
 		std::string							getBodyFile() const;
 
 	private:
