@@ -89,6 +89,12 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		return;
 	}
 
+	if (req.getContentLength() > loc->getClientMaxBodySize())
+	{
+		buildErrorPage(413, config, loc);
+		return;
+	}
+
 	root = loc->getRoot().empty() ? config.getRoot() : loc->getRoot();
 	full_path = root + clean_path;
 

@@ -83,7 +83,7 @@ std::string	Response::_getMessageError(int code)
 void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
 	std::vector<std::string>	indexes = loc.getIndex();
-	std::string					testPath = full_path;
+	std::string					testPath;
 	bool						found = false;
 	struct stat					s;
 
@@ -97,6 +97,7 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 	{
 		for (size_t i = 0; i < indexes.size(); i++)
 		{
+			testPath = full_path;
 			if (testPath.at(testPath.length() - 1) != '/')
 				testPath += "/";
 			testPath += indexes[i];

@@ -2,146 +2,79 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Webserv Control Panel</title>
+    <title>Webserv 1.0 - Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; }
-        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        h2 { color: #2980b9; border-bottom: 2px solid #2980b9; padding-bottom: 5px; }
-        button { background: #2980b9; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #3498db; }
-        input[type="text"] { padding: 8px; width: 200px; border: 1px solid #ddd; border-radius: 4px; }
-        .delete-btn { background: #e74c3c; }
-        .delete-btn:hover { background: #c0392b; }
-        #log { background: #333; color: #2ecc71; padding: 15px; border-radius: 5px; font-family: monospace; min-height: 50px; overflow-x: auto; }
+        body { font-family: sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #eceff1; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #263238; text-align: center; }
+        h2 { border-bottom: 2px solid #607d8b; padding-bottom: 10px; color: #37474f; }
+        .btn { display: inline-block; padding: 10px 20px; background: #00796b; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
+        .btn-red { background: #c62828; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        #console { background: #263238; color: #81c784; padding: 15px; font-family: monospace; border-radius: 5px; height: 100px; overflow-y: auto; }
     </style>
 </head>
 <body>
 
-    <h1>🌐 Webserv 1.0 - Panel de Test</h1>
+    <h1>🚀 Webserv Control Panel</h1>
 
-    <!-- TEST GET STATIQUE -->
     <div class="card">
-        <h2>1. Test GET (Fichier Statique)</h2>
-        <p>Demander un fichier qui existe sur le serveur.</p>
-        <button onclick="window.location.href='/index.html'">Recharger cette page (GET /)</button>
-        <button onclick="window.location.href='/uploads/'">Voir l'Autoindex (/images/)</button>
+        <h2>📂 1. Exploration (GET & Autoindex)</h2>
+        <p>Tester si le serveur liste bien les fichiers du dossier <code>/uploads</code>.</p>
+        <a href="/uploads/" class="btn">Ouvrir l'Autoindex</a>
     </div>
 
-    <!-- TEST POST CGI -->
     <div class="card">
-        <h2>2. Test POST (CGI Python)</h2>
-        <p>Envoyer des données à un script qui les traite.</p>
-        <form action="/cgi-bin/test.py" method="POST">
-            <input type="text" name="message" placeholder="Tape un message...">
-            <button type="submit">Envoyer via CGI</button>
+        <h2>🐍 2. Dynamique (CGI Python)</h2>
+        <form action="/cgi-bin/test.py" method="GET">
+            <input type="text" name="user" placeholder="Ton nom..." required>
+            <button type="submit" class="btn">Tester CGI (GET)</button>
         </form>
     </div>
 
-    <!-- TEST UPLOAD BINAIRE RÉEL -->
     <div class="card">
-        <h2>3. Test POST (Vrai Upload d'Image)</h2>
-        <p>Sélectionne une vraie image sur ton disque.</p>
-        <input type="file" id="filePicker">
-        <button onclick="uploadBinaryFile()" style="background: #27ae60;">Uploader l'image</button>
+        <h2>📤 3. Upload & Sécurité (POST)</h2>
+        <p>La limite est de 10 Mo globale, mais 10 octets sur <code>/too-small</code>.</p>
+        <form id="uploadForm">
+            <input type="text" id="upName" placeholder="Nom du fichier (ex: test.txt)" required>
+            <textarea id="upContent" rows="3" placeholder="Contenu du fichier..."></textarea>
+            <button type="button" onclick="doUpload()" class="btn" style="background:#2e7d32">Uploader</button>
+            <button type="button" onclick="doUploadSmall()" class="btn" style="background:#ef6c00">Tester limite (10 octets)</button>
+        </form>
     </div>
-    
-    <script>
-    async function uploadBinaryFile() {
-        const picker = document.getElementById('filePicker');
-        const log = document.getElementById('log');
-        
-        if (picker.files.length === 0) {
-            alert("Choisis un fichier d'abord !");
-            return;
-        }
-    
-        const file = picker.files[0];
-        const reader = new FileReader();
-    
-        log.innerText = "Lecture du fichier binaire...";
-    
-        // On lit le fichier comme un "ArrayBuffer" (donnée brute)
-        reader.onload = async function() {
-            const bytes = reader.result;
-            log.innerText = "Envoi de " + bytes.byteLength + " octets vers /uploads/" + file.name;
-            
-            try {
-                const response = await fetch('/uploads/' + file.name, {
-                    method: 'POST',
-                    body: bytes // On envoie les octets bruts directement !
-                });
-                
-                if (response.status === 201 || response.status === 200) {
-                    log.innerText = "Succès ! Image uploadée sous le nom : " + file.name;
-                } else {
-                    log.innerText = "Erreur " + response.status;
-                }
-            } catch (err) {
-                log.innerText = "Erreur réseau.";
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    }
-    </script>
 
-<!-- TEST DELETE AMÉLIORÉ -->
-<div class="card">
-    <h2>4. Test DELETE</h2>
-    <p>Entre le nom du fichier à supprimer dans /uploads/</p>
-    <input type="text" id="deleteFileName" placeholder="ex: photo.jpg">
-    <button class="delete-btn" onclick="deleteTargetFile()">Supprimer le fichier</button>
-</div>
-
-<script>
-async function deleteTargetFile() {
-    const fileName = document.getElementById('deleteFileName').value;
-    const log = document.getElementById('log');
-    
-    if (!fileName) {
-        alert("Entre un nom de fichier !");
-        return;
-    }
-
-    log.innerText = "Envoi de la requête DELETE pour /uploads/" + fileName;
-    
-    try {
-        const response = await fetch('/uploads/' + fileName, { method: 'DELETE' });
-        if (response.status === 204) {
-            log.innerText = "Succès ! Code 204: " + fileName + " a été supprimé.";
-        } else {
-            // Ici, si le fichier n'existe pas, tu verras l'erreur 404
-            log.innerText = "Réponse du serveur : " + response.status + " " + response.statusText;
-        }
-    } catch (err) {
-        log.innerText = "Erreur réseau.";
-    }
-}
-</script>
-
-    <!-- LOG DES RÉPONSES -->
     <div class="card">
-        <h2>Console de Réponse</h2>
-        <div id="log">En attente d'action...</div>
+        <h2>🗑️ 4. Suppression (DELETE)</h2>
+        <input type="text" id="delName" placeholder="Nom du fichier à supprimer...">
+        <button onclick="doDelete()" class="btn btn-red">Supprimer définitivement</button>
+    </div>
+
+    <div class="card">
+        <h2>💻 Console de réponse</h2>
+        <div id="console">En attente d'une action...</div>
     </div>
 
     <script>
-        async function deleteFile() {
-            const log = document.getElementById('log');
-            log.innerText = "Envoi de la requête DELETE...";
-            
-            try {
-                const response = await fetch('/uploads/message.txt', { method: 'DELETE' });
-                if (response.status === 204) {
-                    log.innerText = "Succès ! Code 204: Le fichier a été supprimé.";
-                } else {
-                    log.innerText = "Erreur " + response.status + ": " + response.statusText;
-                }
-            } catch (err) {
-                log.innerText = "Erreur réseau (le serveur est-il allumé ?)";
-            }
+        const log = (msg) => document.getElementById('console').innerText = msg;
+
+        async function doUpload() {
+            const name = document.getElementById('upName').value;
+            const body = document.getElementById('upContent').value;
+            const res = await fetch('/uploads/' + name, { method: 'POST', body: body });
+            log("POST /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
+        }
+
+        async function doUploadSmall() {
+            const body = "Ceci est un message de plus de 10 octets";
+            const res = await fetch('/too-small/fail.txt', { method: 'POST', body: body });
+            log("POST /too-small/fail.txt -> Status: " + res.status + " " + res.statusText);
+        }
+
+        async function doDelete() {
+            const name = document.getElementById('delName').value;
+            const res = await fetch('/uploads/' + name, { method: 'DELETE' });
+            log("DELETE /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
         }
     </script>
-
 </body>
 </html>

@@ -20,6 +20,7 @@ Location &Location::operator=(const Location &other)
 		_methods = other._methods;
 		_index = other._index;
 		_auto_index = other._auto_index;
+		_isAutoIndexSet = other._isAutoIndexSet;
 		_client_max_body_size = other._client_max_body_size;
 		_return_code = other._return_code;
 		_return_url = other._return_url;

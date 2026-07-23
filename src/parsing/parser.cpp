@@ -349,6 +349,8 @@ static void	setLocArgs(Location &location, std::vector<std::string> &args)
 		setArgUploadStore(location, args);
 	else if (args[0] == "error_page")
 		setArgErrorPage(location, args);
+	else if (args[0] == "client_max_body_size")
+		location.setClientMaxBodySize(parseSize(args[1]));
 }
 
 static Location	parseLocation(const std::vector<std::string> &l_block, const ServerConfig &server)
