@@ -6,7 +6,8 @@ Response::Response() :
 	_file_size(0),
 	_total_sent(0),
 	_headers_sent(0),
-	_is_finished(0) {}
+	_is_finished(0),
+	_is_head(false) {}
 
 Response::Response(const Response &other)
 {
@@ -51,6 +52,7 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 	CGIHandler	cgi;
 	std::string	cgi_output;
 
+	_is_head = false;
 	if (clean_path == "ERROR")
 	{
 		buildErrorPage(400, config, NULL);
@@ -83,7 +85,11 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		return ;
 	}
 
-	if (!_isMethodAllowed(req.getMethod(), loc->getMethods()))
+	std::string method_to_check = req.getMethod();
+	if (method_to_check == "HEAD")
+		method_to_check = "GET";
+
+	if (!_isMethodAllowed(method_to_check, loc->getMethods()))
 	{
 		buildErrorPage(405, config, loc);
 		return;
@@ -117,15 +123,31 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		_headers["content-length"] = ss_len.str();
 
 		_generateResponse(200);
+
+		if (req.getMethod() == "HEAD")
+			_body.clear();
+
 		return;
 	}
-
-	if (req.getMethod() == "GET")
+	if (req.getMethod() == "HEAD")
+		_is_head = true;
+	if (req.getMethod() == "GET" || req.getMethod() == "HEAD")
 		_handleGet(req, config, *loc, full_path);
 	else if (req.getMethod() == "POST")
 		_handlePost(req, config, *loc, full_path);
 	else if (req.getMethod() == "DELETE")
 		_handleDelete(config, *loc, full_path);
+
+	if (_is_head)
+	{
+		_body.clear();
+		if (_file_fd != -1)
+		{
+			close(_file_fd);
+			_file_fd = -1;
+		}
+	}
+	std::cout << "[DEBUG] CODE DE STATUT RENVOYÉ : " << _status_code << std::endl;
 }
 
 /*
@@ -185,7 +207,7 @@ void	Response::sendResponse(int socket_fd)
 	{
 		if (_header_buffer.empty())
 			return;
-		ret = send(socket_fd, _header_buffer.c_str(), _header_buffer.size(), 0);
+		ret = send(socket_fd, _header_buffer.c_str(), _header_buffer.size(), MSG_NOSIGNAL);
 		if (ret <= 0)
 			return;
 		_headers_sent = true;
@@ -195,9 +217,10 @@ void	Response::sendResponse(int socket_fd)
 		return;
 	}
 
+	
 	if (_file_fd == -1 && !_body.empty())
 	{
-		ret = send(socket_fd, _body.c_str(), _body.size(), 0);
+		ret = send(socket_fd, _body.c_str(), _body.size(), MSG_NOSIGNAL);
 		if (ret < 0)
 			return;
 		_is_finished = true;
@@ -212,7 +235,7 @@ void	Response::sendResponse(int socket_fd)
 
 		if (bytes_read > 0)
 		{
-			ret = send(socket_fd, buffer, bytes_read, 0);
+			ret = send(socket_fd, buffer, bytes_read, MSG_NOSIGNAL);
 			if (ret > 0)
 				_total_sent += ret;
 		}
