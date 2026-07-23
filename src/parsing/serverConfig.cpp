@@ -1,7 +1,7 @@
 #include "../../inc/serverConfig.hpp"
 
 ServerConfig::ServerConfig()
-	: _auto_index(false), _client_max_body_size(0)
+	: _auto_index(false), _client_max_body_size(1048576)
 {
 
 }
@@ -21,12 +21,12 @@ ServerConfig	&ServerConfig::operator=(const ServerConfig &other)
 		_root = other._root;
 		_index = other._index;
 		_auto_index = other._auto_index;
+		_return_code = other._return_code;
+		_return_url = other._return_url;
 		_server_names = other._server_names;
 		_client_max_body_size = other._client_max_body_size;
 		_error_pages = other._error_pages;
 		_locations = other._locations;
-		_return_code = other._return_code;
-		_return_url = other._return_url;
 	}
 	return *this;
 }

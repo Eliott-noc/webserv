@@ -51,6 +51,7 @@ class Request
 		std::string							getQueryString() const;
 		std::map<std::string, std::string>	getHeaders() const;
 		bool								getKeepAlive() const;
+		size_t								getContentLength() const;
 		std::string							getBodyFile() const;
 
 	private:

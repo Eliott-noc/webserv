@@ -395,3 +395,8 @@ bool	Request::getKeepAlive() const
 {
 	return _keep_alive;
 }
+
+size_t	Request::getContentLength() const
+{
+	return _content_length;
+}

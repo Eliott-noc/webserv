@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Webserv 1.0 - Dashboard</title>
+    <style>
+        body { font-family: sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #eceff1; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #263238; text-align: center; }
+        h2 { border-bottom: 2px solid #607d8b; padding-bottom: 10px; color: #37474f; }
+        .btn { display: inline-block; padding: 10px 20px; background: #00796b; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
+        .btn-red { background: #c62828; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        #console { background: #263238; color: #81c784; padding: 15px; font-family: monospace; border-radius: 5px; height: 100px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+    <h1>🚀 Webserv Control Panel</h1>
+
+    <div class="card">
+        <h2>📂 1. Exploration (GET & Autoindex)</h2>
+        <p>Tester si le serveur liste bien les fichiers du dossier <code>/uploads</code>.</p>
+        <a href="/uploads/" class="btn">Ouvrir l'Autoindex</a>
+    </div>
+
+    <div class="card">
+        <h2>🐍 2. Dynamique (CGI Python)</h2>
+        <form action="/cgi-bin/test.py" method="GET">
+            <input type="text" name="user" placeholder="Ton nom..." required>
+            <button type="submit" class="btn">Tester CGI (GET)</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>📤 3. Upload & Sécurité (POST)</h2>
+        <p>La limite est de 10 Mo globale, mais 10 octets sur <code>/too-small</code>.</p>
+        <form id="uploadForm">
+            <input type="text" id="upName" placeholder="Nom du fichier (ex: test.txt)" required>
+            <textarea id="upContent" rows="3" placeholder="Contenu du fichier..."></textarea>
+            <button type="button" onclick="doUpload()" class="btn" style="background:#2e7d32">Uploader</button>
+            <button type="button" onclick="doUploadSmall()" class="btn" style="background:#ef6c00">Tester limite (10 octets)</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>🗑️ 4. Suppression (DELETE)</h2>
+        <input type="text" id="delName" placeholder="Nom du fichier à supprimer...">
+        <button onclick="doDelete()" class="btn btn-red">Supprimer définitivement</button>
+    </div>
+
+    <div class="card">
+        <h2>💻 Console de réponse</h2>
+        <div id="console">En attente d'une action...</div>
+    </div>
+
+    <script>
+        const log = (msg) => document.getElementById('console').innerText = msg;
+
+        async function doUpload() {
+            const name = document.getElementById('upName').value;
+            const body = document.getElementById('upContent').value;
+            const res = await fetch('/uploads/' + name, { method: 'POST', body: body });
+            log("POST /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
+        }
+
+        async function doUploadSmall() {
+            const body = "Ceci est un message de plus de 10 octets";
+            const res = await fetch('/too-small/fail.txt', { method: 'POST', body: body });
+            log("POST /too-small/fail.txt -> Status: " + res.status + " " + res.statusText);
+        }
+
+        async function doDelete() {
+            const name = document.getElementById('delName').value;
+            const res = await fetch('/uploads/' + name, { method: 'DELETE' });
+            log("DELETE /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
+        }
+    </script>
+</body>
+</html>

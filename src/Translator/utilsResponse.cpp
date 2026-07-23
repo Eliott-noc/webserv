@@ -83,7 +83,7 @@ std::string	Response::_getMessageError(int code)
 void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
 	std::vector<std::string>	indexes = loc.getIndex();
-	std::string					testPath = full_path;
+	std::string					testPath;
 	bool						found = false;
 	struct stat					s;
 
@@ -97,6 +97,7 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 	{
 		for (size_t i = 0; i < indexes.size(); i++)
 		{
+			testPath = full_path;
 			if (testPath.at(testPath.length() - 1) != '/')
 				testPath += "/";
 			testPath += indexes[i];
@@ -162,12 +163,21 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 
 void	Response::_handlePost(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
+	struct stat	s;
 	std::string	uploadDir = loc.getUploadStore();
 	std::string	fileName;
 	std::string	savePath;
+	std::string	dirPath;
 	int			exists;
 
-	if (uploadDir.empty())
+	dirPath = full_path.substr(0, full_path.find_last_of('/'));
+	if (stat(dirPath.c_str(), &s) != 0) 
+	{
+		buildErrorPage(404, config, &loc);
+		return;
+	}
+
+	if (uploadDir.empty()) 
 	{
 		buildErrorPage(403, config, &loc);
 		return;
@@ -175,8 +185,6 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 
 	fileName = full_path.substr(full_path.find_last_of('/') + 1);
 	savePath = uploadDir + "/" + fileName;
-
-	struct stat	s;
 
 	exists = (stat(savePath.c_str(), &s) == 0);
 
@@ -198,7 +206,6 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 	_body = "<h1>Action reussie !</h1>";
 	_headers["content-type"] = "text/html";
 	
-
 	if (exists)
 		_generateResponse(200);
 	else
@@ -414,32 +421,34 @@ std::string	Response ::_normalizePath(std::string path)
 	return result.empty() ? "/" : result;
 }
 
-void	Response::_parseCGIOutput(std::string &cgi_output)
+void Response::_parseCGIOutput(std::string &cgi_output)
 {
-	size_t pos = cgi_output.find("\r\n\r\n");
+	size_t		pos = cgi_output.find("\r\n\r\n");
+	std::string	headers_part;
+	size_t		ct_pos;
+	size_t		end_line;
+	std::string	ct_value;
+	size_t		first;
+
 	if (pos != std::string::npos)
 	{
-		std::string headers_part = cgi_output.substr(0, pos);
-		
+		headers_part = cgi_output.substr(0, pos);
 		_body = cgi_output.substr(pos + 4);
 
-		std::stringstream ss(headers_part);
-		std::string line;
-		while (std::getline(ss, line) && line != "\r")
+		ct_pos = headers_part.find("Content-Type:");
+		if (ct_pos != std::string::npos)
 		{
-			size_t colon = line.find(':');
-			if (colon != std::string::npos)
-			{
-				std::string key = line.substr(0, colon);
-				std::string value = line.substr(colon + 1);
-				// Un petit trim pour la valeur
-				size_t first = value.find_first_not_of(" \r");
-				if (first != std::string::npos)
-					value = value.substr(first, value.find_last_not_of(" \r") - first + 1);
-				_headers[key] = value;
-			}
+			end_line = headers_part.find("\r\n", ct_pos);
+			ct_value = headers_part.substr(ct_pos + 13, end_line - (ct_pos + 13));
+			
+			first = ct_value.find_first_not_of(" ");
+			if (first != std::string::npos)
+				_headers["Content-Type"] = ct_value.substr(first);
 		}
 	}
 	else
+	{
 		_body = cgi_output;
+		_headers["Content-Type"] = "text/html; charset=utf-8";
+	}
 }
