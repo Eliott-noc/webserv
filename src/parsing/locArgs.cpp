@@ -6,7 +6,7 @@ void	setArgPath(Location &location, const std::string &path)
 {
 	if (path.empty())
 		throw std::runtime_error("Error: location needs a path");
-	if (path[0] != '/')
+	if (path[0] != '/' && path[0] != '.')
 		throw std::runtime_error("Error : location path must be an absolute path");
 	location.setPath(path);
 }

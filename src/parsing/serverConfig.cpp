@@ -1,7 +1,7 @@
 #include "../../inc/serverConfig.hpp"
 
 ServerConfig::ServerConfig()
-	: _auto_index(false), _client_max_body_size(1048576)
+	: _auto_index(false), _return_code(0), _client_max_body_size(1048576)
 {
 
 }
