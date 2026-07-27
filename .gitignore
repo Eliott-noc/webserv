@@ -7,3 +7,4 @@ test_death/
 /tmp/body_client_*.tmp
 .DS_Store
 arena/
+.make_count
