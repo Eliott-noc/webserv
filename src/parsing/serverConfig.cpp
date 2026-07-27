@@ -83,7 +83,7 @@ std::vector<std::string>	ServerConfig::getServerNames() const
 	return _server_names;
 }
 
-size_t	ServerConfig::getClientMaxBodySize() const
+unsigned long	ServerConfig::getClientMaxBodySize() const
 {
 	return _client_max_body_size;
 }
@@ -128,7 +128,7 @@ void	ServerConfig::setServerNames(const std::string &server_name)
 	_server_names.push_back(server_name);
 }
 
-void	ServerConfig::setClientMaxBodySize(const size_t &client_max_body_size)
+void	ServerConfig::setClientMaxBodySize(const unsigned long &client_max_body_size)
 {
 	_client_max_body_size = client_max_body_size;
 }

@@ -26,7 +26,6 @@ class Response
 		size_t								_total_sent;
 		bool								_headers_sent;
 		bool								_is_finished;
-		bool								_is_head;
 
 	public:
 		Response();

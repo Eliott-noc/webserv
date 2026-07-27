@@ -177,10 +177,10 @@ void	Request::_scanHeader()
  * RETURN : 1 si errreur et 0 si tout est bon.
  */
 
-bool	Request::_chunked(size_t max_body_limit)
+bool	Request::_chunked(unsigned long max_body_limit)
 {
-	size_t		chunkSize;
-	size_t		pos = _raw_buffer.find("\r\n");
+	unsigned long		chunkSize;
+	unsigned long		pos = _raw_buffer.find("\r\n");
 	std::string	chunkData;
 
 	if (pos == std::string::npos)
@@ -239,7 +239,7 @@ bool	Request::_chunked(size_t max_body_limit)
  * RETURN : 200 (fini), 1 (en cours), ou un code d'erreur (400, 413, 431).
  */
 
-int	Request::parse(std::string chunk, size_t max_body_limit)
+int	Request::parse(std::string chunk, unsigned long max_body_limit)
 {
 	_raw_buffer += chunk;
 
@@ -303,8 +303,8 @@ int	Request::parse(std::string chunk, size_t max_body_limit)
 					_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
 				}
 
-				size_t	remaining = _content_length - _bytes_received;
-				size_t	to_write = (_raw_buffer.size() < remaining) ? _raw_buffer.size() : remaining;
+				unsigned long	remaining = _content_length - _bytes_received;
+				unsigned long	to_write = (_raw_buffer.size() < remaining) ? _raw_buffer.size() : remaining;
 
 				if (to_write > 0)
 				{
@@ -396,7 +396,7 @@ bool	Request::getKeepAlive() const
 	return _keep_alive;
 }
 
-size_t	Request::getContentLength() const
+unsigned long	Request::getContentLength() const
 {
 	return _content_length;
 }

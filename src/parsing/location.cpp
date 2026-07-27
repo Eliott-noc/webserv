@@ -64,7 +64,7 @@ std::vector<std::string> Location::getIndex() const
 	return _index;
 }
 
-size_t	Location::getClientMaxBodySize() const
+unsigned long	Location::getClientMaxBodySize() const
 {
 	return _client_max_body_size;
 }
@@ -139,7 +139,7 @@ bool Location::isAutoIndexSet() const
 	return _isAutoIndexSet;
 }
 
-void	Location::setClientMaxBodySize(const size_t &client_max_body_size)
+void	Location::setClientMaxBodySize(const unsigned long &client_max_body_size)
 {
 	_client_max_body_size = client_max_body_size;
 }

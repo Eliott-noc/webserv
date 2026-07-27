@@ -29,12 +29,12 @@ class Request
 		std::map<std::string, std::string>	_headers;
 		bool								_is_chunked;
 		bool								_keep_alive;
-		size_t								_content_length;
+		unsigned long						_content_length;
 		t_request_state						_state;
 		std::string							_raw_buffer;
 		std::string							_tmp_file;
 		int									_body_fd;
-		size_t								_bytes_received;
+		unsigned long						_bytes_received;
 		int									_client_fd;
 
 	public:
@@ -44,20 +44,20 @@ class Request
 		
 		Request &operator=(const Request &other);
 
-		int									parse(std::string raw_data, size_t max_body_limit);
+		int									parse(std::string raw_data, unsigned long max_body_limit);
 
 		std::string							getMethod() const;
 		std::string							getPath() const;
 		std::string							getQueryString() const;
 		std::map<std::string, std::string>	getHeaders() const;
 		bool								getKeepAlive() const;
-		size_t								getContentLength() const;
+		unsigned long						getContentLength() const;
 		std::string							getBodyFile() const;
 
 	private:
 		void								_requestLine();
 		void								_scanHeader();
-		bool								_chunked(size_t max_body_limit);
+		bool								_chunked(unsigned long max_body_limit);
 		std::string							_urlDecode(std::string str);
 
 };

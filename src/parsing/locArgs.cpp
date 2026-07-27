@@ -28,8 +28,8 @@ void	setArgMethods(Location &location, std::vector<std::string> &args)
 	args.erase(args.begin());
 	for (size_t i = 1; i < args.size(); i++)
 	{
-		if (args[i] != "GET" && args[i] != "POST" && args[i] != "DELETE" && args[i] != "HEAD")
-			throw std::runtime_error("Error: allow_methods can only have GET, POST, DELETE or HEAD as arguments");
+		if (args[i] != "GET" && args[i] != "POST" && args[i] != "DELETE")
+			throw std::runtime_error("Error: allow_methods can only have GET, POST or DELETE as arguments");
 		if (checkDuplicateMethods(args[i], &methods))
 			throw std::runtime_error("Error: duplicate methods in location");
 	}

@@ -13,18 +13,18 @@ le POST dans un dossier /upload, activer l'affichage des fichiers (autoindex) da
 class Location
 {
 	private:
-		std::string					_path;          // ex: /images
-		std::string					_root;          // ex: ./www/images
-		std::vector<std::string>	_methods;       // GET, POST, DELETE
-		std::vector<std::string>	_index;         // index.html
-		bool						_auto_index;     // on/off
+		std::string					_path;			// ex: /images
+		std::string					_root;			// ex: ./www/images
+		std::vector<std::string>	_methods;		// GET, POST, DELETE
+		std::vector<std::string>	_index;			// index.html
+		bool						_auto_index;	// on/off
 		bool						_isAutoIndexSet;
-		size_t						_client_max_body_size;
+		unsigned long				_client_max_body_size;
 		int							_return_code;
 		std::string					_return_url;
-		std::string					_cgi_path;      // chemin vers python/php
-		std::string					_cgi_ext;       // .py ou .php
-		std::string					_upload_store;  // dossier d'upload
+		std::string					_cgi_path;		// chemin vers python/php
+		std::string					_cgi_ext;		// .py ou .php
+		std::string					_upload_store;	// dossier d'upload
 		std::map<int, std::string>	_error_pages;
 
 	public:
@@ -41,7 +41,7 @@ class Location
 		std::vector<std::string>	getMethods() const;
 		std::vector<std::string>	getIndex() const;
 		bool						getAutoIndex() const;
-		size_t						getClientMaxBodySize() const;
+		unsigned long				getClientMaxBodySize() const;
 		int							getReturnCode() const;
 		std::string					getReturnUrl() const;
 		std::string					getCGIPath() const;
@@ -57,7 +57,7 @@ class Location
 		void						setIndex(const std::vector<std::string> &index);
 		void						setAutoIndex(const bool &autoIndex);
 		bool						isAutoIndexSet() const;
-		void						setClientMaxBodySize(const size_t &client_max_body_size);
+		void						setClientMaxBodySize(const unsigned long &client_max_body_size);
 		void						setRet(int &ret_code, const std::string &ret_url);
 		void						setCgiPath(const std::string &cgi_path);
 		void						setCgiExt(const std::string &cgi_ext);
