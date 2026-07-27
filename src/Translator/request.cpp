@@ -74,11 +74,6 @@ void	Request::_requestLine()
 	size_t		i;
 	std::string	first_line;
 	std::string	extra;
-	
-	if (_raw_buffer.length() > MAX_URI_LENGTH){
-		_state = ERROR;
-		return;
-	}
 
 	pos = _raw_buffer.find("\r\n");
 	if (pos == std::string::npos)
@@ -267,6 +262,10 @@ int	Request::parse(std::string chunk, unsigned long max_body_limit)
 		{
 			if (_raw_buffer.find("\r\n") == std::string::npos)
 				break ;
+			if (_raw_buffer.length() > MAX_URI_LENGTH){
+				_state = ERROR;
+				return 414;
+			}
 			_requestLine();
 		}
 		else if (_state == READING_HEADERS)
