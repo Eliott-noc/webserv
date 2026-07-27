@@ -166,7 +166,7 @@ void ServerManager::run(){
 							std::cout << G << "[INFO] Received " << count << " bytes from client on fd: " << _pollfds[i].fd << RESET << std::endl;
 							int client_fd = _pollfds[i].fd;
 							Client* client = _clients[client_fd];
-							size_t body_limit = client->config->getClientMaxBodySize();
+							unsigned long body_limit = client->config->getClientMaxBodySize();
 							std::string chunk(buffer, count);
 							int parse_status = client->request.parse(chunk, body_limit);
 							

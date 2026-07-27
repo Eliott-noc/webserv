@@ -2,6 +2,8 @@
 
 int	main(int argc, char **argv)
 {
+	signal(SIGPIPE, SIG_IGN);
+
 	if (argc != 2)
 		return (std::cout << "Error:\nUsage: ./webserv <config file>" << std::endl, 1);
 	std::string	file = argv[1];

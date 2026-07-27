@@ -120,7 +120,7 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		return;
 	}
 
-	if (req.getMethod() == "GET")
+	if (req.getMethod() == "GET" || req.getMethod() == "HEAD")
 		_handleGet(req, config, *loc, full_path);
 	else if (req.getMethod() == "POST")
 		_handlePost(req, config, *loc, full_path);
@@ -142,18 +142,22 @@ void Response::buildErrorPage(int code, ServerConfig &config, const Location *lo
 
 	std::string messageError = _getMessageError(code);
 
-	_body = "<html><head><title>" + messageError + "</title></head>";
-	_body += "<body><center><h1>" + messageError + "</h1></center>";
-	_body += "<hr><center>webserv/1.0</center></body></html>";
-
-	if (loc != NULL)
-		_checkConfig(config, loc, code);
+	if (!_checkConfig(config, loc, code))
+	{
+		std::stringstream ss_body;
+		ss_body << "<html><head><title>" << messageError << "</title></head>";
+		ss_body << "<body><center><h1>" << messageError << "</h1></center>";
+		ss_body << "<hr><center>webserv/1.0</center></body></html>";
+		_body = ss_body.str();
+	}
 
 	_headers["Content-Type"] = "text/html";
+	_headers["Server"] = "webserv/1.0";
+	
 	std::stringstream ss_len;
 	ss_len << _body.length();
+	_headers["Content-Type"] = "text/html; charset=utf-8";
 	_headers["Content-Length"] = ss_len.str();
-	_headers["Server"] = "webserv/1.0";
 
 	_generateResponse(code);
 }
@@ -178,28 +182,26 @@ void	Response::sendResponse(int socket_fd)
 	{
 		_headers_sent = true;
 		_is_finished = true;
-		return;
+		return ;
 	}
 
 	if (!_headers_sent)
 	{
 		if (_header_buffer.empty())
-			return;
-		ret = send(socket_fd, _header_buffer.c_str(), _header_buffer.size(), 0);
+			return ;
+		ret = send(socket_fd, _header_buffer.c_str(), _header_buffer.size(), MSG_NOSIGNAL);
 		if (ret <= 0)
-			return;
+			return ;
 		_headers_sent = true;
-		
 		if (_file_fd == -1 && _body.empty())
 			_is_finished = true;
-		return;
+		return ;
 	}
 
 	if (_file_fd == -1 && !_body.empty())
 	{
-		ret = send(socket_fd, _body.c_str(), _body.size(), 0);
-		if (ret < 0)
-			return;
+		ret = send(socket_fd, _body.c_str(), _body.size(), MSG_NOSIGNAL);
+		if (ret < 0) return;
 		_is_finished = true;
 		_body.clear();
 		return;
@@ -212,7 +214,7 @@ void	Response::sendResponse(int socket_fd)
 
 		if (bytes_read > 0)
 		{
-			ret = send(socket_fd, buffer, bytes_read, 0);
+			ret = send(socket_fd, buffer, bytes_read, MSG_NOSIGNAL);
 			if (ret > 0)
 				_total_sent += ret;
 		}

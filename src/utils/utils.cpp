@@ -105,7 +105,7 @@ bool	isValidPort(const std::string &str)
 	return (port >= 1 && port <= 65535);
 }
 
-size_t parseSize(const std::string& str)
+size_t	parseSize(const std::string& str)
 {
 	size_t multiplier = 1;
 	std::string number = str;
@@ -130,8 +130,10 @@ size_t parseSize(const std::string& str)
 
 	if (!checkInt(number))
 		throw std::runtime_error("Invalid body size");
-
-	return std::atoi(number.c_str()) * multiplier;
+	
+	char			*end;
+	unsigned long	val = std::strtoul(number.c_str(), &end, 10);
+	return (static_cast<size_t>(val * multiplier));
 }
 
 
