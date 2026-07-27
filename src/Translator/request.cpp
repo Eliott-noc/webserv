@@ -1,10 +1,11 @@
 #include "../../inc/request.hpp"
+#define MAX_URI_LENGTH 4096
 
-Request::Request(int client_fd) : 
+Request::Request(int client_fd) :
 	_is_chunked(0),
 	_keep_alive(0),
-	_content_length(0)
-	, _state(READING_REQUEST_LINE),
+	_content_length(0),
+	_state(READING_REQUEST_LINE),
 	_body_fd(-1),
 	_bytes_received(0),
 	_client_fd(client_fd) {}
@@ -74,6 +75,11 @@ void	Request::_requestLine()
 	std::string	first_line;
 	std::string	extra;
 	
+	if (_raw_buffer.length() > MAX_URI_LENGTH){
+		_state = ERROR;
+		return;
+	}
+
 	pos = _raw_buffer.find("\r\n");
 	if (pos == std::string::npos)
 		return ;
