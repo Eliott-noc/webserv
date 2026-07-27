@@ -1,1 +1,4 @@
-client_max_body_size a mettre en unigned long au lieu de int + content_lenth et bytes_receved dans request
+//client_max_body_size a mettre en unigned long au lieu de int + content_lenth et bytes_receved dans request
+
+
+If URI too long, specify 414 error code URI too long, for now its just 400
