@@ -30,8 +30,6 @@ class ServerManager
 		
 	private:
 		void	_acceptNewConnection(int server_fd);
-		// void	_handleClientData(int client_fd);
-		// void	_sendResponse(int client_fd);
 		void	_removeClient(size_t idx);
 };
 

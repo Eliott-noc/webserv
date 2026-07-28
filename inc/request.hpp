@@ -53,6 +53,7 @@ class Request
 		bool								getKeepAlive() const;
 		unsigned long						getContentLength() const;
 		std::string							getBodyFile() const;
+		int									getClientFd() const;
 
 	private:
 		void								_requestLine();

@@ -151,20 +151,20 @@ void	Request::_scanHeader()
 			key = line.substr(0, colon_pos);
 			for (size_t j = 0; j < key.length(); ++j)
 				key[j] = std::tolower(key[j]);
-
 			value = line.substr(colon_pos + 1);
-			if (key == "Connection:" && value == "Keep-Alive")
-				_keep_alive = true;
 			first = value.find_first_not_of(" \t\r\n");
 			last = value.find_last_not_of(" \t\r\n");
 			if (first != std::string::npos)
 				value = value.substr(first, (last - first + 1));
 			else
 				value ="";
-
-			if (key == "transfer-encoding" && value.find("chunked") != std::string::npos)
+			std::string value_lower = value;
+			for (size_t j = 0; j < value_lower.length(); ++j)
+				value_lower[j] = std::tolower(value_lower[j]);
+			if (key == "connection" && value_lower.find("keep-alive") != std::string::npos)
+				_keep_alive = true;
+			if (key == "transfer-encoding" && value_lower.find("chunked") != std::string::npos)
 				_is_chunked = true;
-			
 			_headers[key] = value;
 		}
 		_raw_buffer.erase(0, pos + 2);
@@ -404,4 +404,9 @@ bool	Request::getKeepAlive() const
 unsigned long	Request::getContentLength() const
 {
 	return _content_length;
+}
+
+int		Request::getClientFd() const
+{
+	return _client_fd;
 }

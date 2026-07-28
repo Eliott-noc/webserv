@@ -23,7 +23,9 @@ class Client
 		Client(int client_fd);
 		Client(const Client &other);
 		~Client();
-		
+	
+		void	reset();
+	
 		Client& operator=(const Client &src);
 };
 

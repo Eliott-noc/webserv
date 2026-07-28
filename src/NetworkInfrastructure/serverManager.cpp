@@ -199,10 +199,16 @@ void ServerManager::run(){
 					std::cout << Y << "[DEBUG] Socket fd: " << client_fd << " ready for writing (POLLOUT). Sending data..." << RESET << std::endl;
 					client->response.sendResponse(client_fd);
 					if (client->response.isFinished()){
-						std::cout << G << "[INFO] Response successfully sent to client on FD: " << client_fd << ". Closing connection." << RESET << std::endl;
-						_removeClient(i);
-						nfds--;
-						i--;
+						std::cout << G << "[INFO] Response successfully sent to client on FD: " << client_fd << RESET << std::endl;
+						if (client->request.getKeepAlive() == false){
+							_removeClient(i);
+							nfds--;
+							i--;
+						}
+						else{
+							client->reset();
+							_pollfds[i].events = POLLIN;
+						}
 					}
 				}
 				else if (_pollfds[i].revents & POLLERR || _pollfds[i].revents & POLLHUP || _pollfds[i].revents & POLLNVAL){
@@ -225,13 +231,13 @@ void ServerManager::_acceptNewConnection(int server_fd){
 	
 	if (client_fd < 0){
 		err_code = errno;
-		std::cerr << "[ERROR] accept() failed on server socket fd: " << server_fd << RESET << std::endl;
+		std::cerr << R << "[ERROR] accept() failed on server socket fd: " << server_fd << RESET << std::endl;
 		printPortErr(err_code, -2);
 		return;
 	}
 	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0){
 		err_code = errno;
-		std::cerr << "[ERROR] fcntl O_NONBLOCK failed on newly accepted client fd: " << client_fd << RESET << std::endl;
+		std::cerr << R << "[ERROR] fcntl O_NONBLOCK failed on newly accepted client fd: " << client_fd << RESET << std::endl;
 		printPortErr(err_code, -2);
 		close(client_fd);
 		return;
