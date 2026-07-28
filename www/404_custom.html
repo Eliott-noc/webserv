@@ -1,10 +1,86 @@
 <!DOCTYPE html>
-<html>
-<head><title>Oups !</title></head>
-<body style="text-align: center; padding-top: 50px; font-family: sans-serif;">
-    <h1 style="font-size: 100px;">🕵️‍♂️</h1>
-    <h1>404 - Page Introuvable</h1>
-    <p>Mon serveur a cherché partout, mais ce fichier a disparu !</p>
-    <a href="/">Retour à l'accueil</a>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oops! - 404</title>
+    
+    <style>
+        body {
+            text-align: center; 
+            padding-top: 15vh; 
+            /* Classic terminal monospace fonts */
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #0c0c0c;
+            /* Neon terminal green */
+            color: #00ff41; 
+            margin: 0;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        
+        .ascii-art {
+            font-size: 2.5rem;
+            margin: 0;
+            line-height: 1.5;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+            text-transform: uppercase;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+
+        /* Blinking cursor effect */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.2rem;
+            background-color: #00ff41;
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #00ff41;
+            color: #0c0c0c;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 2px solid #00ff41;
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            /* Invert colors on hover like an old DOS button */
+            background-color: #0c0c0c;
+            color: #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ascii-art">¯\_(ツ)_/¯</div>
+    <h1>Error 404</h1>
+    <p>Directory not found. The requested file has been purged.<span class="cursor"></span></p>
+    
+    <a href="/" class="btn">Return to Home</a>
+
 </body>
 </html>
