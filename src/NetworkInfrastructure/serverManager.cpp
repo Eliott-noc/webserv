@@ -96,7 +96,7 @@ void ServerManager::initServers(){
 			_pollfds.push_back(new_poll);
 			_listenSockets[listen_fd] = &_configs[i];
 
-			std::cout << G << "[INFO] Successfully initialized server bound to fd: " << listen_fd 
+			std::cout << G << "[INFO] Successfully initialized server bound to FD: " << listen_fd 
 						<< " (port: " << port << ")" << RESET << std::endl;
 		}
 	}
@@ -149,7 +149,7 @@ void ServerManager::run(){
 						if (count == -1){
 							err_code = errno;
 							if (err_code != EAGAIN && err_code != EWOULDBLOCK){
-								std::cerr << "[ERROR] recv failed on fd: " << _pollfds[i].fd << RESET << std::endl;
+								std::cerr << "[ERROR] recv failed on FD: " << _pollfds[i].fd << RESET << std::endl;
 								printPortErr(err_code, -2);
 								_removeClient(i);
 								nfds--;
@@ -157,36 +157,36 @@ void ServerManager::run(){
 							}
 						}
 						else if (count == 0){
-							std::cout << G << "[INFO] Connection closed by client on fd: " << _pollfds[i].fd << RESET << std::endl;
+							std::cout << G << "[INFO] Connection closed by client on FD: " << _pollfds[i].fd << RESET << std::endl;
 							_removeClient(i);
 							nfds--;
 							i--;
 						}
 						else {
-							std::cout << G << "[INFO] Received " << count << " bytes from client on fd: " << _pollfds[i].fd << RESET << std::endl;
+							std::cout << G << "[INFO] Received " << count << " bytes from client on FD: " << _pollfds[i].fd << RESET << std::endl;
 							int client_fd = _pollfds[i].fd;
 							Client* client = _clients[client_fd];
 							unsigned long body_limit = client->config->getClientMaxBodySize();
 							std::string chunk(buffer, count);
 							int parse_status = client->request.parse(chunk, body_limit);
 							
-							std::cout << Y << "[DEBUG] Request parsing status for fd " << client_fd << ": " << parse_status << RESET << std::endl;
+							std::cout << Y << "[DEBUG] Request parsing status for FD " << client_fd << ": " << parse_status << RESET << std::endl;
 							if (parse_status == 1) {
-								std::cout << Y << "[DEBUG] Request incomplete on fd " << client_fd << ". Waiting for more chunks..." << RESET << std::endl;
+								std::cout << Y << "[DEBUG] Request incomplete on FD " << client_fd << ". Waiting for more chunks..." << RESET << std::endl;
 								continue;
 							}
 							else {
 								if (parse_status == 200) {
-									std::cout << G << "[INFO] Request parsing completed successfully (200) on fd " << client_fd << ". Building response..." << RESET << std::endl;
+									std::cout << G << "[INFO] Request parsing completed successfully (200) on FD " << client_fd << ". Building response..." << RESET << std::endl;
 									client->response.makeResponse(client->request, *(client->config));
 								}
 								else {
-									std::cerr << Y << "[WARN] Parsing error detected (code: " << parse_status << ") on fd " << client_fd << ". Generating error page..." << RESET << std::endl;
+									std::cerr << Y << "[WARN] Parsing error detected (code: " << parse_status << ") on FD " << client_fd << ". Generating error page..." << RESET << std::endl;
 									std::vector<Location> temp_loc = client->config->getLocations();
 									client->response.buildErrorPage(parse_status, *(client->config), NULL);
 								}
 								_pollfds[i].events = POLLOUT;
-								std::cout << Y << "[DEBUG] Switched poll events to POLLOUT for fd: " << client_fd << RESET << std::endl;
+								std::cout << Y << "[DEBUG] Switched poll events to POLLOUT for FD: " << client_fd << RESET << std::endl;
 							}
 						}
 					}
@@ -199,7 +199,7 @@ void ServerManager::run(){
 					std::cout << Y << "[DEBUG] Socket fd: " << client_fd << " ready for writing (POLLOUT). Sending data..." << RESET << std::endl;
 					client->response.sendResponse(client_fd);
 					if (client->response.isFinished()){
-						std::cout << G << "[INFO] Response successfully sent to client on fd: " << client_fd << ". Closing connection." << RESET << std::endl;
+						std::cout << G << "[INFO] Response successfully sent to client on FD: " << client_fd << ". Closing connection." << RESET << std::endl;
 						_removeClient(i);
 						nfds--;
 						i--;
@@ -207,7 +207,7 @@ void ServerManager::run(){
 				}
 				else if (_pollfds[i].revents & POLLERR || _pollfds[i].revents & POLLHUP || _pollfds[i].revents & POLLNVAL){
 					checked++;
-					std::cerr << Y << "[WARN] Host hangup or internal socket error (revents: " << _pollfds[i].revents << ") on fd: " << _pollfds[i].fd << RESET << std::endl;
+					std::cerr << Y << "[WARN] Host hangup or internal socket error (revents: " << _pollfds[i].revents << ") on FD: " << _pollfds[i].fd << RESET << std::endl;
 					_removeClient(i);
 					nfds--;
 					i--;
@@ -256,12 +256,12 @@ void ServerManager::_removeClient(size_t idx){
 	}
 
 	int fd_to_remove = _pollfds[idx].fd;
-	std::cout << G << "[INFO] Closing and removing client connection associated with fd: " << fd_to_remove << RESET << std::endl;
+	std::cout << G << "[INFO] Closing and removing client connection associated with FD: " << fd_to_remove << RESET << std::endl;
 	
 	close(fd_to_remove);
 	std::map<int, Client*>::iterator it = _clients.find(fd_to_remove);
 	if (it != _clients.end()){
-		std::cout << Y << "[DEBUG] Deleting client memory allocation associated with fd: " << fd_to_remove << RESET << std::endl;
+		std::cout << Y << "[DEBUG] Deleting client memory allocation associated with FD: " << fd_to_remove << RESET << std::endl;
 		delete it->second;
 		_clients.erase(it);
 	}

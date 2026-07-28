@@ -158,7 +158,7 @@ void	CGIHandler::_childProcess(Request &req, char *args[3], int pipe_out[2])
 	close(pipe_out[0]);
 	close(pipe_out[1]);
 
-	std::cerr << "[DEBUG FILILS] Lancement de : " << args[0] << " avec le script : " << args[1] << std::endl;
+	std::cerr << "[DEBUG CGI] Lancement de : " << args[0] << " avec le script : " << args[1] << std::endl;
 	execve(args[0], args, _envArray);
 	perror("execve failed");
 	exit(1);
