@@ -299,7 +299,7 @@ std::string	Response::_getStatusMessage(int code)
 		messages[404] = "Not Found";
 		messages[405] = "Method Not Allowed";
 		messages[413] = "Payload Too Large";
-		messages[414] = "Request URI too long";
+		messages[414] = "Request URI Too long";
 		messages[500] = "Internal Server Error";
 	}
 	
