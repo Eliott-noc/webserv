@@ -410,3 +410,8 @@ int		Request::getClientFd() const
 {
 	return _client_fd;
 }
+
+std::string	Request::getRawBuffer() const
+{
+	return _raw_buffer;
+}
