@@ -132,12 +132,6 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 	std::cout << "[DEBUG] CODE DE STATUT RENVOYÉ : " << _status_code << std::endl;
 }
 
-/*
- * WHAT : Cherche une page HTML personnalisée dans la config, sinon génère un HTML par défaut.
- * WHY : Garantit que le client reçoit toujours une information claire (404, 500, etc.) 
- * au format HTTP valide, même si le serveur rencontre une erreur.
- */
-
 void Response::buildErrorPage(int code, ServerConfig &config, const Location *loc)
 {
 	_status_code = code;
@@ -146,13 +140,24 @@ void Response::buildErrorPage(int code, ServerConfig &config, const Location *lo
 
 	std::string messageError = _getMessageError(code);
 
-	_body = "<html><head><title>" + messageError + "</title></head>";
-	_body += "<body><center><h1>" + messageError + "</h1></center>";
-	_body += "<hr><center>webserv/1.0</center></body></html>";
+	
+	_body = "<!DOCTYPE html>\n<html>\n<head>\n<title>" + messageError + "</title>\n";
+	_body += "<style>\n";
+	_body += "body { font-family: 'Fira Code', 'Consolas', monospace; background-color: #1e1d1b; color: #e8c37d; text-align: center; padding-top: 15vh; }\n";
+	_body += "h1 { color: #f5a933; text-shadow: 0 0 10px rgba(245, 169, 51, 0.3); text-transform: uppercase; letter-spacing: 2px; }\n";
+	_body += "hr { border: 0; border-top: 1px dashed #5e4d31; width: 50%; max-width: 400px; margin: 20px auto; }\n";
+	_body += "p { color: #d1b890; font-size: 0.9rem; }\n";
+	_body += ".cursor { display: inline-block; width: 8px; height: 1.1rem; background-color: #f5a933; vertical-align: middle; animation: blink 1s step-end infinite; }\n";
+	_body += "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }\n";
+	_body += "</style>\n</head>\n<body>\n";
+	
+	_body += "<h1>" + messageError + " <span class=\"cursor\"></span></h1>\n";
+	_body += "<hr>\n<p>[ webserv/1.0 - system exception ]</p>\n";
+	_body += "</body>\n</html>";
 
 	if (loc != NULL)
 		_checkConfig(config, loc, code);
-
+ 
 	_headers["Content-Type"] = "text/html";
 	std::stringstream ss_len;
 	ss_len << _body.length();
