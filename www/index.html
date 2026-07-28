@@ -5,89 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webserv 1.0 - Dashboard</title>
     <style>
-        /* Base CRT Terminal Styling */
         body { 
-            font-family: 'Courier New', Courier, monospace; 
+            font-family: 'Fira Code', 'Consolas', 'Courier New', monospace; 
             max-width: 900px; 
             margin: 0 auto; 
             padding: 20px; 
-            background-color: #0c0c0c; 
-            color: #00ff41;
-            /* Subtle scanline effect */
-            background-image: linear-gradient(rgba(0, 255, 65, 0.03) 50%, transparent 50%);
+            background-color: #1e1d1b; 
+            color: #e8c37d;
+            background-image: linear-gradient(rgba(232, 195, 125, 0.02) 50%, transparent 50%);
             background-size: 100% 4px;
         }
 
         h1 { 
             text-align: center; 
             text-transform: uppercase;
-            text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+            color: #f5a933;
+            text-shadow: 0 0 10px rgba(245, 169, 51, 0.3);
             letter-spacing: 2px;
             margin-bottom: 40px;
         }
 
         h2 { 
-            border-bottom: 1px dashed #00ff41; 
+            border-bottom: 1px solid #5e4d31; 
             padding-bottom: 10px; 
             font-size: 1.2rem;
             text-transform: uppercase;
             margin-top: 0;
-            text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+            color: #f5a933;
         }
 
-        /* Terminal "Blocks" instead of modern cards */
         .card { 
-            background: rgba(0, 20, 0, 0.4); 
+            background: #262421; 
             padding: 20px; 
             margin-bottom: 25px; 
-            border: 1px solid #00ff41; 
-            box-shadow: inset 0 0 10px rgba(0, 255, 65, 0.1);
+            border: 1px solid #4a3e2a; 
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
         p {
             font-size: 0.95rem;
-            color: #b3ffc2;
+            color: #d1b890;
+            line-height: 1.5;
         }
 
         code {
-            background: #00ff41;
-            color: #0c0c0c;
+            background: #36322d;
+            color: #f5a933;
             padding: 2px 6px;
-            font-weight: bold;
+            border-radius: 3px;
         }
 
-        /* Inputs & Textareas */
         input, textarea { 
             width: 100%; 
             padding: 12px; 
             margin: 10px 0; 
-            background: #050505;
-            color: #00ff41;
-            border: 1px solid #00ff41; 
-            font-family: 'Courier New', Courier, monospace;
+            background: #191816;
+            color: #e8c37d;
+            border: 1px solid #5e4d31; 
+            border-radius: 4px;
+            font-family: inherit;
             box-sizing: border-box; 
         }
         
         input:focus, textarea:focus {
             outline: none;
-            box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
-            background: #0a1a0a;
+            border-color: #f5a933;
+            background: #1f1d1a;
         }
 
         input::placeholder, textarea::placeholder {
-            color: #00661a;
+            color: #7a684b;
         }
 
-        /* Retro Buttons */
         .btn { 
             display: inline-block; 
             padding: 10px 20px; 
-            background: #0c0c0c; 
-            color: #00ff41; 
+            background: #36322d; 
+            color: #e8c37d; 
             text-decoration: none; 
-            border: 1px solid #00ff41; 
+            border: 1px solid #5e4d31; 
+            border-radius: 4px;
             cursor: pointer; 
-            font-family: 'Courier New', Courier, monospace;
+            font-family: inherit;
             font-weight: bold;
             text-transform: uppercase;
             transition: all 0.2s ease;
@@ -96,50 +96,47 @@
         }
 
         .btn:hover { 
-            background: #00ff41; 
-            color: #0c0c0c;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            background: #f5a933; 
+            color: #1e1d1b;
+            border-color: #f5a933;
         }
 
-        /* Red Terminal Button */
         .btn-red { 
-            color: #ff003c;
-            border-color: #ff003c;
+            color: #e06c75;
+            border-color: #823c43;
         }
         .btn-red:hover {
-            background: #ff003c;
-            color: #0c0c0c;
-            box-shadow: 0 0 10px rgba(255, 0, 60, 0.5);
+            background: #e06c75;
+            color: #1e1d1b;
+            border-color: #e06c75;
         }
 
-        /* Orange/Warning Terminal Button */
         .btn-warn {
-            color: #ffb000;
-            border-color: #ffb000;
+            color: #d19a66;
+            border-color: #825b33;
         }
         .btn-warn:hover {
-            background: #ffb000;
-            color: #0c0c0c;
-            box-shadow: 0 0 10px rgba(255, 176, 0, 0.5);
+            background: #d19a66;
+            color: #1e1d1b;
+            border-color: #d19a66;
         }
 
-        /* Console Output Area */
         #console { 
-            background: #000000; 
-            color: #00ff41; 
+            background: #141311; 
+            color: #a89f91; 
             padding: 15px; 
-            border: 1px solid #00ff41; 
+            border: 1px inset #3a3225; 
+            border-radius: 4px;
             height: 100px; 
             overflow-y: auto; 
             font-size: 0.9rem;
-            box-shadow: inset 0 0 15px rgba(0, 255, 65, 0.1);
         }
 
         .cursor {
             display: inline-block;
             width: 8px;
             height: 1em;
-            background-color: #00ff41;
+            background-color: #a89f91;
             vertical-align: text-bottom;
             animation: blink 1s step-end infinite;
         }
@@ -152,7 +149,7 @@
 </head>
 <body>
 
-    <h1>=== Webserv Control Panel ===</h1>
+    <h1>=== Webserv Dashboard ===</h1>
 
     <div class="card">
         <h2>[1] Exploration (GET & Autoindex)</h2>
@@ -175,7 +172,7 @@
             <input type="text" id="upName" placeholder="Filename (e.g. test.txt)" required>
             <textarea id="upContent" rows="3" placeholder="File content..."></textarea>
             <button type="button" onclick="doUpload()" class="btn">Upload File</button>
-            <button type="button" onclick="doUploadSmall()" class="btn btn-warn">Test Limit (10 bytes)</button>
+            <button type="button" onclick="doUploadSmall()" class="btn btn-warn">Test Limit (10b)</button>
         </form>
     </div>
 
@@ -191,7 +188,6 @@
     </div>
 
     <script>
-        // Updated log function to keep the blinking cursor at the end
         const log = (msg) => {
             const consoleDiv = document.getElementById('console');
             consoleDiv.innerHTML = `> ${msg} <span class="cursor"></span>`;

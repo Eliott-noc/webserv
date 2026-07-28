@@ -9,42 +9,48 @@
         body {
             text-align: center; 
             padding-top: 15vh; 
-            /* Classic terminal monospace fonts */
-            font-family: 'Courier New', Courier, monospace;
-            background-color: #0c0c0c;
-            /* Neon terminal green */
-            color: #00ff41; 
+            /* Added modern coding fonts before falling back to Courier */
+            font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+            /* Soft charcoal instead of pure black */
+            background-color: #1e1d1b;
+            /* Soft amber/wheat text instead of neon green */
+            color: #e8c37d; 
             margin: 0;
-            padding-left: 20px;
-            padding-right: 20px;
+            padding: 0 20px;
+            /* Very subtle scanline */
+            background-image: linear-gradient(rgba(232, 195, 125, 0.02) 50%, transparent 50%);
+            background-size: 100% 4px;
         }
         
         .ascii-art {
             font-size: 2.5rem;
             margin: 0;
             line-height: 1.5;
-            text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+            color: #f5a933;
         }
         
         h1 {
             font-size: 3rem;
             margin-top: 20px;
             margin-bottom: 10px;
-            text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+            color: #f5a933;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            /* Much softer glow for readability */
+            text-shadow: 0 0 10px rgba(245, 169, 51, 0.3);
         }
         
         p {
             font-size: 1.2rem;
             margin-bottom: 40px;
+            color: #d1b890;
         }
 
-        /* Blinking cursor effect */
         .cursor {
             display: inline-block;
             width: 10px;
             height: 1.2rem;
-            background-color: #00ff41;
+            background-color: #f5a933;
             vertical-align: middle;
             animation: blink 1s step-end infinite;
         }
@@ -57,20 +63,20 @@
         .btn {
             display: inline-block;
             padding: 12px 24px;
-            background-color: #00ff41;
-            color: #0c0c0c;
+            background-color: #2a2825;
+            color: #f5a933;
             text-decoration: none;
             font-weight: bold;
             text-transform: uppercase;
-            border: 2px solid #00ff41;
+            border: 1px solid #735b37;
+            border-radius: 4px;
             transition: all 0.2s ease;
         }
         
         .btn:hover {
-            /* Invert colors on hover like an old DOS button */
-            background-color: #0c0c0c;
-            color: #00ff41;
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+            background-color: #f5a933;
+            color: #1e1d1b;
+            box-shadow: 0 0 12px rgba(245, 169, 51, 0.4);
         }
     </style>
 </head>
