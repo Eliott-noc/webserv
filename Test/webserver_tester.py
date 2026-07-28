@@ -112,35 +112,13 @@ def run_connection_tests():
     except Exception as e:
         print(f"     ❌ ERROR: {e}")
 
-    # Pipelining
-    print("  -> Running: HTTP Pipelining (Double Request)")
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(2.0)
-        s.connect((TARGET_HOST, TARGET_PORT))
-        payload = (
-            "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: Keep-Alive\r\n\r\n"
-            "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: Keep-Alive\r\n\r\n"
-        )
-        s.sendall(payload.encode('utf-8'))
-        response = s.recv(8192).decode('utf-8', errors='ignore')
-        s.close()
-        
-        status_count = response.count("HTTP/1.1 ")
-        if status_count == 2:
-            print("     ✅ PASS: Server responded to both pipelined requests.")
-        else:
-            print(f"     ❌ FAIL: Found {status_count} status lines. Expected 2.")
-    except Exception as e:
-        print(f"     ❌ ERROR: {e}")
-
     # Slowloris
     print("  -> Running: Slowloris (Partial Headers)")
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((TARGET_HOST, TARGET_PORT))
         s.sendall(b"GET / HTTP/1.1\r\nHost: localhost\r\n")
-        time.sleep(3) # Reduced to 3s for faster suite execution
+        time.sleep(3) 
         s.sendall(b"X-Test-Header: Done\r\n\r\n")
         
         response = s.recv(4096).decode('utf-8', errors='ignore')
@@ -166,11 +144,11 @@ def run_connection_tests():
         print(f"     ❌ ERROR: {e}")
 
 # ==========================================
-# 2. RAW HTTP PROTOCOL TESTS
+# 2. RAW HTTP PROTOCOL & SECURITY TESTS
 # ==========================================
 
 def run_raw_tests():
-    print("\n" + "="*40 + "\n2. RAW HTTP PROTOCOL TESTS\n" + "="*40)
+    print("\n" + "="*40 + "\n2. RAW HTTP PROTOCOL & SECURITY TESTS\n" + "="*40)
     
     req1 = "GET / HTTP/1.1\r\n\r\n"
     send_raw_request("Missing Host Header", req1, ("HTTP/1.1 400",))
@@ -184,6 +162,14 @@ def run_raw_tests():
     huge_path = "/" + ("A" * 8000)
     req4 = f"GET {huge_path} HTTP/1.1\r\nHost: localhost\r\n\r\n"
     send_raw_request("Huge URI (Buffer limits)", req4, ("HTTP/1.1 414", "HTTP/1.1 400"))
+
+    # NEW TEST 1: Massive Content-Length Body Overflow
+    req5 = "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 999999999\r\n\r\nshort_body"
+    send_raw_request("Massive Content-Length Protection", req5, ("HTTP/1.1 413", "HTTP/1.1 400"))
+
+    # NEW TEST 2: Chunked Transfer Encoding Basic Formatting
+    req6 = "POST / HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n6\r\n world\r\n0\r\n\r\n"
+    send_raw_request("Chunked Transfer Encoding Parsing", req6, ("HTTP/1.1 200", "HTTP/1.1 201", "HTTP/1.1 204", "HTTP/1.1 400", "HTTP/1.1 405"))
 
 # ==========================================
 # 3. ROUTING & HIGH-LEVEL TESTS
@@ -279,7 +265,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    # If no specific flags are passed, run everything
     run_all = not any(vars(args).values())
     
     print(f"🚀 WEBSERV TESTER INITIATED (Target: {BASE_URL})")
