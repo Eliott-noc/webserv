@@ -1,79 +1,234 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webserv 1.0 - Dashboard</title>
     <style>
-        body { font-family: sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #eceff1; }
-        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #263238; text-align: center; }
-        h2 { border-bottom: 2px solid #607d8b; padding-bottom: 10px; color: #37474f; }
-        .btn { display: inline-block; padding: 10px 20px; background: #00796b; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
-        .btn-red { background: #c62828; }
-        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        #console { background: #263238; color: #81c784; padding: 15px; font-family: monospace; border-radius: 5px; height: 100px; overflow-y: auto; }
+        body { 
+            font-family: 'Fira Code', 'Consolas', 'Courier New', monospace; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #1e1d1b; 
+            color: #e8c37d;
+            background-image: linear-gradient(rgba(232, 195, 125, 0.02) 50%, transparent 50%);
+            background-size: 100% 4px;
+        }
+
+        h1 { 
+            text-align: center; 
+            text-transform: uppercase;
+            color: #f5a933;
+            text-shadow: 0 0 10px rgba(245, 169, 51, 0.3);
+            letter-spacing: 2px;
+            margin-bottom: 40px;
+        }
+
+        h2 { 
+            border-bottom: 1px solid #5e4d31; 
+            padding-bottom: 10px; 
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            margin-top: 0;
+            color: #f5a933;
+        }
+
+        .card { 
+            background: #262421; 
+            padding: 20px; 
+            margin-bottom: 25px; 
+            border: 1px solid #4a3e2a; 
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        p {
+            font-size: 0.95rem;
+            color: #d1b890;
+            line-height: 1.5;
+        }
+
+        code {
+            background: #36322d;
+            color: #f5a933;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        input, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            background: #191816;
+            color: #e8c37d;
+            border: 1px solid #5e4d31; 
+            border-radius: 4px;
+            font-family: inherit;
+            box-sizing: border-box; 
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #f5a933;
+            background: #1f1d1a;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: #7a684b;
+        }
+
+        .btn { 
+            display: inline-block; 
+            padding: 10px 20px; 
+            background: #36322d; 
+            color: #e8c37d; 
+            text-decoration: none; 
+            border: 1px solid #5e4d31; 
+            border-radius: 4px;
+            cursor: pointer; 
+            font-family: inherit;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            margin-right: 10px;
+            margin-top: 5px;
+        }
+
+        .btn:hover { 
+            background: #f5a933; 
+            color: #1e1d1b;
+            border-color: #f5a933;
+        }
+
+        .btn-red { 
+            color: #e06c75;
+            border-color: #823c43;
+        }
+        .btn-red:hover {
+            background: #e06c75;
+            color: #1e1d1b;
+            border-color: #e06c75;
+        }
+
+        .btn-warn {
+            color: #d19a66;
+            border-color: #825b33;
+        }
+        .btn-warn:hover {
+            background: #d19a66;
+            color: #1e1d1b;
+            border-color: #d19a66;
+        }
+
+        #console { 
+            background: #141311; 
+            color: #a89f91; 
+            padding: 15px; 
+            border: 1px inset #3a3225; 
+            border-radius: 4px;
+            height: 100px; 
+            overflow-y: auto; 
+            font-size: 0.9rem;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1em;
+            background-color: #a89f91;
+            vertical-align: text-bottom;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
-    <h1>🚀 Webserv Control Panel</h1>
+    <h1>=== Webserv Dashboard ===</h1>
 
     <div class="card">
-        <h2>📂 1. Exploration (GET & Autoindex)</h2>
-        <p>Tester si le serveur liste bien les fichiers du dossier <code>/uploads</code>.</p>
-        <a href="/uploads/" class="btn">Ouvrir l'Autoindex</a>
+        <h2>[1] Exploration (GET & Autoindex)</h2>
+        <p>Test if the server correctly lists files in the <code>/uploads</code> directory.</p>
+        <a href="/uploads/" class="btn">Open Autoindex</a>
     </div>
 
     <div class="card">
-        <h2>🐍 2. Dynamique (CGI Python)</h2>
+        <h2>[2] Dynamic (Python CGI)</h2>
         <form action="/cgi-bin/test.py" method="GET">
-            <input type="text" name="user" placeholder="Ton nom..." required>
-            <button type="submit" class="btn">Tester CGI (GET)</button>
+            <input type="text" name="user" placeholder="Enter your name..." required>
+            <button type="submit" class="btn">Execute CGI (GET)</button>
         </form>
     </div>
 
     <div class="card">
-        <h2>📤 3. Upload & Sécurité (POST)</h2>
-        <p>La limite est de 10 Mo globale, mais 10 octets sur <code>/too-small</code>.</p>
+        <h2>[3] Upload & Security (POST)</h2>
+        <p>Global limit is 10MB, but strictly limited to 10 bytes on <code>/too-small</code>.</p>
         <form id="uploadForm">
-            <input type="text" id="upName" placeholder="Nom du fichier (ex: test.txt)" required>
-            <textarea id="upContent" rows="3" placeholder="Contenu du fichier..."></textarea>
-            <button type="button" onclick="doUpload()" class="btn" style="background:#2e7d32">Uploader</button>
-            <button type="button" onclick="doUploadSmall()" class="btn" style="background:#ef6c00">Tester limite (10 octets)</button>
+            <input type="text" id="upName" placeholder="Filename (e.g. test.txt)" required>
+            <textarea id="upContent" rows="3" placeholder="File content..."></textarea>
+            <button type="button" onclick="doUpload()" class="btn">Upload File</button>
+            <button type="button" onclick="doUploadSmall()" class="btn btn-warn">Test Limit (10b)</button>
         </form>
     </div>
 
     <div class="card">
-        <h2>🗑️ 4. Suppression (DELETE)</h2>
-        <input type="text" id="delName" placeholder="Nom du fichier à supprimer...">
-        <button onclick="doDelete()" class="btn btn-red">Supprimer définitivement</button>
+        <h2>[4] Deletion (DELETE)</h2>
+        <input type="text" id="delName" placeholder="Filename to delete...">
+        <button onclick="doDelete()" class="btn btn-red">Delete Permanently</button>
     </div>
 
     <div class="card">
-        <h2>💻 Console de réponse</h2>
-        <div id="console">En attente d'une action...</div>
+        <h2>[ SYS ] Response Console</h2>
+        <div id="console">Awaiting system input... <span class="cursor"></span></div>
     </div>
 
     <script>
-        const log = (msg) => document.getElementById('console').innerText = msg;
+        const log = (msg) => {
+            const consoleDiv = document.getElementById('console');
+            consoleDiv.innerHTML = `> ${msg} <span class="cursor"></span>`;
+        };
 
         async function doUpload() {
             const name = document.getElementById('upName').value;
             const body = document.getElementById('upContent').value;
-            const res = await fetch('/uploads/' + name, { method: 'POST', body: body });
-            log("POST /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
+            if(!name) return log("ERROR: Filename is required.");
+            
+            log("UPLOADING: /uploads/" + name + "...");
+            try {
+                const res = await fetch('/uploads/' + name, { method: 'POST', body: body });
+                log("POST /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
+            } catch (e) {
+                log("CONNECTION ERROR: " + e.message);
+            }
         }
 
         async function doUploadSmall() {
-            const body = "Ceci est un message de plus de 10 octets";
-            const res = await fetch('/too-small/fail.txt', { method: 'POST', body: body });
-            log("POST /too-small/fail.txt -> Status: " + res.status + " " + res.statusText);
+            const body = "This is a message larger than 10 bytes";
+            log("UPLOADING to /too-small/fail.txt...");
+            try {
+                const res = await fetch('/too-small/fail.txt', { method: 'POST', body: body });
+                log("POST /too-small/fail.txt -> Status: " + res.status + " " + res.statusText);
+            } catch (e) {
+                log("CONNECTION ERROR: " + e.message);
+            }
         }
 
         async function doDelete() {
             const name = document.getElementById('delName').value;
-            const res = await fetch('/uploads/' + name, { method: 'DELETE' });
-            log("DELETE /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
+            if(!name) return log("ERROR: Filename is required.");
+
+            log("DELETING: /uploads/" + name + "...");
+            try {
+                const res = await fetch('/uploads/' + name, { method: 'DELETE' });
+                log("DELETE /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
+            } catch (e) {
+                log("CONNECTION ERROR: " + e.message);
+            }
         }
     </script>
 </body>
