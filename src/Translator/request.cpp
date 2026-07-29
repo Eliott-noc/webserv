@@ -89,12 +89,11 @@ void	Request::_requestLine()
 
 	std::stringstream	ss(first_line);
 
-	if (!(ss >> _method >> _path >> _version))
+	if (!(ss >> _method >> _path >> _version) || (_version != "HTTP/1.1" && _version != "HTTP/1.0"))
 	{
 		_state = ERROR;
 		return ;
 	}
-
 	_path = _urlDecode(_path);
 
 	if (_method != "GET" && _method != "POST" && _method != "DELETE")
@@ -151,20 +150,20 @@ void	Request::_scanHeader()
 			key = line.substr(0, colon_pos);
 			for (size_t j = 0; j < key.length(); ++j)
 				key[j] = std::tolower(key[j]);
-
 			value = line.substr(colon_pos + 1);
-			if (key == "Connection:" && value == "Keep-Alive")
-				_keep_alive = true;
 			first = value.find_first_not_of(" \t\r\n");
 			last = value.find_last_not_of(" \t\r\n");
 			if (first != std::string::npos)
 				value = value.substr(first, (last - first + 1));
 			else
 				value ="";
-
-			if (key == "transfer-encoding" && value.find("chunked") != std::string::npos)
+			std::string value_lower = value;
+			for (size_t j = 0; j < value_lower.length(); ++j)
+				value_lower[j] = std::tolower(value_lower[j]);
+			if (key == "connection" && value_lower.find("keep-alive") != std::string::npos)
+				_keep_alive = true;
+			if (key == "transfer-encoding" && value_lower.find("chunked") != std::string::npos)
 				_is_chunked = true;
-			
 			_headers[key] = value;
 		}
 		_raw_buffer.erase(0, pos + 2);
@@ -290,9 +289,15 @@ int	Request::parse(std::string chunk, unsigned long max_body_limit)
 			}
 			else if (_headers.count("content-length"))
 			{
-				if (_content_length == 0)
+				if (_content_length == 0){
+					long test_len = atol(_headers["content-length"].c_str());
+					if (test_len < 0){
+						_state = ERROR;
+						return 400;
+					}
 					_content_length = atol(_headers["content-length"].c_str());
-
+				}
+				
 				if (_content_length > max_body_limit)
 				{
 					_state = ERROR;
@@ -404,4 +409,14 @@ bool	Request::getKeepAlive() const
 unsigned long	Request::getContentLength() const
 {
 	return _content_length;
+}
+
+int		Request::getClientFd() const
+{
+	return _client_fd;
+}
+
+std::string	Request::getRawBuffer() const
+{
+	return _raw_buffer;
 }

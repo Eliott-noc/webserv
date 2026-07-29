@@ -12,6 +12,12 @@ Client::~Client(){
 	
 }
 
+void Client::reset() {
+	int fd = this->request.getClientFd();
+	this->request = Request(fd);
+	this->response = Response();
+}
+
 Client& Client::operator=(const Client &src){
 	if (this != &src){
 		this->config = src.config;

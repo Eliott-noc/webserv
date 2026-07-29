@@ -2,6 +2,6 @@
 
 
 
-If URI too long, specify 414 error code URI too long, for now its just 400
+//If URI too long, specify 414 error code URI too long, for now its just 400
 
 need to fix keep alive in request.

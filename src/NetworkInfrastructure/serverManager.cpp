@@ -4,6 +4,7 @@
 #define Y "\033[33m"
 #define C "\033[36m"
 #define RESET "\033[0m"
+#define TIMEOUT_CLIENT 3.0
 
 ServerManager::ServerManager(std::vector<ServerConfig> configs) : _configs(configs){
 	std::cout << G << "[INFO] ServerManager initialized" << RESET << std::endl;
@@ -96,7 +97,7 @@ void ServerManager::initServers(){
 			_pollfds.push_back(new_poll);
 			_listenSockets[listen_fd] = &_configs[i];
 
-			std::cout << G << "[INFO] Successfully initialized server bound to fd: " << listen_fd 
+			std::cout << G << "[INFO] Successfully initialized server bound to FD: " << listen_fd 
 						<< " (port: " << port << ")" << RESET << std::endl;
 		}
 	}
@@ -113,7 +114,7 @@ void ServerManager::run(){
 	while(true){
 		size_t	nfds = _pollfds.size();
 		int		err_code;
-		int		ready = poll(&_pollfds[0], nfds, 2500);
+		int		ready = poll(&_pollfds[0], nfds, 1000);
 		if (ready < 0){
 			err_code = errno;
 			if (err_code == EINTR) {
@@ -123,12 +124,6 @@ void ServerManager::run(){
 			std::cerr << R << "[FATAL] poll() error!" << RESET << std::endl;
 			printPortErr(err_code, -2);
 			return;
-		}
-		else if (ready == 0) {
-			// Keeping this trace commented out to prevent terminal flooding. 
-			// Uncomment it if you want to verify that the polling loop actively cycles when idle.
-			// std::cout << Y <<  "[DEBUG] poll() timeout (2.5s) - active clients: " << (nfds - _listeningCount) << RESET << std::endl;
-			continue;
 		}
 		else{
 			int checked = 0;
@@ -149,7 +144,7 @@ void ServerManager::run(){
 						if (count == -1){
 							err_code = errno;
 							if (err_code != EAGAIN && err_code != EWOULDBLOCK){
-								std::cerr << "[ERROR] recv failed on fd: " << _pollfds[i].fd << RESET << std::endl;
+								std::cerr << "[ERROR] recv failed on FD: " << _pollfds[i].fd << RESET << std::endl;
 								printPortErr(err_code, -2);
 								_removeClient(i);
 								nfds--;
@@ -157,36 +152,37 @@ void ServerManager::run(){
 							}
 						}
 						else if (count == 0){
-							std::cout << G << "[INFO] Connection closed by client on fd: " << _pollfds[i].fd << RESET << std::endl;
+							std::cout << G << "[INFO] Connection closed by client on FD: " << _pollfds[i].fd << RESET << std::endl;
 							_removeClient(i);
 							nfds--;
 							i--;
 						}
 						else {
-							std::cout << G << "[INFO] Received " << count << " bytes from client on fd: " << _pollfds[i].fd << RESET << std::endl;
+							std::cout << G << "[INFO] Received " << count << " bytes from client on FD: " << _pollfds[i].fd << RESET << std::endl;
 							int client_fd = _pollfds[i].fd;
 							Client* client = _clients[client_fd];
 							unsigned long body_limit = client->config->getClientMaxBodySize();
+							gettimeofday(&(client->last_activ), NULL);
 							std::string chunk(buffer, count);
 							int parse_status = client->request.parse(chunk, body_limit);
 							
-							std::cout << Y << "[DEBUG] Request parsing status for fd " << client_fd << ": " << parse_status << RESET << std::endl;
+							std::cout << Y << "[DEBUG] Request parsing status for FD " << client_fd << ": " << parse_status << RESET << std::endl;
 							if (parse_status == 1) {
-								std::cout << Y << "[DEBUG] Request incomplete on fd " << client_fd << ". Waiting for more chunks..." << RESET << std::endl;
+								std::cout << Y << "[DEBUG] Request incomplete on FD " << client_fd << ". Waiting for more chunks..." << RESET << std::endl;
 								continue;
 							}
 							else {
 								if (parse_status == 200) {
-									std::cout << G << "[INFO] Request parsing completed successfully (200) on fd " << client_fd << ". Building response..." << RESET << std::endl;
+									std::cout << G << "[INFO] Request parsing completed successfully (200) on FD " << client_fd << ". Building response..." << RESET << std::endl;
 									client->response.makeResponse(client->request, *(client->config));
 								}
 								else {
-									std::cerr << Y << "[WARN] Parsing error detected (code: " << parse_status << ") on fd " << client_fd << ". Generating error page..." << RESET << std::endl;
+									std::cerr << Y << "[WARN] Parsing error detected (code: " << parse_status << ") on FD " << client_fd << ". Generating error page..." << RESET << std::endl;
 									std::vector<Location> temp_loc = client->config->getLocations();
 									client->response.buildErrorPage(parse_status, *(client->config), NULL);
 								}
 								_pollfds[i].events = POLLOUT;
-								std::cout << Y << "[DEBUG] Switched poll events to POLLOUT for fd: " << client_fd << RESET << std::endl;
+								std::cout << Y << "[DEBUG] Switched poll events to POLLOUT for FD: " << client_fd << RESET << std::endl;
 							}
 						}
 					}
@@ -199,17 +195,34 @@ void ServerManager::run(){
 					std::cout << Y << "[DEBUG] Socket fd: " << client_fd << " ready for writing (POLLOUT). Sending data..." << RESET << std::endl;
 					client->response.sendResponse(client_fd);
 					if (client->response.isFinished()){
-						std::cout << G << "[INFO] Response successfully sent to client on fd: " << client_fd << ". Closing connection." << RESET << std::endl;
-						_removeClient(i);
-						nfds--;
-						i--;
+						std::cout << G << "[INFO] Response successfully sent to client on FD: " << client_fd << RESET << std::endl;
+						gettimeofday(&(client->last_activ), NULL);
+						if (client->request.getKeepAlive() == false){
+							_removeClient(i);
+							nfds--;
+							i--;
+						}
+						else{
+							client->reset();
+							_pollfds[i].events = POLLIN;
+						}
 					}
 				}
 				else if (_pollfds[i].revents & POLLERR || _pollfds[i].revents & POLLHUP || _pollfds[i].revents & POLLNVAL){
 					checked++;
-					std::cerr << Y << "[WARN] Host hangup or internal socket error (revents: " << _pollfds[i].revents << ") on fd: " << _pollfds[i].fd << RESET << std::endl;
+					std::cerr << Y << "[WARN] Host hangup or internal socket error (revents: " << _pollfds[i].revents << ") on FD: " << _pollfds[i].fd << RESET << std::endl;
 					_removeClient(i);
 					nfds--;
+					i--;
+				}
+			}
+		}
+		for (size_t i = _listeningCount; i < _pollfds.size(); i++){
+			int client_fd = _pollfds[i].fd;
+			Client* checked_client = _clients[client_fd];
+			if (checked_client){
+				if (_checkTimeouts(*checked_client) == 1){
+					_removeClient(i);
 					i--;
 				}
 			}
@@ -225,13 +238,13 @@ void ServerManager::_acceptNewConnection(int server_fd){
 	
 	if (client_fd < 0){
 		err_code = errno;
-		std::cerr << "[ERROR] accept() failed on server socket fd: " << server_fd << RESET << std::endl;
+		std::cerr << R << "[ERROR] accept() failed on server socket fd: " << server_fd << RESET << std::endl;
 		printPortErr(err_code, -2);
 		return;
 	}
 	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0){
 		err_code = errno;
-		std::cerr << "[ERROR] fcntl O_NONBLOCK failed on newly accepted client fd: " << client_fd << RESET << std::endl;
+		std::cerr << R << "[ERROR] fcntl O_NONBLOCK failed on newly accepted client fd: " << client_fd << RESET << std::endl;
 		printPortErr(err_code, -2);
 		close(client_fd);
 		return;
@@ -242,6 +255,7 @@ void ServerManager::_acceptNewConnection(int server_fd){
 	new_poll.revents = 0;
 	_pollfds.push_back(new_poll);
 	Client* _newClient = new Client(client_fd);
+	gettimeofday(&_newClient->last_activ, NULL);
 	_newClient->config = _listenSockets[server_fd];
 	_clients[client_fd] = _newClient;
 
@@ -256,12 +270,12 @@ void ServerManager::_removeClient(size_t idx){
 	}
 
 	int fd_to_remove = _pollfds[idx].fd;
-	std::cout << G << "[INFO] Closing and removing client connection associated with fd: " << fd_to_remove << RESET << std::endl;
+	std::cout << G << "[INFO] Closing and removing client connection associated with FD: " << fd_to_remove << RESET << std::endl;
 	
 	close(fd_to_remove);
 	std::map<int, Client*>::iterator it = _clients.find(fd_to_remove);
 	if (it != _clients.end()){
-		std::cout << Y << "[DEBUG] Deleting client memory allocation associated with fd: " << fd_to_remove << RESET << std::endl;
+		std::cout << Y << "[DEBUG] Deleting client memory allocation associated with FD: " << fd_to_remove << RESET << std::endl;
 		delete it->second;
 		_clients.erase(it);
 	}
@@ -274,4 +288,15 @@ void ServerManager::_removeClient(size_t idx){
 	}
 	_pollfds.pop_back();
 	std::cout << Y << "[DEBUG] Client removal completed. Active monitored socket count is now: " << _pollfds.size() << RESET << std::endl;
+}
+
+int	ServerManager::_checkTimeouts(Client& client){
+	struct timeval now;
+	gettimeofday(&now, NULL);
+	double elapsed_secs = (now.tv_sec - client.last_activ.tv_sec) + (now.tv_usec - client.last_activ.tv_usec) / 1000000.0;
+	double timeout = TIMEOUT_CLIENT;
+	if (elapsed_secs > timeout)
+		return 1;
+	else
+		return 0;
 }
