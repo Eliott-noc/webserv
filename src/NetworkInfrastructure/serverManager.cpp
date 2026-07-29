@@ -4,6 +4,7 @@
 #define Y "\033[33m"
 #define C "\033[36m"
 #define RESET "\033[0m"
+#define TIMEOUT_CLIENT 3.0
 
 ServerManager::ServerManager(std::vector<ServerConfig> configs) : _configs(configs){
 	std::cout << G << "[INFO] ServerManager initialized" << RESET << std::endl;
@@ -113,7 +114,7 @@ void ServerManager::run(){
 	while(true){
 		size_t	nfds = _pollfds.size();
 		int		err_code;
-		int		ready = poll(&_pollfds[0], nfds, 2500);
+		int		ready = poll(&_pollfds[0], nfds, 1000);
 		if (ready < 0){
 			err_code = errno;
 			if (err_code == EINTR) {
@@ -123,12 +124,6 @@ void ServerManager::run(){
 			std::cerr << R << "[FATAL] poll() error!" << RESET << std::endl;
 			printPortErr(err_code, -2);
 			return;
-		}
-		else if (ready == 0) {
-			// Keeping this trace commented out to prevent terminal flooding. 
-			// Uncomment it if you want to verify that the polling loop actively cycles when idle.
-			// std::cout << Y <<  "[DEBUG] poll() timeout (2.5s) - active clients: " << (nfds - _listeningCount) << RESET << std::endl;
-			continue;
 		}
 		else{
 			int checked = 0;
@@ -167,6 +162,7 @@ void ServerManager::run(){
 							int client_fd = _pollfds[i].fd;
 							Client* client = _clients[client_fd];
 							unsigned long body_limit = client->config->getClientMaxBodySize();
+							gettimeofday(&(client->last_activ), NULL);
 							std::string chunk(buffer, count);
 							int parse_status = client->request.parse(chunk, body_limit);
 							
@@ -200,6 +196,7 @@ void ServerManager::run(){
 					client->response.sendResponse(client_fd);
 					if (client->response.isFinished()){
 						std::cout << G << "[INFO] Response successfully sent to client on FD: " << client_fd << RESET << std::endl;
+						gettimeofday(&(client->last_activ), NULL);
 						if (client->request.getKeepAlive() == false){
 							_removeClient(i);
 							nfds--;
@@ -216,6 +213,16 @@ void ServerManager::run(){
 					std::cerr << Y << "[WARN] Host hangup or internal socket error (revents: " << _pollfds[i].revents << ") on FD: " << _pollfds[i].fd << RESET << std::endl;
 					_removeClient(i);
 					nfds--;
+					i--;
+				}
+			}
+		}
+		for (size_t i = _listeningCount; i < _pollfds.size(); i++){
+			int client_fd = _pollfds[i].fd;
+			Client* checked_client = _clients[client_fd];
+			if (checked_client){
+				if (_checkTimeouts(*checked_client) == 1){
+					_removeClient(i);
 					i--;
 				}
 			}
@@ -248,6 +255,7 @@ void ServerManager::_acceptNewConnection(int server_fd){
 	new_poll.revents = 0;
 	_pollfds.push_back(new_poll);
 	Client* _newClient = new Client(client_fd);
+	gettimeofday(&_newClient->last_activ, NULL);
 	_newClient->config = _listenSockets[server_fd];
 	_clients[client_fd] = _newClient;
 
@@ -280,4 +288,15 @@ void ServerManager::_removeClient(size_t idx){
 	}
 	_pollfds.pop_back();
 	std::cout << Y << "[DEBUG] Client removal completed. Active monitored socket count is now: " << _pollfds.size() << RESET << std::endl;
+}
+
+int	ServerManager::_checkTimeouts(Client& client){
+	struct timeval now;
+	gettimeofday(&now, NULL);
+	double elapsed_secs = (now.tv_sec - client.last_activ.tv_sec) + (now.tv_usec - client.last_activ.tv_usec) / 1000000.0;
+	double timeout = TIMEOUT_CLIENT;
+	if (elapsed_secs > timeout)
+		return 1;
+	else
+		return 0;
 }

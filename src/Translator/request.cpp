@@ -89,12 +89,11 @@ void	Request::_requestLine()
 
 	std::stringstream	ss(first_line);
 
-	if (!(ss >> _method >> _path >> _version))
+	if (!(ss >> _method >> _path >> _version) || (_version != "HTTP/1.1" && _version != "HTTP/1.0"))
 	{
 		_state = ERROR;
 		return ;
 	}
-
 	_path = _urlDecode(_path);
 
 	if (_method != "GET" && _method != "POST" && _method != "DELETE")
