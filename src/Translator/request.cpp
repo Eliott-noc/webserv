@@ -290,9 +290,15 @@ int	Request::parse(std::string chunk, unsigned long max_body_limit)
 			}
 			else if (_headers.count("content-length"))
 			{
-				if (_content_length == 0)
+				if (_content_length == 0){
+					long test_len = atol(_headers["content-length"].c_str());
+					if (test_len < 0){
+						_state = ERROR;
+						return 400;
+					}
 					_content_length = atol(_headers["content-length"].c_str());
-
+				}
+				
 				if (_content_length > max_body_limit)
 				{
 					_state = ERROR;
