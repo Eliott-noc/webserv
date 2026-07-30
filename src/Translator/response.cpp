@@ -129,7 +129,7 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 	else if (req.getMethod() == "DELETE")
 		_handleDelete(config, *loc, full_path);
 
-	std::cout << "[DEBUG] CODE DE STATUT RENVOYÉ : " << _status_code << std::endl;
+	// std::cout << "[DEBUG] CODE DE STATUT RENVOYÉ : " << _status_code << std::endl;
 }
 
 void Response::buildErrorPage(int code, ServerConfig &config, const Location *loc)
@@ -147,8 +147,6 @@ void Response::buildErrorPage(int code, ServerConfig &config, const Location *lo
 	_body += "h1 { color: #f5a933; text-shadow: 0 0 10px rgba(245, 169, 51, 0.3); text-transform: uppercase; letter-spacing: 2px; }\n";
 	_body += "hr { border: 0; border-top: 1px dashed #5e4d31; width: 50%; max-width: 400px; margin: 20px auto; }\n";
 	_body += "p { color: #d1b890; font-size: 0.9rem; }\n";
-	_body += ".cursor { display: inline-block; width: 8px; height: 1.1rem; background-color: #f5a933; vertical-align: middle; animation: blink 1s step-end infinite; }\n";
-	_body += "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }\n";
 	_body += "</style>\n</head>\n<body>\n";
 	
 	_body += "<h1>" + messageError + " <span class=\"cursor\"></span></h1>\n";

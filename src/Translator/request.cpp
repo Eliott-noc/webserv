@@ -97,11 +97,11 @@ void	Request::_requestLine()
 
 	_path = _urlDecode(_path);
 
-	if (_method != "GET" && _method != "POST" && _method != "DELETE")
-	{
-		_state = ERROR;
-		return ;
-	}
+	// if (_method != "GET" && _method != "POST" && _method != "DELETE")
+	// {
+	// 	_state = ERROR;
+	// 	return ;
+	// }
 
 	if (ss >> extra)
 	{
@@ -182,7 +182,7 @@ bool	Request::_chunked(unsigned long max_body_limit)
 {
 	unsigned long		chunkSize;
 	unsigned long		pos = _raw_buffer.find("\r\n");
-	std::string	chunkData;
+	std::string			chunkData;
 
 	if (pos == std::string::npos)
 		return true;
@@ -267,6 +267,13 @@ int	Request::parse(std::string chunk, unsigned long max_body_limit)
 				return 414;
 			}
 			_requestLine();
+			if (_state == ERROR){
+				return 400;
+			}
+			if (_method != "GET" && _method != "POST" && _method != "DELETE"){
+				_state = ERROR;
+				return 405;
+			}
 		}
 		else if (_state == READING_HEADERS)
 		{
@@ -342,9 +349,9 @@ int	Request::parse(std::string chunk, unsigned long max_body_limit)
 		return 200;
 	}
 	
-	if (_state == ERROR)
+	if (_state == ERROR){
 		return 400;
-
+	}
 	return 1;
 }
 
