@@ -59,6 +59,8 @@ make re
 - **C++ Reference**: [https://en.cppreference.com/cpp](https://en.cppreference.com/cpp)
 - **Linux Man Pages**: [https://man7.org/linux/man-pages/index.html](https://man7.org/linux/man-pages/index.html)
 
+- **NGINX Docs** : [https://nginx.org/en/docs/beginners_guide.html](https://nginx.org/en/docs/beginners_guide.html)
+
 ### AI Usage Statement
 AI tools were utilized during the development of this project to assist with research and design tasks. Specifically:
 - **Architecture and Brainstorming**: AI was used to discuss structural ideas for the non-blocking state machine and understand the lifecycle of client sockets.

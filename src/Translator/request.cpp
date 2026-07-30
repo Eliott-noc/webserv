@@ -97,12 +97,6 @@ void	Request::_requestLine()
 
 	_path = _urlDecode(_path);
 
-	// if (_method != "GET" && _method != "POST" && _method != "DELETE")
-	// {
-	// 	_state = ERROR;
-	// 	return ;
-	// }
-
 	if (ss >> extra)
 	{
 		_state = ERROR;

@@ -1,0 +1,2 @@
+fix method not allowed error code : 
+should be 405 Not Allowed instead of 400 bad request

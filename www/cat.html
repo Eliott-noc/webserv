@@ -1,210 +1,210 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🐾 Matthieu's Cat Server</title>
-    <style>
-        /* Indie Web / Neo-brutalist background */
-        body { 
-            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
-            max-width: 850px; 
-            margin: 0 auto; 
-            padding: 40px 20px; 
-            background-color: #fff4f4; /* Soft pink */
-            background-image: radial-gradient(#ffc2c2 3px, transparent 3px); /* Polka dots */
-            background-size: 30px 30px;
-            color: #1a1a1a;
-        }
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>🐾 Matthieu's Cat Server</title>
+	<style>
+		/* Indie Web / Neo-brutalist background */
+		body { 
+			font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
+			max-width: 850px; 
+			margin: 0 auto; 
+			padding: 40px 20px; 
+			background-color: #fff4f4; /* Soft pink */
+			background-image: radial-gradient(#ffc2c2 3px, transparent 3px); /* Polka dots */
+			background-size: 30px 30px;
+			color: #1a1a1a;
+		}
 
-        h1 { 
-            text-align: center; 
-            font-size: 2.8rem;
-            text-shadow: 3px 3px 0px #ffb6c1;
-            margin-bottom: 40px;
-        }
+		h1 { 
+			text-align: center; 
+			font-size: 2.8rem;
+			text-shadow: 3px 3px 0px #ffb6c1;
+			margin-bottom: 40px;
+		}
 
-        /* Chunky, cute "cards" */
-        .card { 
-            background: #ffffff; 
-            padding: 25px; 
-            margin-bottom: 30px; 
-            border: 4px solid #1a1a1a; 
-            border-radius: 15px; 
-            box-shadow: 8px 8px 0px #1a1a1a; /* Hard brutalist shadow */
-            transition: transform 0.2s;
-        }
-        
-        .card:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 10px 10px 0px #1a1a1a;
-        }
+		/* Chunky, cute "cards" */
+		.card { 
+			background: #ffffff; 
+			padding: 25px; 
+			margin-bottom: 30px; 
+			border: 4px solid #1a1a1a; 
+			border-radius: 15px; 
+			box-shadow: 8px 8px 0px #1a1a1a; /* Hard brutalist shadow */
+			transition: transform 0.2s;
+		}
+		
+		.card:hover {
+			transform: translate(-2px, -2px);
+			box-shadow: 10px 10px 0px #1a1a1a;
+		}
 
-        h2 { 
-            border-bottom: 4px dashed #ffb6c1; 
-            padding-bottom: 10px; 
-            margin-top: 0;
-            color: #1a1a1a; 
-        }
+		h2 { 
+			border-bottom: 4px dashed #ffb6c1; 
+			padding-bottom: 10px; 
+			margin-top: 0;
+			color: #1a1a1a; 
+		}
 
-        p { font-size: 1.1rem; font-weight: 500; }
+		p { font-size: 1.1rem; font-weight: 500; }
 
-        code {
-            background: #ffe0e0;
-            padding: 4px 8px;
-            border: 2px solid #1a1a1a;
-            border-radius: 8px;
-            font-weight: bold;
-        }
+		code {
+			background: #ffe0e0;
+			padding: 4px 8px;
+			border: 2px solid #1a1a1a;
+			border-radius: 8px;
+			font-weight: bold;
+		}
 
-        /* Fun, squishy inputs */
-        input, textarea { 
-            width: 100%; 
-            padding: 15px; 
-            margin: 10px 0; 
-            background: #fdfdfd;
-            border: 3px solid #1a1a1a; 
-            border-radius: 10px; 
-            box-sizing: border-box; 
-            font-family: inherit;
-            font-size: 1rem;
-            box-shadow: inset 2px 2px 0px rgba(0,0,0,0.05);
-        }
-        
-        input:focus, textarea:focus {
-            outline: none;
-            background: #fffafa;
-            border-color: #ff6b81;
-        }
+		/* Fun, squishy inputs */
+		input, textarea { 
+			width: 100%; 
+			padding: 15px; 
+			margin: 10px 0; 
+			background: #fdfdfd;
+			border: 3px solid #1a1a1a; 
+			border-radius: 10px; 
+			box-sizing: border-box; 
+			font-family: inherit;
+			font-size: 1rem;
+			box-shadow: inset 2px 2px 0px rgba(0,0,0,0.05);
+		}
+		
+		input:focus, textarea:focus {
+			outline: none;
+			background: #fffafa;
+			border-color: #ff6b81;
+		}
 
-        /* Indie clickable buttons */
-        .btn { 
-            display: inline-block; 
-            padding: 12px 24px; 
-            background: #7bed9f; /* Pastel green */
-            color: #1a1a1a; 
-            text-decoration: none; 
-            border: 3px solid #1a1a1a; 
-            border-radius: 10px;
-            box-shadow: 4px 4px 0px #1a1a1a;
-            cursor: pointer; 
-            font-family: inherit;
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-right: 10px;
-            margin-top: 10px;
-            transition: all 0.1s;
-        }
+		/* Indie clickable buttons */
+		.btn { 
+			display: inline-block; 
+			padding: 12px 24px; 
+			background: #7bed9f; /* Pastel green */
+			color: #1a1a1a; 
+			text-decoration: none; 
+			border: 3px solid #1a1a1a; 
+			border-radius: 10px;
+			box-shadow: 4px 4px 0px #1a1a1a;
+			cursor: pointer; 
+			font-family: inherit;
+			font-weight: bold;
+			font-size: 1.1rem;
+			margin-right: 10px;
+			margin-top: 10px;
+			transition: all 0.1s;
+		}
 
-        /* Button click squish effect */
-        .btn:active { 
-            transform: translate(4px, 4px);
-            box-shadow: 0px 0px 0px #1a1a1a;
-        }
+		/* Button click squish effect */
+		.btn:active { 
+			transform: translate(4px, 4px);
+			box-shadow: 0px 0px 0px #1a1a1a;
+		}
 
-        /* Thematic Button Colors */
-        .btn-blue { background: #70a1ff; }
-        .btn-orange { background: #ffa502; }
-        .btn-red { background: #ff4757; color: white; }
+		/* Thematic Button Colors */
+		.btn-blue { background: #70a1ff; }
+		.btn-orange { background: #ffa502; }
+		.btn-red { background: #ff4757; color: white; }
 
-        /* Log console */
-        #console { 
-            background: #1a1a1a; 
-            color: #7bed9f; 
-            padding: 20px; 
-            font-family: 'Courier New', monospace; 
-            border: 4px solid #1a1a1a; 
-            border-radius: 10px;
-            height: 120px; 
-            overflow-y: auto; 
-            font-size: 1rem;
-            box-shadow: inset 4px 4px 0px rgba(0,0,0,0.5);
-        }
-    </style>
+		/* Log console */
+		#console { 
+			background: #1a1a1a; 
+			color: #7bed9f; 
+			padding: 20px; 
+			font-family: 'Courier New', monospace; 
+			border: 4px solid #1a1a1a; 
+			border-radius: 10px;
+			height: 120px; 
+			overflow-y: auto; 
+			font-size: 1rem;
+			box-shadow: inset 4px 4px 0px rgba(0,0,0,0.5);
+		}
+	</style>
 </head>
 <body>
 
-    <h1>🐈 Matthieu's Cat-Web Dashboard 🧶</h1>
+	<h1>🐈 Matthieu's Cat-Web Dashboard 🧶</h1>
 
-    <div class="card">
-        <h2>📦 1. The Cardboard Box (GET & Autoindex)</h2>
-        <p>Check if the server correctly lists all the toys hiding in the <code>/uploads</code> box.</p>
-        <a href="/uploads/" class="btn btn-blue">Peek in the Box</a>
-    </div>
+	<div class="card">
+		<h2>📦 1. The Cardboard Box (GET & Autoindex)</h2>
+		<p>Check if the server correctly lists all the toys hiding in the <code>/uploads</code> box.</p>
+		<a href="/uploads/" class="btn btn-blue">Peek in the Box</a>
+	</div>
 
-    <div class="card">
-        <h2>🐟 2. Dynamic Catnip (Python CGI)</h2>
-        <form action="/cgi-bin/test.py" method="GET">
-            <input type="text" name="user" placeholder="Tell the cat your name..." required>
-            <button type="submit" class="btn">Feed the CGI (GET)</button>
-        </form>
-    </div>
+	<div class="card">
+		<h2>🐟 2. Dynamic Catnip (Python CGI)</h2>
+		<form action="/cgi-bin/test.py" method="GET">
+			<input type="text" name="user" placeholder="Tell the cat your name..." required>
+			<button type="submit" class="btn">Feed the CGI (GET)</button>
+		</form>
+	</div>
 
-    <div class="card">
-        <h2>🐾 3. Stash a Treat (Upload POST)</h2>
-        <p>The global treat stash limit is 10MB, but strictly limited to 10 bytes on <code>/too-small</code>.</p>
-        <form id="uploadForm">
-            <input type="text" id="upName" placeholder="Treat name (e.g. salmon.txt)" required>
-            <textarea id="upContent" rows="3" placeholder="Describe the treat..."></textarea>
-            <button type="button" onclick="doUpload()" class="btn">Stash Treat</button>
-            <button type="button" onclick="doUploadSmall()" class="btn btn-orange">Test Tiny Stash (10b)</button>
-        </form>
-    </div>
+	<div class="card">
+		<h2>🐾 3. Stash a Treat (Upload POST)</h2>
+		<p>The global treat stash limit is 10MB, but strictly limited to 10 bytes on <code>/too-small</code>.</p>
+		<form id="uploadForm">
+			<input type="text" id="upName" placeholder="Treat name (e.g. salmon.txt)" required>
+			<textarea id="upContent" rows="3" placeholder="Describe the treat..."></textarea>
+			<button type="button" onclick="doUpload()" class="btn">Stash Treat</button>
+			<button type="button" onclick="doUploadSmall()" class="btn btn-orange">Test Tiny Stash (10b)</button>
+		</form>
+	</div>
 
-    <div class="card">
-        <h2>🧹 4. The Litter Box (DELETE)</h2>
-        <input type="text" id="delName" placeholder="Name of the thing the cat knocked off the table...">
-        <button onclick="doDelete()" class="btn btn-red">Sweep it away forever</button>
-    </div>
+	<div class="card">
+		<h2>🧹 4. The Litter Box (DELETE)</h2>
+		<input type="text" id="delName" placeholder="Name of the thing the cat knocked off the table...">
+		<button onclick="doDelete()" class="btn btn-red">Sweep it away forever</button>
+	</div>
 
-    <div class="card" style="background: #eccc68;">
-        <h2>💬 Meow-nsole (Server Logs)</h2>
-        <div id="console">Waiting for a meow... 🐱</div>
-    </div>
+	<div class="card" style="background: #eccc68;">
+		<h2>💬 Meow-nsole (Server Logs)</h2>
+		<div id="console">Waiting for a meow... 🐱</div>
+	</div>
 
-    <script>
-        const log = (msg) => {
-            const consoleDiv = document.getElementById('console');
-            consoleDiv.innerHTML = `> ${msg} 🐾`;
-        };
+	<script>
+		const log = (msg) => {
+			const consoleDiv = document.getElementById('console');
+			consoleDiv.innerHTML = `> ${msg} 🐾`;
+		};
 
-        async function doUpload() {
-            const name = document.getElementById('upName').value;
-            const body = document.getElementById('upContent').value;
-            if(!name) return log("MROW! (Error: Treat name is required.)");
-            
-            log("STASHING: /uploads/" + name + "...");
-            try {
-                const res = await fetch('/uploads/' + name, { method: 'POST', body: body });
-                log("POST /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
-            } catch (e) {
-                log("HISS! CONNECTION ERROR: " + e.message);
-            }
-        }
+		async function doUpload() {
+			const name = document.getElementById('upName').value;
+			const body = document.getElementById('upContent').value;
+			if(!name) return log("MROW! (Error: Treat name is required.)");
+			
+			log("STASHING: /uploads/" + name + "...");
+			try {
+				const res = await fetch('/uploads/' + name, { method: 'POST', body: body });
+				log("POST /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
+			} catch (e) {
+				log("HISS! CONNECTION ERROR: " + e.message);
+			}
+		}
 
-        async function doUploadSmall() {
-            const body = "This is a treat larger than 10 bytes!";
-            log("STASHING to /too-small/fail.txt...");
-            try {
-                const res = await fetch('/too-small/fail.txt', { method: 'POST', body: body });
-                log("POST /too-small/fail.txt -> Status: " + res.status + " " + res.statusText);
-            } catch (e) {
-                log("HISS! CONNECTION ERROR: " + e.message);
-            }
-        }
+		async function doUploadSmall() {
+			const body = "This is a treat larger than 10 bytes!";
+			log("STASHING to /too-small/fail.txt...");
+			try {
+				const res = await fetch('/too-small/fail.txt', { method: 'POST', body: body });
+				log("POST /too-small/fail.txt -> Status: " + res.status + " " + res.statusText);
+			} catch (e) {
+				log("HISS! CONNECTION ERROR: " + e.message);
+			}
+		}
 
-        async function doDelete() {
-            const name = document.getElementById('delName').value;
-            if(!name) return log("MROW! (Error: Need a name to sweep away.)");
+		async function doDelete() {
+			const name = document.getElementById('delName').value;
+			if(!name) return log("MROW! (Error: Need a name to sweep away.)");
 
-            log("SWEEPING: /uploads/" + name + "...");
-            try {
-                const res = await fetch('/uploads/' + name, { method: 'DELETE' });
-                log("DELETE /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
-            } catch (e) {
-                log("HISS! CONNECTION ERROR: " + e.message);
-            }
-        }
-    </script>
+			log("SWEEPING: /uploads/" + name + "...");
+			try {
+				const res = await fetch('/uploads/' + name, { method: 'DELETE' });
+				log("DELETE /uploads/" + name + " -> Status: " + res.status + " " + res.statusText);
+			} catch (e) {
+				log("HISS! CONNECTION ERROR: " + e.message);
+			}
+		}
+	</script>
 </body>
 </html>
