@@ -204,7 +204,23 @@ void ServerManager::run(){
 						}
 						else{
 							client->reset();
-							_pollfds[i].events = POLLIN;
+							if (!client->request.getRawBuffer().empty()){
+								int parse_status = client->request.parse("", client->config->getClientMaxBodySize());
+								if (parse_status == 200){
+									client->response.makeResponse(client->request, *(client->config));
+									_pollfds[i].events = POLLOUT;
+								}
+								else if (parse_status == 1){
+									_pollfds[i].events = POLLIN;
+								}
+								else {
+									client->response.buildErrorPage(parse_status, *(client->config), NULL);
+									_pollfds[i].events = POLLOUT;
+								}
+							}
+							else{
+								_pollfds[i].events = POLLIN;
+							}
 						}
 					}
 				}

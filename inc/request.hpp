@@ -56,6 +56,8 @@ class Request
 		int									getClientFd() const;
 		std::string							getRawBuffer() const;
 
+		void								setRawBuffer(std::string buffer);
+
 	private:
 		void								_requestLine();
 		void								_scanHeader();
