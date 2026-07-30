@@ -12,6 +12,7 @@
 # include <sys/stat.h>
 # include <sys/wait.h>
 # include <sys/socket.h>
+# include <sys/time.h>
 # include <fcntl.h>
 # include <fstream>
 # include <dirent.h>

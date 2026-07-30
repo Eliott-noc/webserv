@@ -9,3 +9,4 @@ test_death/
 arena/
 .make_count
 nginx-*
+venv
