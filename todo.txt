@@ -1,2 +1,67 @@
-fix method not allowed error code : 
-should be 405 Not Allowed instead of 400 bad request
+add date and additional option for response :
+
+*   Trying 127.0.0.1:8081...
+* Connected to localhost (127.0.0.1) port 8081 (#0)
+> POTATO / HTTP/1.1
+> Host: localhost:8081
+> User-Agent: curl/7.81.0
+> Accept: */*
+> 
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 405 Not Allowed
+< Server: nginx/1.30.4
+< Date: Thu, 30 Jul 2026 11:58:57 GMT //obligatoire
+< Content-Type: text/html
+< Content-Length: 157
+< Connection: keep-alive
+
+our server do : 
+
+*   Trying 127.0.0.1:8080...
+* Connected to localhost (127.0.0.1) port 8080 (#0)
+> POTATO / HTTP/1.1
+> Host: localhost:8080
+> User-Agent: curl/7.81.0
+> Accept: */*
+> 
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 405 Method Not Allowed
+< Content-Length: 621
+< Content-Type: text/html
+< Server: webserv/1.0
+
+-----------------------------
+siege diagnostic :
+
+
+➜  nginx_local git:(eliott_feature) ✗ siege -b -c 50 -t 10S http://127.0.0.1:8080/
+[error] socket: read error Connection reset by peer sock.c:635: Connection reset by peer
+
+{       "transactions":                        80285,
+        "availability":                       100.00,
+        "elapsed_time":                         9.60,
+        "data_transferred":                     7.66,
+        "response_time":                        0.01,
+        "transaction_rate":                  8363.02,
+        "throughput":                           0.80,
+        "concurrency":                         44.09,
+        "successful_transactions":             80285,
+        "failed_transactions":                     1,
+        "longest_transaction":                  7.61,
+        "shortest_transaction":                 0.00
+}
+➜  nginx_local git:(eliott_feature) ✗ siege -b -c 50 -t 10S http://127.0.0.1:8081/
+
+{       "transactions":                       185451,
+        "availability":                       100.00,
+        "elapsed_time":                         9.63,
+        "data_transferred":                    17.69,
+        "response_time":                        0.00,
+        "transaction_rate":                 19257.63,
+        "throughput":                           1.84,
+        "concurrency":                         48.69,
+        "successful_transactions":            185451,
+        "failed_transactions":                     0,
+        "longest_transaction":                  0.01,
+        "shortest_transaction":                 0.00
+}
