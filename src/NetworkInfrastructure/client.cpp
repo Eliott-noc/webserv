@@ -13,10 +13,8 @@ Client::~Client(){
 }
 
 void Client::reset() {
-	std::string buffer = this->request.getRawBuffer();
 	int fd = this->request.getClientFd();
 	this->request = Request(fd);
-	this->request.setRawBuffer(buffer);
 	this->response = Response();
 }
 

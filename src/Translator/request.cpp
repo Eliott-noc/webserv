@@ -236,7 +236,6 @@ bool	Request::_chunked(unsigned long max_body_limit)
 int	Request::parse(std::string chunk, unsigned long max_body_limit)
 {
 	_raw_buffer += chunk;
-	std::cout << _raw_buffer << std::endl;
 
 	while (_state != FINISHED && _state != ERROR)
 	{
@@ -421,8 +420,4 @@ int		Request::getClientFd() const
 std::string	Request::getRawBuffer() const
 {
 	return _raw_buffer;
-}
-
-void	Request::setRawBuffer(std::string buffer){
-	_raw_buffer = buffer;
 }

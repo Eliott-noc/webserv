@@ -134,7 +134,11 @@ void ServerManager::run(){
 					checked++;
 					if (i < _listeningCount){
 						std::cout << Y <<  "[DEBUG] Incoming activity on listening socket fd: " << _pollfds[i].fd << RESET << std::endl;
-						_acceptNewConnection(_pollfds[i].fd);
+						while (true){
+							int accept_ret = _acceptNewConnection(_pollfds[i].fd);
+							if (accept_ret == -1)
+								break;
+						}
 						continue;
 					}
 					else{
@@ -246,7 +250,7 @@ void ServerManager::run(){
 	}
 }
 
-void ServerManager::_acceptNewConnection(int server_fd){
+int ServerManager::_acceptNewConnection(int server_fd){
 	struct sockaddr_storage	client_addr;
 	socklen_t				addr_len = sizeof(client_addr);
 	int						err_code;
@@ -256,14 +260,14 @@ void ServerManager::_acceptNewConnection(int server_fd){
 		err_code = errno;
 		std::cerr << R << "[ERROR] accept() failed on server socket fd: " << server_fd << RESET << std::endl;
 		printPortErr(err_code, -2);
-		return;
+		return -1;
 	}
 	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0){
 		err_code = errno;
 		std::cerr << R << "[ERROR] fcntl O_NONBLOCK failed on newly accepted client fd: " << client_fd << RESET << std::endl;
 		printPortErr(err_code, -2);
 		close(client_fd);
-		return;
+		return -1;
 	}
 	pollfd new_poll;
 	new_poll.fd = client_fd;
@@ -277,6 +281,7 @@ void ServerManager::_acceptNewConnection(int server_fd){
 
 	std::cout << G << "[INFO] Accepted connection. Assigned Client FD: " << client_fd 
 				<< " (associated with Listening FD: " << server_fd << ")" << RESET << std::endl;
+	return 0;
 }
 
 void ServerManager::_removeClient(size_t idx){
