@@ -343,7 +343,6 @@ void	Response::_generateResponse(int code)
 	 if (!dir)
 		 return "";
  
-	 // Build the Amber CRT HTML/CSS response
 	 html = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n";
 	 html += "<title>Index of " + request_path + "</title>\n";
 	 html += "<style>\n";
@@ -352,7 +351,6 @@ void	Response::_generateResponse(int code)
 	 html += "ul { list-style-type: none; padding: 0; margin-top: 20px; }\n";
 	 html += "li { margin: 8px 0; }\n";
 	 
-	 // Style the links to look like clickable retro buttons
 	 html += "a { color: #e8c37d; text-decoration: none; padding: 8px 15px; background: #262421; border: 1px solid #4a3e2a; border-radius: 4px; display: inline-block; min-width: 300px; font-weight: bold; transition: all 0.2s; }\n";
 	 html += "a:hover { background: #f5a933; color: #1e1d1b; border-color: #f5a933; box-shadow: 0 0 10px rgba(245, 169, 51, 0.4); }\n";
 	 

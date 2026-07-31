@@ -65,3 +65,13 @@ siege diagnostic :
         "longest_transaction":                  0.01,
         "shortest_transaction":                 0.00
 }
+
+
+
+to add to response :
+
+Server: 
+Date: Fri, 31 Jul 2026 08:11:47 GMT
+Content-type avant Content-Length
+Last Modified ?
+Connection: keep-alive
