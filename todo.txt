@@ -65,3 +65,10 @@ siege diagnostic :
         "longest_transaction":                  0.01,
         "shortest_transaction":                 0.00
 }
+
+
+
+cant check error code after recv directly
+
+check all read recv write and send to check 0 and -1,
+to be checked but i guess <= 0 checks both

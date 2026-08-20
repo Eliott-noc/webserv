@@ -147,13 +147,11 @@ void ServerManager::run(){
 						ssize_t count = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
 						if (count == -1){
 							err_code = errno;
-							if (err_code != EAGAIN && err_code != EWOULDBLOCK){
-								std::cerr << "[ERROR] recv failed on FD: " << _pollfds[i].fd << RESET << std::endl;
-								printPortErr(err_code, -2);
-								_removeClient(i);
-								nfds--;
-								i--;
-							}
+							std::cerr << "[ERROR] recv failed on FD: " << _pollfds[i].fd << RESET << std::endl;
+							printPortErr(err_code, -2);
+							_removeClient(i);
+							nfds--;
+							i--;
 						}
 						else if (count == 0){
 							std::cout << G << "[INFO] Connection closed by client on FD: " << _pollfds[i].fd << RESET << std::endl;
