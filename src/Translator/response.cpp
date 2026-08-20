@@ -56,7 +56,8 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		buildErrorPage(400, config, NULL);
 		return;
 	}
-	
+	_headers["Date"] = getHttpDate();
+	_headers["Server"] = "webserv/1.0";
 	const Location	*loc = config.getLocationForPath(clean_path);
 	Location defaultLoc; 
 	if (!loc)
@@ -160,7 +161,6 @@ void Response::buildErrorPage(int code, ServerConfig &config, const Location *lo
 	std::stringstream ss_len;
 	ss_len << _body.length();
 	_headers["Content-Length"] = ss_len.str();
-	_headers["Server"] = "webserv/1.0";
 
 	_generateResponse(code);
 }
@@ -236,4 +236,14 @@ void	Response::sendResponse(int socket_fd)
 bool Response::isFinished() const
 {
 	return _is_finished;
+}
+
+std::string Response::getHttpDate() {
+	char buffer[100];
+	time_t now = time(NULL);
+
+	struct tm* tm_info = gmtime(&now);
+
+	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", tm_info);	
+	return std::string(buffer);
 }

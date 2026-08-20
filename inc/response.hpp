@@ -54,6 +54,7 @@ class Response
 		bool		_isCGI(std::string const &path, const Location &loc);
 		std::string	_normalizePath(std::string path);
 		void		_parseCGIOutput(std::string &cgi_output);
+		std::string	getHttpDate();
 };
 
 #endif

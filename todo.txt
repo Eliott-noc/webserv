@@ -1,36 +1,4 @@
-add date and additional option for response :
 
-*   Trying 127.0.0.1:8081...
-* Connected to localhost (127.0.0.1) port 8081 (#0)
-> POTATO / HTTP/1.1
-> Host: localhost:8081
-> User-Agent: curl/7.81.0
-> Accept: */*
-> 
-* Mark bundle as not supporting multiuse
-< HTTP/1.1 405 Not Allowed
-< Server: nginx/1.30.4
-< Date: Thu, 30 Jul 2026 11:58:57 GMT //obligatoire
-< Content-Type: text/html
-< Content-Length: 157
-< Connection: keep-alive
-
-our server do : 
-
-*   Trying 127.0.0.1:8080...
-* Connected to localhost (127.0.0.1) port 8080 (#0)
-> POTATO / HTTP/1.1
-> Host: localhost:8080
-> User-Agent: curl/7.81.0
-> Accept: */*
-> 
-* Mark bundle as not supporting multiuse
-< HTTP/1.1 405 Method Not Allowed
-< Content-Length: 621
-< Content-Type: text/html
-< Server: webserv/1.0
-
------------------------------
 siege diagnostic :
 
 
@@ -65,8 +33,6 @@ siege diagnostic :
         "longest_transaction":                  0.01,
         "shortest_transaction":                 0.00
 }
-
-
 
 cant check error code after recv directly
 
