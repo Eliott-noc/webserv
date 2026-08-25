@@ -5,7 +5,7 @@ Client::Client(int client_fd) : fd(client_fd), request(client_fd){
 }
 
 Client::Client(const Client &other) : request(other.fd){
-
+	*this = other;
 }
 
 Client::~Client(){
@@ -13,8 +13,7 @@ Client::~Client(){
 }
 
 void Client::reset() {
-	int fd = this->request.getClientFd();
-	this->request = Request(fd);
+	this->request = Request(this->fd);
 	this->response = Response();
 }
 

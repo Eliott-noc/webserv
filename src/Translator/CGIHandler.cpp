@@ -182,7 +182,7 @@ std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
 		result.append(buffer, bytes_read);
 	close(pipe_out[0]);
 
-	waitpid(pid, &status, 0); 
+	waitpid(pid, &status, WNOHANG); 
 	_freeEnvArray();
 
 	if (WIFSIGNALED(status) || (WIFEXITED(status) && WEXITSTATUS(status) != 0))

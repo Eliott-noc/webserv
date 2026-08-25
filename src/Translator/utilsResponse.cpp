@@ -334,55 +334,50 @@ void	Response::_generateResponse(int code)
  * dans les fichiers quand aucun fichier index n'est présent.
  */
 
- std::string Response::_generateAutoIndex(std::string full_path, std::string request_path)
- {
-	 std::string html;
-	 std::string name;
- 
-	 DIR *dir = opendir(full_path.c_str());
-	 if (!dir)
-		 return "";
- 
-	 // Build the Amber CRT HTML/CSS response
-	 html = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n";
-	 html += "<title>Index of " + request_path + "</title>\n";
-	 html += "<style>\n";
-	 html += "body { font-family: 'Fira Code', 'Consolas', monospace; background-color: #1e1d1b; color: #e8c37d; margin: 0; padding: 40px; }\n";
-	 html += "h1 { color: #f5a933; text-shadow: 0 0 10px rgba(245, 169, 51, 0.3); text-transform: uppercase; border-bottom: 1px solid #5e4d31; padding-bottom: 15px; font-size: 1.8rem; }\n";
-	 html += "ul { list-style-type: none; padding: 0; margin-top: 20px; }\n";
-	 html += "li { margin: 8px 0; }\n";
-	 
-	 // Style the links to look like clickable retro buttons
-	 html += "a { color: #e8c37d; text-decoration: none; padding: 8px 15px; background: #262421; border: 1px solid #4a3e2a; border-radius: 4px; display: inline-block; min-width: 300px; font-weight: bold; transition: all 0.2s; }\n";
-	 html += "a:hover { background: #f5a933; color: #1e1d1b; border-color: #f5a933; box-shadow: 0 0 10px rgba(245, 169, 51, 0.4); }\n";
-	 
-	 html += "hr { border: 0; border-top: 1px dashed #5e4d31; margin-top: 30px; }\n";
-	 html += "p { color: #d1b890; font-size: 0.9rem; }\n";
-	 html += ".cursor { display: inline-block; width: 10px; height: 1.2rem; background-color: #f5a933; vertical-align: text-bottom; animation: blink 1s step-end infinite; }\n";
-	 html += "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }\n";
-	 html += "</style>\n</head>\n<body>\n";
-	 
-	 // Dynamic Header with blinking cursor
-	 html += "<h1>> INDEX: " + request_path + " <span class=\"cursor\"></span></h1>\n<ul>\n";
- 
-	 struct dirent *entry;
-	 while ((entry = readdir(dir)) != NULL)
-	 {
-		 name = entry->d_name;
- 
-		 // Skip the current directory dot
-		 if (name == ".")
-			 continue;
- 
-		 // Generate the clickable link item
-		 html += "<li><a href=\"" + name + "\">" + name + "</a></li>\n";
-	 }
- 
-	 html += "</ul>\n<hr>\n<p>[ webserv/1.0 - autoindex module ]</p>\n</body>\n</html>";
- 
-	 closedir(dir);
-	 return html;
- }
+std::string Response::_generateAutoIndex(std::string full_path, std::string request_path)
+{
+	std::string	html;
+	std::string	name;
+	DIR			*dir = opendir(full_path.c_str());
+
+	if (!dir)
+		return "";
+
+	html = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n";
+	html += "<title>Index of " + request_path + "</title>\n";
+	html += "<style>\n";
+	html += "body { font-family: 'Fira Code', 'Consolas', monospace; background-color: #1e1d1b; color: #e8c37d; margin: 0; padding: 40px; }\n";
+	html += "h1 { color: #f5a933; text-shadow: 0 0 10px rgba(245, 169, 51, 0.3); text-transform: uppercase; border-bottom: 1px solid #5e4d31; padding-bottom: 15px; font-size: 1.8rem; }\n";
+	html += "ul { list-style-type: none; padding: 0; margin-top: 20px; }\n";
+	html += "li { margin: 8px 0; }\n";
+	
+	html += "a { color: #e8c37d; text-decoration: none; padding: 8px 15px; background: #262421; border: 1px solid #4a3e2a; border-radius: 4px; display: inline-block; min-width: 300px; font-weight: bold; transition: all 0.2s; }\n";
+	html += "a:hover { background: #f5a933; color: #1e1d1b; border-color: #f5a933; box-shadow: 0 0 10px rgba(245, 169, 51, 0.4); }\n";
+	
+	html += "hr { border: 0; border-top: 1px dashed #5e4d31; margin-top: 30px; }\n";
+	html += "p { color: #d1b890; font-size: 0.9rem; }\n";
+	html += ".cursor { display: inline-block; width: 10px; height: 1.2rem; background-color: #f5a933; vertical-align: text-bottom; animation: blink 1s step-end infinite; }\n";
+	html += "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }\n";
+	html += "</style>\n</head>\n<body>\n";
+
+	html += "<h1>> INDEX: " + request_path + " <span class=\"cursor\"></span></h1>\n<ul>\n";
+
+	struct dirent *entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		name = entry->d_name;
+
+		if (name == ".")
+			continue;
+
+		html += "<li><a href=\"" + name + "\">" + name + "</a></li>\n";
+	}
+
+	html += "</ul>\n<hr>\n<p>[ webserv/1.0 - autoindex module ]</p>\n</body>\n</html>";
+
+	closedir(dir);
+	return html;
+}
 
 /*
  * WHAT: regarde si c'est un executable.

@@ -1,7 +1,3 @@
-//client_max_body_size a mettre en unigned long au lieu de int + content_lenth et bytes_receved dans request
+si programme py = infini, bloque le serveur --> ajouter timeout pour cgi
 
 
-
-//If URI too long, specify 414 error code URI too long, for now its just 400
-
-need to fix keep alive in request.

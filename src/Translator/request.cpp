@@ -1,5 +1,7 @@
 #include "../../inc/request.hpp"
+
 #define MAX_URI_LENGTH 4096
+#define MAX_HEADER_SIZE 8192
 
 Request::Request(int client_fd) :
 	_is_chunked(0),
@@ -8,7 +10,8 @@ Request::Request(int client_fd) :
 	_state(READING_REQUEST_LINE),
 	_body_fd(-1),
 	_bytes_received(0),
-	_client_fd(client_fd) {}
+	_client_fd(client_fd),
+	_status_code(200) {}
 
 Request::Request(const Request &other)
 {
@@ -27,84 +30,93 @@ Request	&Request::operator=(const Request &other)
 {
 	if (this != &other)
 	{
+		if (_body_fd != -1)
+			close(_body_fd);
+		if (!_tmp_file.empty())
+			std::remove(_tmp_file.c_str());
+
 		_method = other._method;
 		_path = other._path;
 		_query_string = other._query_string;
 		_version = other._version;
 		_headers = other._headers;
 		_is_chunked = other._is_chunked;
+		_keep_alive = other._keep_alive;
 		_content_length = other._content_length;
 		_state = other._state;
-		_raw_buffer = other._raw_buffer;
 		_tmp_file = other._tmp_file;
 		_body_fd = other._body_fd;
 		_bytes_received = other._bytes_received;
 		_client_fd = other._client_fd;
+		_status_code = other._status_code;
 	}
 	return *this;
 }
 
-/*
- * WHAT : Convertit une chaîne hexadécimale en entier (size_t).
- * WHY : Utilisé pour le décodage du 'Transfer-Encoding: chunked' où chaque morceau 
- * doit annoncer sa taille en format hexadécimal.
- */
+size_t	hexToDecimal(std::string hexStr)
+{
+	size_t				x;
+	std::stringstream	ss;
+	
+	ss << std::hex << hexStr;
+	if (!(ss >> x))
+		return 0xFFFFFFFF;
+	return x;
+}
 
- size_t	hexToDecimal(std::string hexStr)
- {
-	 size_t				x;
-	 std::stringstream	ss;
-	 
-	 ss << std::hex << hexStr;
-
-	 if (!(ss >> x))
-		 return 0xFFFFFFFF;
-	 return x;
- }
-
-/*
- * WHAT : Extrait la méthode, le chemin, la Query String et la version.
- * WHY : C'est l'ordre principal du client. On valide ici que la ligne est bien 
- * formée (exactement 3 éléments) pour rejeter les requêtes corrompues dès le début.
- */
-
-void	Request::_requestLine()
+void	Request::_requestLine(std::string &buffer)
 {
 	size_t		pos;
 	size_t		i;
 	std::string	first_line;
 	std::string	extra;
 
-	pos = _raw_buffer.find("\r\n");
+	pos = buffer.find("\r\n");
 	if (pos == std::string::npos)
 		return ;
 
-	first_line = _raw_buffer.substr(0, pos);
+	first_line = buffer.substr(0, pos);
 
 	if (first_line.find('\t') != std::string::npos)
 	{
 		_state = ERROR;
+		_status_code = 400;
 		return ;
 	}
 
 	std::stringstream	ss(first_line);
 
-	if (!(ss >> _method >> _path >> _version) || (_version != "HTTP/1.1" && _version != "HTTP/1.0"))
+	if (!(ss >> _method >> _path >> _version))
 	{
 		_state = ERROR;
+		_status_code = 400;
 		return ;
 	}
+
+	if (_version == "HTTP/1.1")
+		_keep_alive = true;
+	else if (_version == "HTTP/1.0")
+		_keep_alive = false;
+	else
+	{
+		_state = ERROR;
+		_status_code = 505;
+		return ;
+	}
+
 	_path = _urlDecode(_path);
 
 	if (_method != "GET" && _method != "POST" && _method != "DELETE")
 	{
 		_state = ERROR;
+		_status_code = 400;
 		return ;
 	}
 
 	if (ss >> extra)
 	{
 		_state = ERROR;
+		_status_code = 400;
 		return ;
 	}
 
@@ -114,32 +126,25 @@ void	Request::_requestLine()
 		_path = _path.substr(0, i);
 	}
 
-	_raw_buffer.erase(0, pos + 2);
+	buffer.erase(0, pos + 2);
 	_state = READING_HEADERS;
 }
 
-/*
- * WHAT : Remplit la map des headers et détecte le mode 'chunked'.
- * WHY : Les headers donnent les métadonnées (Host, Taille, Type). La limite de 8Ko 
- * sur le buffer ici est une sécurité vitale contre les attaques par déni de service (DoS).
- */
-
-void	Request::_scanHeader()
+void	Request::_scanHeader(std::string &buffer)
 {
 	size_t		pos;
 	std::string	line;
 	size_t		colon_pos;
 	std::string	key;
 	std::string	value;
-	size_t		first;
-	size_t		last;
 
-	while ((pos = _raw_buffer.find("\r\n")) != std::string::npos)
+	while ((pos = buffer.find("\r\n")) != std::string::npos)
 	{
-		line = _raw_buffer.substr(0, pos);
+		line = buffer.substr(0, pos);
+
 		if (line.empty())
 		{
-			_raw_buffer.erase(0, 2);
+			buffer.erase(0, 2);
 			_state = READING_BODY;
 			return;
 		}
@@ -150,177 +155,181 @@ void	Request::_scanHeader()
 			key = line.substr(0, colon_pos);
 			for (size_t j = 0; j < key.length(); ++j)
 				key[j] = std::tolower(key[j]);
+
 			value = line.substr(colon_pos + 1);
-			first = value.find_first_not_of(" \t\r\n");
-			last = value.find_last_not_of(" \t\r\n");
+			size_t first = value.find_first_not_of(" \t");
+			size_t last = value.find_last_not_of(" \t");
 			if (first != std::string::npos)
 				value = value.substr(first, (last - first + 1));
 			else
-				value ="";
-			std::string value_lower = value;
-			for (size_t j = 0; j < value_lower.length(); ++j)
-				value_lower[j] = std::tolower(value_lower[j]);
-			if (key == "connection" && value_lower.find("keep-alive") != std::string::npos)
-				_keep_alive = true;
-			if (key == "transfer-encoding" && value_lower.find("chunked") != std::string::npos)
+				value = "";
+
+			if (key == "connection")
+			{
+				std::string value_lower = value;
+				for (size_t j = 0; j < value_lower.length(); ++j)
+					value_lower[j] = std::tolower(value_lower[j]);
+
+				if (value_lower == "keep-alive")
+					_keep_alive = true;
+				else if (value_lower == "close")
+					_keep_alive = false;
+			}
+
+			if (key == "transfer-encoding" && value.find("chunked") != std::string::npos)
 				_is_chunked = true;
+			
 			_headers[key] = value;
 		}
-		_raw_buffer.erase(0, pos + 2);
+		buffer.erase(0, pos + 2);
 	}
 }
 
-/*
- * WHAT : Lit la taille en hexa, puis le morceau de données correspondant.
- * WHY : Requis par le protocole HTTP/1.1 pour les envois dont on ne connaît pas 
- * la taille à l'avance. On écrit direct sur disque pour la RAM.
- * RETURN : 1 si errreur et 0 si tout est bon.
- */
-
-bool	Request::_chunked(unsigned long max_body_limit)
+bool	Request::_chunked(std::string &buffer, unsigned long max_body_limit)
 {
 	unsigned long		chunkSize;
-	unsigned long		pos = _raw_buffer.find("\r\n");
-	std::string	chunkData;
+	unsigned long		pos = buffer.find("\r\n");
+	std::string			chunkData;
 
 	if (pos == std::string::npos)
 		return true;
 
-	chunkSize = hexToDecimal(_raw_buffer.substr(0, pos));
+	chunkSize = hexToDecimal(buffer.substr(0, pos));
 	if (chunkSize == 0xFFFFFFFF)
 	{
 		_state = ERROR;
+		_status_code = 400;
 		return true; 
 	}
 	
 	if (_content_length + chunkSize > max_body_limit)
 	{
 		_state = ERROR;
+		_status_code = 413;
 		return true;
 	}
 
 	if (chunkSize == 0)
 	{
-		if (_body_fd != -1)
-		{
-			close(_body_fd);
-			_body_fd = -1;
-		}
+		if (_body_fd != -1) { close(_body_fd); _body_fd = -1; }
 		_state = FINISHED;
-		_raw_buffer.erase(0, pos + 4);
+		buffer.erase(0, pos + 4);
 		return true;
 	}
 
-	if (_raw_buffer.size() < pos + 2 + chunkSize + 2)
+	if (buffer.size() < pos + 2 + chunkSize + 2)
 		return true;
 
 	if (_body_fd == -1)
 	{
 		std::stringstream	ss;
-		
 		ss << "/tmp/body_client_" << _client_fd << ".tmp";
 		_tmp_file = ss.str();
-		_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND | O_TRUNC, 0644);
+		_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
 	}
 	
-	chunkData = _raw_buffer.substr(pos + 2, chunkSize);
-	
+	chunkData = buffer.substr(pos + 2, chunkSize);
 	write(_body_fd, chunkData.c_str(), chunkData.size());
 	
 	_content_length += chunkSize;
-	_raw_buffer.erase(0, pos + 2 + chunkSize + 2);
+	buffer.erase(0, pos + 2 + chunkSize + 2);
 	return false;
 }
 
-/*
- * WHAT : Accumule les données reçues dans un buffer et progresse grace a _state.
- * WHY : Pour gérer la fragmentation réseau. Si la requête arrive en plusieurs morceaux, 
- * on ne perd rien et on reprend là où on s'était arrêté sans bloquer le serveur.
- * RETURN : 200 (fini), 1 (en cours), ou un code d'erreur (400, 413, 431).
- */
-
-int	Request::parse(std::string chunk, unsigned long max_body_limit)
+int	Request::parse(std::string &buffer, unsigned long max_body_limit)
 {
-	_raw_buffer += chunk;
-
 	while (_state != FINISHED && _state != ERROR)
 	{
 		if (_state == READING_REQUEST_LINE || _state == READING_HEADERS)
 		{
-			size_t	end_headers = _raw_buffer.find("\r\n\r\n");
-
-			if ((end_headers == std::string::npos && _raw_buffer.size() > 8192) ||
-				(end_headers != std::string::npos && end_headers > 8192))
+			size_t	end_headers = buffer.find("\r\n\r\n");
+			if ((end_headers == std::string::npos && buffer.size() > MAX_HEADER_SIZE) ||
+				(end_headers != std::string::npos && end_headers > MAX_HEADER_SIZE))
 			{
 				_state = ERROR;
-				return 431;
+				_status_code = 431;
+				break;
 			}
 		}
 
 		if (_state == READING_REQUEST_LINE)
 		{
-			if (_raw_buffer.find("\r\n") == std::string::npos)
-				break ;
-			if (_raw_buffer.length() > MAX_URI_LENGTH){
-				_state = ERROR;
-				return 414;
+			size_t pos = buffer.find("\r\n");
+			if (pos == std::string::npos)
+			{
+				if (buffer.length() > MAX_URI_LENGTH) {
+					_state = ERROR;
+					_status_code = 414;
+				}
+				break;
 			}
-			_requestLine();
+			if (pos > MAX_URI_LENGTH) {
+				_state = ERROR;
+				_status_code = 414;
+				break;
+			}
+			_requestLine(buffer);
 		}
 		else if (_state == READING_HEADERS)
 		{
-			if (_raw_buffer.find("\r\n") == std::string::npos)
+			if (buffer.find("\r\n") == std::string::npos)
 				break;
-
-			_scanHeader();
-
+			_scanHeader(buffer);
 			if (_state == READING_HEADERS)
 				break;
 		}
 		else if (_state == READING_BODY)
 		{
 			if (_method == "POST" && !_headers.count("content-length") && !_is_chunked)
-				return 411;
+			{
+				_state = ERROR;
+				_status_code = 411;
+				break;
+			}
 
 			if (_is_chunked)
 			{
-				if (_chunked(max_body_limit) == true)
+				if (_chunked(buffer, max_body_limit) == true)
 					break;
 			}
 			else if (_headers.count("content-length"))
 			{
-				if (_content_length == 0){
-					long test_len = atol(_headers["content-length"].c_str());
-					if (test_len < 0){
+				if (_content_length == 0)
+				{
+					char *endptr;
+					long test_len = strtol(_headers["content-length"].c_str(), &endptr, 10);
+					if (*endptr != '\0' || test_len < 0) {
 						_state = ERROR;
-						return 400;
+						_status_code = 400;
+						break;
 					}
-					_content_length = atol(_headers["content-length"].c_str());
+					_content_length = (unsigned long)test_len;
 				}
 				
 				if (_content_length > max_body_limit)
 				{
+					if (_body_fd != -1) { close(_body_fd); _body_fd = -1; }
 					_state = ERROR;
-					return 413;
+					_status_code = 413;
+					break;
 				}
 
 				if (_body_fd == -1)
 				{
 					std::stringstream	ss;
-
 					ss << "/tmp/body_client_" << _client_fd << ".tmp";
 					_tmp_file = ss.str();
-					_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
+					_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
 				}
 
 				unsigned long	remaining = _content_length - _bytes_received;
-				unsigned long	to_write = (_raw_buffer.size() < remaining) ? _raw_buffer.size() : remaining;
+				unsigned long	to_write = (buffer.size() < remaining) ? buffer.size() : remaining;
 
 				if (to_write > 0)
 				{
-					write(_body_fd, _raw_buffer.c_str(), to_write);
+					write(_body_fd, buffer.c_str(), to_write);
 					_bytes_received += to_write;
-					_raw_buffer.erase(0, to_write);
+					buffer.erase(0, to_write);
 				}
 
 				if (_bytes_received >= _content_length)
@@ -338,17 +347,17 @@ int	Request::parse(std::string chunk, unsigned long max_body_limit)
 
 	if (_state == FINISHED)
 	{
-		std::map<std::string, std::string>::iterator	it = _headers.find("host");
-		if (it == _headers.end() || it->second.empty())
+		if (_headers.find("host") == _headers.end() || _headers["host"].empty())
 		{
 			_state = ERROR;
+			_status_code = 400;
 			return 400;
 		}
 		return 200;
 	}
 	
 	if (_state == ERROR)
-		return 400;
+		return _status_code;
 
 	return 1;
 }
@@ -416,7 +425,7 @@ int		Request::getClientFd() const
 	return _client_fd;
 }
 
-std::string	Request::getRawBuffer() const
+int Request::getStatusCode() const
 {
-	return _raw_buffer;
+	return _status_code;
 }

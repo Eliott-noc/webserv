@@ -58,13 +58,13 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 	}
 	
 	const Location	*loc = config.getLocationForPath(clean_path);
-	Location defaultLoc; 
+	Location		defaultLoc; 
 	if (!loc)
 	{
 		defaultLoc.setPath("/"); 
 		defaultLoc.setRoot(config.getRoot());
 		
-		std::vector<std::string> serverIndexes = config.getIndex();
+		std::vector<std::string>	serverIndexes = config.getIndex();
 		for (size_t i = 0; i < serverIndexes.size(); ++i)
 			defaultLoc.setIndex(serverIndexes[i]);
 
@@ -83,7 +83,7 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		return ;
 	}
 
-	std::string method_to_check = req.getMethod();
+	std::string	method_to_check = req.getMethod();
 
 	if (!_isMethodAllowed(method_to_check, loc->getMethods()))
 	{

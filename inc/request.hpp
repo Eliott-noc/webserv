@@ -31,11 +31,11 @@ class Request
 		bool								_keep_alive;
 		unsigned long						_content_length;
 		t_request_state						_state;
-		std::string							_raw_buffer;
 		std::string							_tmp_file;
 		int									_body_fd;
 		unsigned long						_bytes_received;
 		int									_client_fd;
+		int									_status_code;
 
 	public:
 		Request(int client_fd);
@@ -44,7 +44,7 @@ class Request
 		
 		Request &operator=(const Request &other);
 
-		int									parse(std::string raw_data, unsigned long max_body_limit);
+		int									parse(std::string &buffer, unsigned long max_body_limit);
 
 		std::string							getMethod() const;
 		std::string							getPath() const;
@@ -54,12 +54,12 @@ class Request
 		unsigned long						getContentLength() const;
 		std::string							getBodyFile() const;
 		int									getClientFd() const;
-		std::string							getRawBuffer() const;
+		int									getStatusCode() const;
 
 	private:
-		void								_requestLine();
-		void								_scanHeader();
-		bool								_chunked(unsigned long max_body_limit);
+		void								_requestLine(std::string &buffer);
+		void								_scanHeader(std::string &buffer);
+		bool								_chunked(std::string &buffer, unsigned long max_body_limit);
 		std::string							_urlDecode(std::string str);
 
 };
