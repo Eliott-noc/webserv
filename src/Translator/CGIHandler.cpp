@@ -164,29 +164,89 @@ void	CGIHandler::_childProcess(Request &req, char *args[3], int pipe_out[2])
 	exit(1);
 }
 
-/*
- * WHAT : Gestion du processus père (le serveur).
- * WHY  : Lit le résultat du script via le pipe, attend la fin du processus pour 
- * éviter les processus "zombies" et libère la mémoire allouée pour l'env.
- */
-
 std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
 {
-	std::string	result;
-	char		buffer[4096];
-	int			bytes_read;
-	int			status;
+	std::string		result;
+	char			buffer[4096];
+	int				status;
+	struct timeval	start_time, current_time;
+	
+	close(pipe_out[1]); // Ferme l'entrée du pipe (côté parent)
+	
+	// On rend la lecture du pipe non-bloquante pour ne pas rester coincé sur read
+	fcntl(pipe_out[0], F_SETFL, O_NONBLOCK);
 
-	close(pipe_out[1]);
+	gettimeofday(&start_time, NULL);
+	bool timed_out = false;
+
+	while (true)
+	{
+		// 1. Vérifier si le processus fils a fini
+		int wait_ret = waitpid(pid, &status, WNOHANG);
+		
+		if (wait_ret == pid) // Le fils s'est terminé normalement
+			break;
+		
+		// 2. Vérifier le timeout (ex: 5 secondes)
+		gettimeofday(&current_time, NULL);
+		long elapsed = (current_time.tv_sec - start_time.tv_sec);
+		if (elapsed > 5) // Timeout de 5 secondes
+		{
+			timed_out = true;
+			kill(pid, SIGKILL); // On tue le script en boucle infinie
+			break;
+		}
+
+		// 3. Lire ce qui est disponible dans le pipe (optionnel ici, mais propre)
+		int bytes_read = read(pipe_out[0], buffer, 4096);
+		if (bytes_read > 0)
+			result.append(buffer, bytes_read);
+
+		usleep(10000); // Petite pause pour ne pas saturer le CPU (10ms)
+	}
+
+	// Lecture finale après la fin du processus pour récupérer les derniers octets
+	int bytes_read;
 	while ((bytes_read = read(pipe_out[0], buffer, 4096)) > 0)
 		result.append(buffer, bytes_read);
+
 	close(pipe_out[0]);
 
-	waitpid(pid, &status, WNOHANG); 
-	_freeEnvArray();
+	if (timed_out)
+	{
+		std::cerr << "[CGI] Timeout reached, process killed." << std::endl;
+		return ""; // Tu pourras gérer une erreur 504 Gateway Timeout plus tard
+	}
 
 	if (WIFSIGNALED(status) || (WIFEXITED(status) && WEXITSTATUS(status) != 0))
 		return "";
 
 	return result;
 }
+
+/*
+ * WHAT : Gestion du processus père (le serveur).
+ * WHY  : Lit le résultat du script via le pipe, attend la fin du processus pour 
+ * éviter les processus "zombies" et libère la mémoire allouée pour l'env.
+ */
+
+// std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
+// {
+// 	std::string	result;
+// 	char		buffer[4096];
+// 	int			bytes_read;
+// 	int			status;
+
+// 	close(pipe_out[1]);
+// 	while ((bytes_read = read(pipe_out[0], buffer, 4096)) > 0)
+// 		result.append(buffer, bytes_read);
+// 	close(pipe_out[0]);
+
+// 	waitpid(pid, &status, WNOHANG); 
+// 	_freeEnvArray();
+
+// 	if (WIFSIGNALED(status) || (WIFEXITED(status) && WEXITSTATUS(status) != 0))
+// 		return "";
+
+// 	return result;
+// }
