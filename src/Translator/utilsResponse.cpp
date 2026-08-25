@@ -334,12 +334,12 @@ void	Response::_generateResponse(int code)
  * dans les fichiers quand aucun fichier index n'est présent.
  */
 
-std::string Response::_generateAutoIndex(std::string full_path, std::string request_path)
+std::string	Response::_generateAutoIndex(std::string full_path, std::string request_path)
 {
 	std::string	html;
 	std::string	name;
-	DIR			*dir = opendir(full_path.c_str());
 
+	DIR	*dir = opendir(full_path.c_str());
 	if (!dir)
 		return "";
 
@@ -359,17 +359,20 @@ std::string Response::_generateAutoIndex(std::string full_path, std::string requ
 	html += ".cursor { display: inline-block; width: 10px; height: 1.2rem; background-color: #f5a933; vertical-align: text-bottom; animation: blink 1s step-end infinite; }\n";
 	html += "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }\n";
 	html += "</style>\n</head>\n<body>\n";
-
+	
+	// Dynamic Header with blinking cursor
 	html += "<h1>> INDEX: " + request_path + " <span class=\"cursor\"></span></h1>\n<ul>\n";
 
-	struct dirent *entry;
+	struct dirent	*entry;
 	while ((entry = readdir(dir)) != NULL)
 	{
 		name = entry->d_name;
 
+		// Skip the current directory dot
 		if (name == ".")
 			continue;
 
+		// Generate the clickable link item
 		html += "<li><a href=\"" + name + "\">" + name + "</a></li>\n";
 	}
 

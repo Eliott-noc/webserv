@@ -1,13 +1,198 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Serveur 9090</title>
-    <style>body { background: #303f9f; color: white; text-align: center; padding-top: 100px; font-family: sans-serif; }</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xX_Matthieu's_Cat_Cafe_Xx ~*~ (✿◠‿◠)</title>
+    <style>
+        /* *~* Custom Scrollbar of DOOM *~* */
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #ffb6c1; }
+        ::-webkit-scrollbar-thumb { background: #ff1493; border: 2px dotted #fff; }
+
+        body {
+            /* Tiled glitter background */
+            background-color: #ff69b4;
+            background-image: url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzFqb2ZwOGhhb2k1MXBhNHFqenNzampkdTFpNm54NDN5ZWVzeTQ2OSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/gXXFrjHFJIMoqKr8UT/giphy.gif');
+			background-size: 50% auto;
+   			background-repeat: repeat; 
+    		font-family: "Comic Sans MS", "Chalkboard SE", cursive;
+    		color: #ffffff;
+    		text-shadow: 2px 2px 0px #ff1493, -1px -1px 0px #000;
+    		cursor: crosshair;
+    		margin: 0;
+    		padding: 20px;
+        }
+
+        #container {
+            width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.6);
+            border: 5px dashed #00ffff;
+            padding: 20px;
+            box-shadow: 0 0 20px #ff1493;
+        }
+
+        h1 {
+            color: #00ffff;
+            font-size: 3em;
+            text-align: center;
+            text-shadow: 3px 3px 0px #ff00ff;
+            text-decoration: underline;
+            text-decoration-style: wavy;
+        }
+
+        .marquee-container {
+            background: #ffff00;
+            color: #ff0000;
+            font-weight: bold;
+            padding: 5px;
+            font-size: 1.2em;
+            border: 2px solid red;
+            text-shadow: none;
+            margin-bottom: 20px;
+        }
+
+        .profile-box {
+            display: flex;
+            justify-content: space-between;
+            border: 3px solid #ff1493;
+            background: rgba(255, 105, 180, 0.3);
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .blurb {
+            font-size: 1.1em;
+            line-height: 1.4;
+        }
+
+        .highlight {
+            background-color: #00ffff;
+            color: #000;
+            text-shadow: none;
+            padding: 2px;
+        }
+
+        /* Fake MySpace Music Player */
+        .music-player {
+            border: 4px ridge #ff00ff;
+            background: #000;
+            padding: 10px;
+            text-align: center;
+            width: 250px;
+            font-family: Tahoma, sans-serif;
+            font-size: 12px;
+            text-shadow: none;
+            margin: 20px auto;
+        }
+        .music-player-title { color: #00ff00; margin-bottom: 5px;}
+        .music-player-controls { color: #fff; background: #333; padding: 5px; cursor: pointer; }
+
+        .top-8 {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .top-8 td {
+            border: 3px dotted #00ffff;
+            padding: 10px;
+            text-align: center;
+            background: #ff1493;
+        }
+
+        .top-8 img {
+            border: 2px solid #fff;
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+        }
+
+        a {
+            color: #00ffff;
+            text-decoration: none;
+        }
+        a:hover {
+            color: #ffff00;
+            text-decoration: underline;
+            cursor: help;
+        }
+
+        .footer-glitter {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: #ccc;
+        }
+    </style>
 </head>
 <body>
-    <h1>🛰️ Espace de test du Port 9090</h1>
-    <p>Si tu vois cette page bleue, c'est que le multi-port fonctionne !</p>
-    <p><a href="http://127.0.0.1:8080" style="color: #ffeb3b;">Retourner au serveur 8080</a></p>
+    <div id="container">
+        <h1>*~ 🎀 xX_Matthieu's_Cat_Cafe_Xx 🎀 ~*</h1>
+
+        <div class="marquee-container">
+            <marquee scrollamount="15">
+                (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ WELCOME TO MY PAGE!!! PLZ DONT STEAL MY HTML!!! ✧ﾟ･: *ヽ(◕ヮ◕ヽ)
+            </marquee>
+        </div>
+
+        <div class="profile-box">
+            <div class="blurb">
+                <h3><font color="#00ffff">About Me!! ^^</font></h3>
+                <p>OMG Hiiiii!!!!! ≧◡≦</p>
+                <p>I was SUPPOSED to be doing my stupid C++ homework today... ugh, synchronous polling is literally SO boring!!! (Who even cares about manual keep-alive connections anyway??? >_<). But I decided to make this page for Matthieu's kitties instead!!! <3 <3 <3</p>
+                <p>Rawr xD! If u don't like cats, click the X in the top right corner BYEEEEE!!!! ಠ_ಠ</p>
+                
+                <p><span class="highlight">Mood:</span> Hyper 🤪<br>
+                <span class="highlight">Listening to:</span> Caramelldansen 🎵</p>
+                
+                <p><em>(Shoutout to whollebe for helping me fix my URI length boundaries yesterday lol u saved my life bestie!!! 💖)</em></p>
+            </div>
+            
+            <div class="music-player">
+                <div class="music-player-title">♫ MySpace Music ♫</div>
+                <div style="color: #ff00ff; margin-bottom: 5px;">Caramelldansen.mp3</div>
+                <div class="music-player-controls">▶ | ⏸ | ⏹ | 🔊</div>
+                <div style="font-size: 9px; color: #666; margin-top: 5px;">Buffering via synchronous multiplexer...</div>
+            </div>
+        </div>
+
+        <center>
+            <h2><font color="#ffff00">~*~ TOP KITTIES ~*~</font></h2>
+            <p>I only have room for 4 in my Top 8 right now sry guys!!!</p>
+            <table class="top-8">
+                <tr>
+                    <td>
+                        <b>Fluffy</b><br>
+                        <img src="./img/cat1.png" alt="cat"><br>
+                        <em>BFF!!!</em>
+                    </td>
+                    <td>
+                        <b>Mittens</b><br>
+                        <img src="./img/cat2.png" alt="cat"><br>
+                        <em>So random xD</em>
+                    </td>
+                    <td>
+                        <b>Shadow</b><br>
+                        <img src="./img/cat3.png" alt="cat"><br>
+                        <em>Very emo today</em>
+                    </td>
+                    <td>
+                        <b>Garfield</b><br>
+                        <img src="./img/cat1.png" alt="cat"><br>
+                        <em>Hates mondays lol</em>
+                    </td>
+                </tr>
+            </table>
+        </center>
+
+        <div class="footer-glitter">
+            <marquee direction="right" scrollamount="10" width="200">✨✨✨✨✨✨</marquee><br>
+            © 2005-2026. Hand-coded with 💖 and lots of caffeine. <br>
+            Don't copy my layout or my boyfriend will hack u.<br>
+            <img src="https://counter.websiteout.net/compteur.php?S=11&C=1&D=0&N=0&a=0" alt="fake visitor counter" style="margin-top:10px;">
+        </div>
+    </div>
 </body>
 </html>

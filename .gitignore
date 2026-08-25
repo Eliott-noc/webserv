@@ -8,5 +8,5 @@ test_death/
 .DS_Store
 arena/
 .make_count
-
+nginx-*
 venv

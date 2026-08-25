@@ -1,0 +1,40 @@
+
+siege diagnostic :
+
+
+➜  nginx_local git:(eliott_feature) ✗ siege -b -c 50 -t 10S http://127.0.0.1:8080/
+[error] socket: read error Connection reset by peer sock.c:635: Connection reset by peer
+
+{       "transactions":                        80285,
+        "availability":                       100.00,
+        "elapsed_time":                         9.60,
+        "data_transferred":                     7.66,
+        "response_time":                        0.01,
+        "transaction_rate":                  8363.02,
+        "throughput":                           0.80,
+        "concurrency":                         44.09,
+        "successful_transactions":             80285,
+        "failed_transactions":                     1,
+        "longest_transaction":                  7.61,
+        "shortest_transaction":                 0.00
+}
+➜  nginx_local git:(eliott_feature) ✗ siege -b -c 50 -t 10S http://127.0.0.1:8081/
+
+{       "transactions":                       185451,
+        "availability":                       100.00,
+        "elapsed_time":                         9.63,
+        "data_transferred":                    17.69,
+        "response_time":                        0.00,
+        "transaction_rate":                 19257.63,
+        "throughput":                           1.84,
+        "concurrency":                         48.69,
+        "successful_transactions":            185451,
+        "failed_transactions":                     0,
+        "longest_transaction":                  0.01,
+        "shortest_transaction":                 0.00
+}
+
+cant check error code after recv directly
+
+check all read recv write and send to check 0 and -1,
+to be checked but i guess <= 0 checks both

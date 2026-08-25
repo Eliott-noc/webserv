@@ -271,6 +271,13 @@ int	Request::parse(std::string chunk, unsigned long max_body_limit)
 				break;
 			}
 			_requestLine();
+			if (_state == ERROR){
+				return 400;
+			}
+			if (_method != "GET" && _method != "POST" && _method != "DELETE"){
+				_state = ERROR;
+				return 405;
+			}
 		}
 		else if (_state == READING_HEADERS)
 		{
