@@ -103,112 +103,152 @@ void ServerManager::initServers(){
 	}
 }
 
-void ServerManager::run() {
+void ServerManager::run(){
 	initServers();
-	size_t _listeningCount = _pollfds.size();
-	if (_listeningCount == 0) {
+	size_t	_listeningCount = _pollfds.size();
+	if (_listeningCount == 0){
 		std::cerr << R << "[FATAL] No server sockets could be created. Shutting down." << RESET << std::endl;
 		return;
 	}
 	std::cout << G << "[INFO] Main loop started. Listening on " << _listeningCount << " socket(s)..." << RESET << std::endl;
-
-	while (true) {
-		size_t nfds = _pollfds.size();
-		int ready = poll(&_pollfds[0], nfds, 1000);
-
-		if (ready < 0) {
-			if (errno == EINTR) continue;
+	while(true){
+		size_t	nfds = _pollfds.size();
+		int		err_code;
+		int		ready = poll(&_pollfds[0], nfds, 1000);
+		if (ready < 0){
+			err_code = errno;
+			if (err_code == EINTR) {
+				std::cout << Y <<  "[DEBUG] poll() interrupted by signal (EINTR). Resuming..." << RESET << std::endl;
+				continue;
+			}
 			std::cerr << R << "[FATAL] poll() error!" << RESET << std::endl;
+			printPortErr(err_code, -2);
 			return;
 		}
-
-		int checked = 0;
-		for (size_t i = 0; i < nfds; i++) {
-			if (checked >= ready && i >= _listeningCount) break;
-
-			if (_pollfds[i].revents & POLLIN) {
-				checked++;
-				if (i < _listeningCount) {
-					_acceptNewConnection(_pollfds[i].fd);
-					nfds = _pollfds.size();
-					continue;
-				} else {
-					char buffer[8192];
-					ssize_t count = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
-
-					if (count <= 0) {
-						_removeClient(i);
-						nfds--; i--;
-						continue;
-					}
-
-					Client* client = _clients[_pollfds[i].fd];
-					gettimeofday(&(client->last_activ), NULL);
-
-					client->raw_request_buffer.append(buffer, count);
-
-					int parse_status = client->request.parse(client->raw_request_buffer, client->config->getClientMaxBodySize());
-
-					if (parse_status == 1) {
-						continue;
-					} else {
-						if (parse_status == 200) {
-							client->response.makeResponse(client->request, *(client->config));
-						} else {
-							client->response.buildErrorPage(parse_status, *(client->config), NULL);
+		else{
+			int checked = 0;
+			for (size_t i = 0; i < nfds; i++){
+				if (checked == ready)
+					break;
+				if (_pollfds[i].revents & POLLIN){
+					checked++;
+					if (i < _listeningCount){
+						std::cout << Y <<  "[DEBUG] Incoming activity on listening socket fd: " << _pollfds[i].fd << RESET << std::endl;
+						while (true){
+							int accept_ret = _acceptNewConnection(_pollfds[i].fd);
+							if (accept_ret == -1)
+								break;
 						}
-						_pollfds[i].events = POLLOUT;
+						continue;
 					}
-				}
-			} 
-			else if (_pollfds[i].revents & POLLOUT) {
-				checked++;
-				Client* client = _clients[_pollfds[i].fd];
-
-				client->response.sendResponse(_pollfds[i].fd);
-
-				if (client->response.isFinished()) {
-					gettimeofday(&(client->last_activ), NULL);
-
-					if (client->request.getKeepAlive() == false) {
-						_removeClient(i);
-						nfds--; i--;
-					} else {
-						client->reset(); 
-						_pollfds[i].events = POLLIN;
-
-						if (!client->raw_request_buffer.empty()) {
-							int next_status = client->request.parse(client->raw_request_buffer, client->config->getClientMaxBodySize());
-							if (next_status != 1) {
-								if (next_status == 200)
+					else{
+						std::cout << Y <<  "[DEBUG] Socket fd: " << _pollfds[i].fd << " ready for reading (POLLIN)" << RESET << std::endl;
+						char buffer[8192];
+						ssize_t count = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
+						if (count == -1){
+							err_code = errno;
+							std::cerr << "[ERROR] recv failed on FD: " << _pollfds[i].fd << RESET << std::endl;
+							printPortErr(err_code, -2);
+							_removeClient(i);
+							nfds--;
+							i--;
+						}
+						else if (count == 0){
+							std::cout << G << "[INFO] Connection closed by client on FD: " << _pollfds[i].fd << RESET << std::endl;
+							_removeClient(i);
+							nfds--;
+							i--;
+						}
+						else {
+							std::cout << G << "[INFO] Received " << count << " bytes from client on FD: " << _pollfds[i].fd << RESET << std::endl;
+							int client_fd = _pollfds[i].fd;
+							Client* client = _clients[client_fd];
+							unsigned long body_limit = client->config->getClientMaxBodySize();
+							gettimeofday(&(client->last_activ), NULL);
+							std::string chunk(buffer, count);
+							int parse_status = client->request.parse(chunk, body_limit);
+							
+							std::cout << Y << "[DEBUG] Request parsing status for FD " << client_fd << ": " << parse_status << RESET << std::endl;
+							if (parse_status == 1) {
+								std::cout << Y << "[DEBUG] Request incomplete on FD " << client_fd << ". Waiting for more chunks..." << RESET << std::endl;
+								continue;
+							}
+							else {
+								if (parse_status == 200) {
+									std::cout << G << "[INFO] Request parsing completed successfully (200) on FD " << client_fd << ". Building response..." << RESET << std::endl;
 									client->response.makeResponse(client->request, *(client->config));
-								else
-									client->response.buildErrorPage(next_status, *(client->config), NULL);
+								}
+								else {
+									std::cerr << Y << "[WARN] Parsing error detected (code: " << parse_status << ") on FD " << client_fd << ". Generating error page..." << RESET << std::endl;
+									std::vector<Location> temp_loc = client->config->getLocations();
+									client->response.buildErrorPage(parse_status, *(client->config), NULL);
+								}
 								_pollfds[i].events = POLLOUT;
+								std::cout << Y << "[DEBUG] Switched poll events to POLLOUT for FD: " << client_fd << RESET << std::endl;
 							}
 						}
 					}
 				}
-			} 
-			else if (_pollfds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-				checked++;
-				_removeClient(i);
-				nfds--; i--;
+				else if (_pollfds[i].revents & POLLOUT){
+					checked++;
+					int client_fd = _pollfds[i].fd;
+					Client* client = _clients[client_fd];
+
+					std::cout << Y << "[DEBUG] Socket fd: " << client_fd << " ready for writing (POLLOUT). Sending data..." << RESET << std::endl;
+					client->response.sendResponse(client_fd);
+					if (client->response.isFinished()){
+						std::cout << G << "[INFO] Response successfully sent to client on FD: " << client_fd << RESET << std::endl;
+						gettimeofday(&(client->last_activ), NULL);
+						if (client->request.getKeepAlive() == false){
+							_removeClient(i);
+							nfds--;
+							i--;
+						}
+						else{
+							client->reset();
+							if (!client->request.getRawBuffer().empty()){
+								int parse_status = client->request.parse("", client->config->getClientMaxBodySize());
+								if (parse_status == 200){
+									client->response.makeResponse(client->request, *(client->config));
+									_pollfds[i].events = POLLOUT;
+								}
+								else if (parse_status == 1){
+									_pollfds[i].events = POLLIN;
+								}
+								else {
+									client->response.buildErrorPage(parse_status, *(client->config), NULL);
+									_pollfds[i].events = POLLOUT;
+								}
+							}
+							else{
+								_pollfds[i].events = POLLIN;
+							}
+						}
+					}
+				}
+				else if (_pollfds[i].revents & POLLERR || _pollfds[i].revents & POLLHUP || _pollfds[i].revents & POLLNVAL){
+					checked++;
+					std::cerr << Y << "[WARN] Host hangup or internal socket error (revents: " << _pollfds[i].revents << ") on FD: " << _pollfds[i].fd << RESET << std::endl;
+					_removeClient(i);
+					nfds--;
+					i--;
+				}
 			}
 		}
-
-		for (size_t i = _listeningCount; i < _pollfds.size(); i++) {
-			if (_checkTimeouts(*_clients[_pollfds[i].fd]) == 1) {
-				std::cout << Y << "[DEBUG] Timeout reached for FD: " << _pollfds[i].fd << RESET << std::endl;
-				_removeClient(i);
-				nfds = _pollfds.size();
-				i--;
+		for (size_t i = _listeningCount; i < _pollfds.size(); i++){
+			int client_fd = _pollfds[i].fd;
+			Client* checked_client = _clients[client_fd];
+			if (checked_client){
+				if (_checkTimeouts(*checked_client) == 1){
+					_removeClient(i);
+					i--;
+				}
 			}
 		}
 	}
 }
 
-void ServerManager::_acceptNewConnection(int server_fd){
+int ServerManager::_acceptNewConnection(int server_fd){
 	struct sockaddr_storage	client_addr;
 	socklen_t				addr_len = sizeof(client_addr);
 	int						err_code;
@@ -218,14 +258,14 @@ void ServerManager::_acceptNewConnection(int server_fd){
 		err_code = errno;
 		std::cerr << R << "[ERROR] accept() failed on server socket fd: " << server_fd << RESET << std::endl;
 		printPortErr(err_code, -2);
-		return;
+		return -1;
 	}
 	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0){
 		err_code = errno;
 		std::cerr << R << "[ERROR] fcntl O_NONBLOCK failed on newly accepted client fd: " << client_fd << RESET << std::endl;
 		printPortErr(err_code, -2);
 		close(client_fd);
-		return;
+		return -1;
 	}
 	pollfd new_poll;
 	new_poll.fd = client_fd;
@@ -239,6 +279,7 @@ void ServerManager::_acceptNewConnection(int server_fd){
 
 	std::cout << G << "[INFO] Accepted connection. Assigned Client FD: " << client_fd 
 				<< " (associated with Listening FD: " << server_fd << ")" << RESET << std::endl;
+	return 0;
 }
 
 void ServerManager::_removeClient(size_t idx){

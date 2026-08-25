@@ -64,18 +64,18 @@ size_t	hexToDecimal(std::string hexStr)
 	return x;
 }
 
-void	Request::_requestLine(std::string &buffer)
+void	Request::_requestLine()
 {
 	size_t		pos;
 	size_t		i;
 	std::string	first_line;
 	std::string	extra;
 
-	pos = buffer.find("\r\n");
+	pos = _raw_buffer.find("\r\n");
 	if (pos == std::string::npos)
 		return ;
 
-	first_line = buffer.substr(0, pos);
+	first_line = _raw_buffer.substr(0, pos);
 
 	if (first_line.find('\t') != std::string::npos)
 	{
@@ -126,11 +126,11 @@ void	Request::_requestLine(std::string &buffer)
 		_path = _path.substr(0, i);
 	}
 
-	buffer.erase(0, pos + 2);
+	_raw_buffer.erase(0, pos + 2);
 	_state = READING_HEADERS;
 }
 
-void	Request::_scanHeader(std::string &buffer)
+void	Request::_scanHeader()
 {
 	size_t		pos;
 	std::string	line;
@@ -138,13 +138,13 @@ void	Request::_scanHeader(std::string &buffer)
 	std::string	key;
 	std::string	value;
 
-	while ((pos = buffer.find("\r\n")) != std::string::npos)
+	while ((pos = _raw_buffer.find("\r\n")) != std::string::npos)
 	{
-		line = buffer.substr(0, pos);
+		line = _raw_buffer.substr(0, pos);
 
 		if (line.empty())
 		{
-			buffer.erase(0, 2);
+			_raw_buffer.erase(0, 2);
 			_state = READING_BODY;
 			return;
 		}
@@ -181,20 +181,20 @@ void	Request::_scanHeader(std::string &buffer)
 			
 			_headers[key] = value;
 		}
-		buffer.erase(0, pos + 2);
+		_raw_buffer.erase(0, pos + 2);
 	}
 }
 
-bool	Request::_chunked(std::string &buffer, unsigned long max_body_limit)
+bool	Request::_chunked(unsigned long max_body_limit)
 {
 	unsigned long		chunkSize;
-	unsigned long		pos = buffer.find("\r\n");
+	unsigned long		pos = _raw_buffer.find("\r\n");
 	std::string			chunkData;
 
 	if (pos == std::string::npos)
 		return true;
 
-	chunkSize = hexToDecimal(buffer.substr(0, pos));
+	chunkSize = hexToDecimal(_raw_buffer.substr(0, pos));
 	if (chunkSize == 0xFFFFFFFF)
 	{
 		_state = ERROR;
@@ -213,11 +213,11 @@ bool	Request::_chunked(std::string &buffer, unsigned long max_body_limit)
 	{
 		if (_body_fd != -1) { close(_body_fd); _body_fd = -1; }
 		_state = FINISHED;
-		buffer.erase(0, pos + 4);
+		_raw_buffer.erase(0, pos + 4);
 		return true;
 	}
 
-	if (buffer.size() < pos + 2 + chunkSize + 2)
+	if (_raw_buffer.size() < pos + 2 + chunkSize + 2)
 		return true;
 
 	if (_body_fd == -1)
@@ -228,22 +228,24 @@ bool	Request::_chunked(std::string &buffer, unsigned long max_body_limit)
 		_body_fd = open(_tmp_file.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
 	}
 	
-	chunkData = buffer.substr(pos + 2, chunkSize);
+	chunkData = _raw_buffer.substr(pos + 2, chunkSize);
 	write(_body_fd, chunkData.c_str(), chunkData.size());
 	
 	_content_length += chunkSize;
-	buffer.erase(0, pos + 2 + chunkSize + 2);
+	_raw_buffer.erase(0, pos + 2 + chunkSize + 2);
 	return false;
 }
 
-int	Request::parse(std::string &buffer, unsigned long max_body_limit)
+int	Request::parse(std::string chunk, unsigned long max_body_limit)
 {
+	_raw_buffer += chunk;
+
 	while (_state != FINISHED && _state != ERROR)
 	{
 		if (_state == READING_REQUEST_LINE || _state == READING_HEADERS)
 		{
-			size_t	end_headers = buffer.find("\r\n\r\n");
-			if ((end_headers == std::string::npos && buffer.size() > MAX_HEADER_SIZE) ||
+			size_t	end_headers = _raw_buffer.find("\r\n\r\n");
+			if ((end_headers == std::string::npos && _raw_buffer.size() > MAX_HEADER_SIZE) ||
 				(end_headers != std::string::npos && end_headers > MAX_HEADER_SIZE))
 			{
 				_state = ERROR;
@@ -254,10 +256,10 @@ int	Request::parse(std::string &buffer, unsigned long max_body_limit)
 
 		if (_state == READING_REQUEST_LINE)
 		{
-			size_t pos = buffer.find("\r\n");
+			size_t pos = _raw_buffer.find("\r\n");
 			if (pos == std::string::npos)
 			{
-				if (buffer.length() > MAX_URI_LENGTH) {
+				if (_raw_buffer.length() > MAX_URI_LENGTH) {
 					_state = ERROR;
 					_status_code = 414;
 				}
@@ -268,13 +270,13 @@ int	Request::parse(std::string &buffer, unsigned long max_body_limit)
 				_status_code = 414;
 				break;
 			}
-			_requestLine(buffer);
+			_requestLine();
 		}
 		else if (_state == READING_HEADERS)
 		{
-			if (buffer.find("\r\n") == std::string::npos)
+			if (_raw_buffer.find("\r\n") == std::string::npos)
 				break;
-			_scanHeader(buffer);
+			_scanHeader();
 			if (_state == READING_HEADERS)
 				break;
 		}
@@ -289,7 +291,7 @@ int	Request::parse(std::string &buffer, unsigned long max_body_limit)
 
 			if (_is_chunked)
 			{
-				if (_chunked(buffer, max_body_limit) == true)
+				if (_chunked(max_body_limit) == true)
 					break;
 			}
 			else if (_headers.count("content-length"))
@@ -323,13 +325,13 @@ int	Request::parse(std::string &buffer, unsigned long max_body_limit)
 				}
 
 				unsigned long	remaining = _content_length - _bytes_received;
-				unsigned long	to_write = (buffer.size() < remaining) ? buffer.size() : remaining;
+				unsigned long	to_write = (_raw_buffer.size() < remaining) ? _raw_buffer.size() : remaining;
 
 				if (to_write > 0)
 				{
-					write(_body_fd, buffer.c_str(), to_write);
+					write(_body_fd, _raw_buffer.c_str(), to_write);
 					_bytes_received += to_write;
-					buffer.erase(0, to_write);
+					_raw_buffer.erase(0, to_write);
 				}
 
 				if (_bytes_received >= _content_length)
@@ -428,4 +430,9 @@ int		Request::getClientFd() const
 int Request::getStatusCode() const
 {
 	return _status_code;
+}
+
+std::string	Request::getRawBuffer() const
+{
+	return _raw_buffer;
 }

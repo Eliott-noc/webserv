@@ -568,7 +568,7 @@ def main():
                    help="per-request timeout; also the hang-detection threshold")
     p.add_argument("--upload-path", default="/upload/",
                    help="a route configured to accept POST/uploads")
-    p.add_argument("--cgi-path", default="",
+    p.add_argument("--cgi-path", default="/cgi-bin/test.py",
                    help="e.g. /cgi-bin/test.py ; skipped if empty")
     p.add_argument("--only", default="",
                    help="comma list: core,malformed,chunked,upload")
