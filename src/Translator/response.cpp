@@ -110,7 +110,10 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 			buildErrorPage(500, config, loc);
 			return;
 		}
-
+		if (cgi_output == "timeout"){
+			buildErrorPage(504, config, loc);
+			return;
+		}
 		_parseCGIOutput(cgi_output);
 
 		std::stringstream	ss_len;

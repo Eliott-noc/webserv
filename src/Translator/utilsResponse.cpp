@@ -301,6 +301,7 @@ std::string	Response::_getStatusMessage(int code)
 		messages[413] = "Payload Too Large";
 		messages[414] = "Request URI Too long";
 		messages[500] = "Internal Server Error";
+		messages[504] = "Gateway Timeout";
 	}
 	
 	if (messages.count(code))

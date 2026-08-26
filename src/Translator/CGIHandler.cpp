@@ -190,7 +190,7 @@ std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
 		// 2. Vérifier le timeout (ex: 5 secondes)
 		gettimeofday(&current_time, NULL);
 		long elapsed = (current_time.tv_sec - start_time.tv_sec);
-		if (elapsed > 5) // Timeout de 5 secondes
+		if (elapsed > 2) // Timeout de 5 secondes
 		{
 			timed_out = true;
 			kill(pid, SIGKILL); // On tue le script en boucle infinie
@@ -215,7 +215,7 @@ std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
 	if (timed_out)
 	{
 		std::cerr << "[CGI] Timeout reached, process killed." << std::endl;
-		return ""; // Tu pourras gérer une erreur 504 Gateway Timeout plus tard
+		return "timeout"; // Tu pourras gérer une erreur 504 Gateway Timeout plus tard
 	}
 
 	if (WIFSIGNALED(status) || (WIFEXITED(status) && WEXITSTATUS(status) != 0))
