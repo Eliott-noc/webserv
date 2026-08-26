@@ -1,0 +1,8 @@
+siege -b -c 50 -t 10S http://127.0.0.1:8080/
+	50 clients
+	10 seconds
+
+curl -v http://localhost:8080/
+curl -v -X FOOBAR http://localhost:8080/
+
+

@@ -280,11 +280,6 @@ std::string	Response::_getMimeType(std::string path)
 	return "application/octet-stream";
 }
 
-/*
- * WHAT : Convertit un code numérique (ex: 404) en message texte (ex: Not Found).
- * WHY : Le protocole HTTP impose d'envoyer la description du code dans la Status Line.
- */
-
 std::string	Response::_getStatusMessage(int code)
 {
 	static std::map<int, std::string>	messages;
@@ -309,12 +304,6 @@ std::string	Response::_getStatusMessage(int code)
 	return "Unknown Error";
 }
 
-/*
- * WHAT : Assemble la ligne de statut et tous les headers dans le buffer d'en-tête.
- * WHY : Prépare la "première partie" de la réponse. En mode streaming, on doit
- * separer les headers du contenu pour pouvoir les envoyer en premier.
- */
-
 void	Response::_generateResponse(int code)
 {
 	_status_code = code;
@@ -328,12 +317,6 @@ void	Response::_generateResponse(int code)
 	ss << "\r\n";
 	_header_buffer = ss.str();
 }
-
-/*
- * WHAT : Produit une page HTML listant les fichiers d'un dossier.
- * WHY : Fonctionnalité "Directory Listing" requise par le sujet. Permet la navigation 
- * dans les fichiers quand aucun fichier index n'est présent.
- */
 
 std::string	Response::_generateAutoIndex(std::string full_path, std::string request_path)
 {
@@ -360,34 +343,21 @@ std::string	Response::_generateAutoIndex(std::string full_path, std::string requ
 	html += ".cursor { display: inline-block; width: 10px; height: 1.2rem; background-color: #f5a933; vertical-align: text-bottom; animation: blink 1s step-end infinite; }\n";
 	html += "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }\n";
 	html += "</style>\n</head>\n<body>\n";
-	
-	// Dynamic Header with blinking cursor
 	html += "<h1>> INDEX: " + request_path + " <span class=\"cursor\"></span></h1>\n<ul>\n";
 
 	struct dirent	*entry;
 	while ((entry = readdir(dir)) != NULL)
 	{
 		name = entry->d_name;
-
-		// Skip the current directory dot
 		if (name == ".")
 			continue;
-
-		// Generate the clickable link item
 		html += "<li><a href=\"" + name + "\">" + name + "</a></li>\n";
 	}
-
 	html += "</ul>\n<hr>\n<p>[ webserv/1.0 - autoindex module ]</p>\n</body>\n</html>";
 
 	closedir(dir);
 	return html;
 }
-
-/*
- * WHAT: regarde si c'est un executable.
- * WHY: utils.
- * RETURN: 1 si c'est un executable, sinon non.
-*/
 
 bool	Response::_isCGI(std::string const &path, const Location &loc)
 {
@@ -400,14 +370,6 @@ bool	Response::_isCGI(std::string const &path, const Location &loc)
 		return true;
 	return false;
 }
-
-/*
- * WHAT : Nettoie l'URL en résolvant les ".." et les "//".
- * WHY : Empêche un pirate de sortir du dossier racine (root) pour aller lire 
- * des fichiers sensibles, comme par exemple notre mot de passe, ou notre code.
- * RETURN : Error si erreur, ou une simplification de path (au lieux de :
- * /image/chat.png/../../image, on a : /image)
- */
 
 std::string	Response ::_normalizePath(std::string path)
 {

@@ -37,10 +37,6 @@ bool	checkLocation(Location *location, const ServerConfig &server)
 
 	if (location->getErrorPages().empty())
 		location->setErrorPages(server.getErrorPages());
-
-	//allow_methode
-	//cgi
-
 	return 0;
 }
 

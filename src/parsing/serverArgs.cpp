@@ -75,7 +75,6 @@ void	setServerName(ServerConfig &server, const std::vector<std::string> &args)
 		if (args[i].empty())
 			throw std::runtime_error("Error: server_name can't have empty arguments");
 		server.setServerNames(args[i]);
-		//Check si 2 noms identiques = erreur ?
 	}
 }
 

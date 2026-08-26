@@ -20,13 +20,6 @@ CGIHandler	&CGIHandler::operator=(const CGIHandler &other)
 	return *this;
 }
 
-/*
- * WHAT : Pilote l'exécution du script (préparation, fork, récupération).
- * WHY  : Point d'entrée pour transformer une requête statique en exécution dynamique.
- * Gère le nettoyage de la mémoire même en cas d'échec du pipe ou du fork.
- * RETURN: "" si erreur, sinon l'output du prog execute.
-*/
-
 std::string	CGIHandler::execute(Request &req, std::string script_path, Location loc)
 {
 	char	*args[3];
@@ -54,12 +47,6 @@ std::string	CGIHandler::execute(Request &req, std::string script_path, Location 
 	return _parentProcess(pipe_out, pid);
 }
 
-/*
- * WHAT : Remplit une map avec les variables d'environnement.
- * WHY  : C'est le seul moyen de communication avec le script externe (Python/PHP).
- * On transmet la méthode, les arguments (Query String) et les infos de taille.
-*/
-
 void	CGIHandler::_setupEnv(Request &req, std::string script_path)
 {
 	std::map<std::string, std::string>	headers;
@@ -83,12 +70,6 @@ void	CGIHandler::_setupEnv(Request &req, std::string script_path)
 	_env["SCRIPT_NAME"] = script_path;
 }
 
-/*
- * WHAT : Convertit la std::map en tableau de pointeurs char** (format C).
- * WHY  : La fonction système execve() exige un tableau de chaînes de caractères 
- * terminé par NULL pour définir l'environnement du nouveau processus.
-*/
-
 void	CGIHandler::_convertEnvMapToArray()
 {
 	std::string	element;
@@ -111,11 +92,6 @@ void	CGIHandler::_convertEnvMapToArray()
 	_envArray[i] = NULL;
 }
 
-/*
- * WHAT: free tableau de char**.
- * WHY: utils.
-*/
-
 void	CGIHandler::_freeEnvArray()
 {
 	if (_envArray)
@@ -126,12 +102,6 @@ void	CGIHandler::_freeEnvArray()
 		_envArray = NULL;
 	}
 }
-
-/*
- * WHAT : Configuration du processus fils (le script).
- * WHY  : Redirige STDIN vers le fichier du Body et STDOUT vers le pipe.
- * Remplace le code du serveur par celui de l'interpréteur (Python) via execve.
-*/
 
 void	CGIHandler::_childProcess(Request &req, char *args[3], int pipe_out[2])
 {
@@ -163,14 +133,6 @@ void	CGIHandler::_childProcess(Request &req, char *args[3], int pipe_out[2])
 	perror("execve failed");
 	exit(1);
 }
-
-/*
- * WHAT : Gestion du processus père (le serveur).
- * WHY  : Lit le résultat du script via le pipe, attend la fin du processus pour 
- * éviter les processus "zombies" et libère la mémoire allouée pour l'env.
- * RETURN: "timeout" si timeout, "" si erreur dans enfant, et le resultat du script
- * si tout est bon.
-*/
 
 std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
 {

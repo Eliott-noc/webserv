@@ -1,3 +1,0 @@
-si programme py = infini, bloque le serveur --> ajouter timeout pour cgi
-
-

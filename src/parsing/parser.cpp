@@ -166,11 +166,9 @@ static void printServer(const ServerConfig& server)
 			std::cout << "  " << i << " : " << names[i] << '\n';
 	}
 
-	// Client body size
 	std::cout << "\n[CLIENT MAX BODY SIZE]\n";
 	std::cout << "  " << server.getClientMaxBodySize() << '\n';
 
-	// Error pages
 	const std::map<int, std::string>& errorPages = server.getErrorPages();
 
 	std::cout << "\n[ERROR PAGES]\n";
@@ -190,7 +188,6 @@ static void printServer(const ServerConfig& server)
 		}
 	}
 
-	// Locations
 	const std::vector<Location>& locations = server.getLocations();
 
 	std::cout << "\n[LOCATIONS] (" << locations.size() << ")\n";
@@ -377,10 +374,6 @@ static Location	parseLocation(const std::vector<std::string> &l_block, const Ser
 			args.clear();
 		}
 	}
-	//checkLocation  si pas de index rempli, alors la location herite de l'index du server
-	//De william: j'ai rajoute server comme parametre de la fonction pour pouvoir get Index du server
-	//checkLocation(location, server);
-
 	return location;
 }
 
@@ -476,8 +469,6 @@ std::vector<ServerConfig>	parseConfig(const std::string &filename)
 		server.setLocations(locations);
 		servers.push_back(server);
 	}
-
-	//checkServers(servers);
 
 	for (size_t i = 0; i < servers.size(); i++)
 	{
