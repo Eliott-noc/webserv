@@ -25,7 +25,7 @@ CGIHandler	&CGIHandler::operator=(const CGIHandler &other)
  * WHY  : Point d'entrée pour transformer une requête statique en exécution dynamique.
  * Gère le nettoyage de la mémoire même en cas d'échec du pipe ou du fork.
  * RETURN: "" si erreur, sinon l'output du prog execute.
- */
+*/
 
 std::string	CGIHandler::execute(Request &req, std::string script_path, Location loc)
 {
@@ -58,7 +58,7 @@ std::string	CGIHandler::execute(Request &req, std::string script_path, Location 
  * WHAT : Remplit une map avec les variables d'environnement.
  * WHY  : C'est le seul moyen de communication avec le script externe (Python/PHP).
  * On transmet la méthode, les arguments (Query String) et les infos de taille.
- */
+*/
 
 void	CGIHandler::_setupEnv(Request &req, std::string script_path)
 {
@@ -87,7 +87,7 @@ void	CGIHandler::_setupEnv(Request &req, std::string script_path)
  * WHAT : Convertit la std::map en tableau de pointeurs char** (format C).
  * WHY  : La fonction système execve() exige un tableau de chaînes de caractères 
  * terminé par NULL pour définir l'environnement du nouveau processus.
- */
+*/
 
 void	CGIHandler::_convertEnvMapToArray()
 {
@@ -131,7 +131,7 @@ void	CGIHandler::_freeEnvArray()
  * WHAT : Configuration du processus fils (le script).
  * WHY  : Redirige STDIN vers le fichier du Body et STDOUT vers le pipe.
  * Remplace le code du serveur par celui de l'interpréteur (Python) via execve.
- */
+*/
 
 void	CGIHandler::_childProcess(Request &req, char *args[3], int pipe_out[2])
 {
@@ -164,6 +164,14 @@ void	CGIHandler::_childProcess(Request &req, char *args[3], int pipe_out[2])
 	exit(1);
 }
 
+/*
+ * WHAT : Gestion du processus père (le serveur).
+ * WHY  : Lit le résultat du script via le pipe, attend la fin du processus pour 
+ * éviter les processus "zombies" et libère la mémoire allouée pour l'env.
+ * RETURN: "timeout" si timeout, "" si erreur dans enfant, et le resultat du script
+ * si tout est bon.
+*/
+
 std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
 {
 	std::string		result;
@@ -171,42 +179,40 @@ std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
 	int				status;
 	struct timeval	start_time, current_time;
 	
-	close(pipe_out[1]); // Ferme l'entrée du pipe (côté parent)
+	close(pipe_out[1]);
 	
-	// On rend la lecture du pipe non-bloquante pour ne pas rester coincé sur read
 	fcntl(pipe_out[0], F_SETFL, O_NONBLOCK);
 
 	gettimeofday(&start_time, NULL);
-	bool timed_out = false;
+
+	bool	timed_out = false;
 
 	while (true)
 	{
-		// 1. Vérifier si le processus fils a fini
-		int wait_ret = waitpid(pid, &status, WNOHANG);
+		int	wait_ret = waitpid(pid, &status, WNOHANG);
 		
-		if (wait_ret == pid) // Le fils s'est terminé normalement
+		if (wait_ret == pid)
 			break;
 		
-		// 2. Vérifier le timeout (ex: 5 secondes)
 		gettimeofday(&current_time, NULL);
-		long elapsed = (current_time.tv_sec - start_time.tv_sec);
-		if (elapsed > 2) // Timeout de 5 secondes
+
+		long	elapsed = (current_time.tv_sec - start_time.tv_sec);
+
+		if (elapsed > 2)
 		{
 			timed_out = true;
-			kill(pid, SIGKILL); // On tue le script en boucle infinie
+			kill(pid, SIGKILL);
 			break;
 		}
 
-		// 3. Lire ce qui est disponible dans le pipe (optionnel ici, mais propre)
-		int bytes_read = read(pipe_out[0], buffer, 4096);
+		int	bytes_read = read(pipe_out[0], buffer, 4096);
 		if (bytes_read > 0)
 			result.append(buffer, bytes_read);
 
-		usleep(10000); // Petite pause pour ne pas saturer le CPU (10ms)
+		usleep(10000);
 	}
 
-	// Lecture finale après la fin du processus pour récupérer les derniers octets
-	int bytes_read;
+	int	bytes_read;
 	while ((bytes_read = read(pipe_out[0], buffer, 4096)) > 0)
 		result.append(buffer, bytes_read);
 
@@ -215,7 +221,7 @@ std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
 	if (timed_out)
 	{
 		std::cerr << "[CGI] Timeout reached, process killed." << std::endl;
-		return "timeout"; // Tu pourras gérer une erreur 504 Gateway Timeout plus tard
+		return "timeout";
 	}
 
 	if (WIFSIGNALED(status) || (WIFEXITED(status) && WEXITSTATUS(status) != 0))
@@ -223,30 +229,3 @@ std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
 
 	return result;
 }
-
-/*
- * WHAT : Gestion du processus père (le serveur).
- * WHY  : Lit le résultat du script via le pipe, attend la fin du processus pour 
- * éviter les processus "zombies" et libère la mémoire allouée pour l'env.
- */
-
-// std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
-// {
-// 	std::string	result;
-// 	char		buffer[4096];
-// 	int			bytes_read;
-// 	int			status;
-
-// 	close(pipe_out[1]);
-// 	while ((bytes_read = read(pipe_out[0], buffer, 4096)) > 0)
-// 		result.append(buffer, bytes_read);
-// 	close(pipe_out[0]);
-
-// 	waitpid(pid, &status, WNOHANG); 
-// 	_freeEnvArray();
-
-// 	if (WIFSIGNALED(status) || (WIFEXITED(status) && WEXITSTATUS(status) != 0))
-// 		return "";
-
-// 	return result;
-// }
