@@ -229,8 +229,14 @@ bool	Request::_chunked(unsigned long max_body_limit)
 	}
 	
 	chunkData = _raw_buffer.substr(pos + 2, chunkSize);
-	write(_body_fd, chunkData.c_str(), chunkData.size());
-	
+	ssize_t write_ret = write(_body_fd, chunkData.c_str(), chunkData.size());
+	if (write_ret <= 0){
+		close(_body_fd);
+		_body_fd = -1;
+		_state = ERROR;
+		_status_code = 500;
+		return true;
+	}
 	_content_length += chunkSize;
 	_raw_buffer.erase(0, pos + 2 + chunkSize + 2);
 	return false;
@@ -336,7 +342,14 @@ int	Request::parse(std::string chunk, unsigned long max_body_limit)
 
 				if (to_write > 0)
 				{
-					write(_body_fd, _raw_buffer.c_str(), to_write);
+					ssize_t write_ret = write(_body_fd, _raw_buffer.c_str(), to_write);
+					if (write_ret <= 0){
+						close(_body_fd);
+						_body_fd = -1;
+						_state = ERROR;
+						_status_code = 500;
+						break;
+					}
 					_bytes_received += to_write;
 					_raw_buffer.erase(0, to_write);
 				}
@@ -367,7 +380,7 @@ int	Request::parse(std::string chunk, unsigned long max_body_limit)
 	
 	if (_state == ERROR)
 		return _status_code;
-
+	
 	return 1;
 }
 

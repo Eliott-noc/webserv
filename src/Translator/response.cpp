@@ -6,7 +6,8 @@ Response::Response() :
 	_file_size(0),
 	_total_sent(0),
 	_headers_sent(0),
-	_is_finished(0) {}
+	_is_finished(0),
+	_is_error(0) {}
 
 Response::Response(const Response &other)
 {
@@ -32,6 +33,7 @@ Response	&Response::operator=(const Response &other)
 		_total_sent = other._total_sent;
 		_headers_sent = other._headers_sent;
 		_is_finished = other._is_finished;
+		_is_error = other._is_error;
 	}
 	return *this;
 }
@@ -180,8 +182,11 @@ void	Response::sendResponse(int socket_fd)
 		if (_header_buffer.empty())
 			return;
 		ret = send(socket_fd, _header_buffer.c_str(), _header_buffer.size(), MSG_NOSIGNAL);
-		if (ret <= 0)
+		if (ret <= 0){
+			_is_error = true;
+			_is_finished = true;
 			return;
+		}
 		_headers_sent = true;
 		
 		if (_file_fd == -1 && _body.empty())
@@ -192,8 +197,11 @@ void	Response::sendResponse(int socket_fd)
 	if (_file_fd == -1 && !_body.empty())
 	{
 		ret = send(socket_fd, _body.c_str(), _body.size(), MSG_NOSIGNAL);
-		if (ret < 0)
+		if (ret <= 0){
+			_is_error = true;
+			_is_finished = true;
 			return;
+		}
 		_is_finished = true;
 		_body.clear();
 		return;
@@ -207,8 +215,12 @@ void	Response::sendResponse(int socket_fd)
 		if (bytes_read > 0)
 		{
 			ret = send(socket_fd, buffer, bytes_read, MSG_NOSIGNAL);
-			if (ret > 0)
-				_total_sent += ret;
+			if (ret <= 0){
+				_is_error = true;
+				_is_finished = true;
+				return;
+			}
+			_total_sent += ret;
 		}
 		
 		if (bytes_read <= 0 || _total_sent >= _file_size)
@@ -223,6 +235,11 @@ void	Response::sendResponse(int socket_fd)
 bool Response::isFinished() const
 {
 	return _is_finished;
+}
+
+bool Response::isError() const
+{
+	return _is_error;
 }
 
 std::string Response::getHttpDate() {

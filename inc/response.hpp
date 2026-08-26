@@ -26,6 +26,7 @@ class Response
 		size_t								_total_sent;
 		bool								_headers_sent;
 		bool								_is_finished;
+		bool								_is_error;
 
 	public:
 		Response();
@@ -39,6 +40,7 @@ class Response
 		std::string	getRawResponse() const;
 		void		sendResponse(int client_socket);
 		bool		isFinished() const;
+		bool		isError() const;
 
 	private:
 		bool		_isMethodAllowed(std::string method, std::vector<std::string> const &allowedMethods);

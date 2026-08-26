@@ -189,6 +189,11 @@ void ServerManager::run(){
 					int client_fd = _pollfds[i].fd;
 					Client* client = _clients[client_fd];
 					client->response.sendResponse(client_fd);
+					if (client->response.isError()){
+						_removeClient(i);
+						nfds--;
+						i--;
+					}
 					if (client->response.isFinished()){
 						std::cout << G << "[INFO] Response successfully sent to client on FD: " << client_fd << RESET << std::endl;
 						gettimeofday(&(client->last_activ), NULL);
