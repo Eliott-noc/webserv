@@ -133,7 +133,6 @@ void ServerManager::run(){
 				if (_pollfds[i].revents & POLLIN){
 					checked++;
 					if (i < _listeningCount){
-						std::cout << Y <<  "[DEBUG] Incoming activity on listening socket fd: " << _pollfds[i].fd << RESET << std::endl;
 						while (true){
 							int accept_ret = _acceptNewConnection(_pollfds[i].fd);
 							if (accept_ret == -1)
@@ -142,7 +141,6 @@ void ServerManager::run(){
 						continue;
 					}
 					else{
-						std::cout << Y <<  "[DEBUG] Socket fd: " << _pollfds[i].fd << " ready for reading (POLLIN)" << RESET << std::endl;
 						char buffer[8192];
 						ssize_t count = recv(_pollfds[i].fd, buffer, sizeof(buffer), 0);
 						if (count == -1){
@@ -168,9 +166,7 @@ void ServerManager::run(){
 							std::string chunk(buffer, count);
 							int parse_status = client->request.parse(chunk, body_limit);
 							
-							std::cout << Y << "[DEBUG] Request parsing status for FD " << client_fd << ": " << parse_status << RESET << std::endl;
 							if (parse_status == 1) {
-								std::cout << Y << "[DEBUG] Request incomplete on FD " << client_fd << ". Waiting for more chunks..." << RESET << std::endl;
 								continue;
 							}
 							else {
@@ -184,7 +180,6 @@ void ServerManager::run(){
 									client->response.buildErrorPage(parse_status, *(client->config), NULL);
 								}
 								_pollfds[i].events = POLLOUT;
-								std::cout << Y << "[DEBUG] Switched poll events to POLLOUT for FD: " << client_fd << RESET << std::endl;
 							}
 						}
 					}
@@ -193,8 +188,6 @@ void ServerManager::run(){
 					checked++;
 					int client_fd = _pollfds[i].fd;
 					Client* client = _clients[client_fd];
-
-					std::cout << Y << "[DEBUG] Socket fd: " << client_fd << " ready for writing (POLLOUT). Sending data..." << RESET << std::endl;
 					client->response.sendResponse(client_fd);
 					if (client->response.isFinished()){
 						std::cout << G << "[INFO] Response successfully sent to client on FD: " << client_fd << RESET << std::endl;
@@ -257,13 +250,11 @@ int ServerManager::_acceptNewConnection(int server_fd){
 	if (client_fd < 0){
 		err_code = errno;
 		std::cerr << R << "[ERROR] accept() failed on server socket fd: " << server_fd << RESET << std::endl;
-		printPortErr(err_code, -2);
 		return -1;
 	}
 	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0){
 		err_code = errno;
 		std::cerr << R << "[ERROR] fcntl O_NONBLOCK failed on newly accepted client fd: " << client_fd << RESET << std::endl;
-		printPortErr(err_code, -2);
 		close(client_fd);
 		return -1;
 	}
@@ -294,19 +285,19 @@ void ServerManager::_removeClient(size_t idx){
 	close(fd_to_remove);
 	std::map<int, Client*>::iterator it = _clients.find(fd_to_remove);
 	if (it != _clients.end()){
-		std::cout << Y << "[DEBUG] Deleting client memory allocation associated with FD: " << fd_to_remove << RESET << std::endl;
+		// std::cout << Y << "[DEBUG] Deleting client memory allocation associated with FD: " << fd_to_remove << RESET << std::endl;
 		delete it->second;
 		_clients.erase(it);
 	}
 	
 	if (idx < _pollfds.size() - 1){
-		std::cout << Y << "[DEBUG] Swapping deleted index " << idx << " (fd: " << fd_to_remove 
-				<< ") with last element at index " << (_pollfds.size() - 1) 
-				<< " (fd: " << _pollfds.back().fd << ")" << RESET << std::endl;
+		// std::cout << Y << "[DEBUG] Swapping deleted index " << idx << " (fd: " << fd_to_remove 
+		// 		<< ") with last element at index " << (_pollfds.size() - 1) 
+				// << " (fd: " << _pollfds.back().fd << ")" << RESET << std::endl;
 		_pollfds[idx] = _pollfds.back();
 	}
 	_pollfds.pop_back();
-	std::cout << Y << "[DEBUG] Client removal completed. Active monitored socket count is now: " << _pollfds.size() << RESET << std::endl;
+	// std::cout << Y << "[DEBUG] Client removal completed. Active monitored socket count is now: " << _pollfds.size() << RESET << std::endl;
 }
 
 int	ServerManager::_checkTimeouts(Client& client){
