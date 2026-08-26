@@ -83,7 +83,7 @@ std::string	Response::_getMessageError(int code)
 void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
 	std::vector<std::string>	indexes = loc.getIndex();
-	std::string					testPath = full_path;
+	std::string					testPath;
 	bool						found = false;
 	struct stat					s;
 
@@ -97,6 +97,7 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 	{
 		for (size_t i = 0; i < indexes.size(); i++)
 		{
+			testPath = full_path;
 			if (testPath.at(testPath.length() - 1) != '/')
 				testPath += "/";
 			testPath += indexes[i];
@@ -162,12 +163,21 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
 
 void	Response::_handlePost(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
+	struct stat	s;
 	std::string	uploadDir = loc.getUploadStore();
 	std::string	fileName;
 	std::string	savePath;
+	std::string	dirPath;
 	int			exists;
 
-	if (uploadDir.empty())
+	dirPath = full_path.substr(0, full_path.find_last_of('/'));
+	if (stat(dirPath.c_str(), &s) != 0) 
+	{
+		buildErrorPage(404, config, &loc);
+		return;
+	}
+
+	if (uploadDir.empty()) 
 	{
 		buildErrorPage(403, config, &loc);
 		return;
@@ -175,8 +185,6 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 
 	fileName = full_path.substr(full_path.find_last_of('/') + 1);
 	savePath = uploadDir + "/" + fileName;
-
-	struct stat	s;
 
 	exists = (stat(savePath.c_str(), &s) == 0);
 
@@ -198,7 +206,6 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 	_body = "<h1>Action reussie !</h1>";
 	_headers["content-type"] = "text/html";
 	
-
 	if (exists)
 		_generateResponse(200);
 	else
@@ -292,7 +299,9 @@ std::string	Response::_getStatusMessage(int code)
 		messages[404] = "Not Found";
 		messages[405] = "Method Not Allowed";
 		messages[413] = "Payload Too Large";
+		messages[414] = "Request URI Too long";
 		messages[500] = "Internal Server Error";
+		messages[504] = "Gateway Timeout";
 	}
 	
 	if (messages.count(code))
@@ -335,21 +344,40 @@ std::string	Response::_generateAutoIndex(std::string full_path, std::string requ
 	if (!dir)
 		return "";
 
-	html = "<html><head><title>Index of " + request_path + "</title></head>";
-	html += "<body><h1>Index of " + request_path + "</h1><hr><ul>";
+	html = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n";
+	html += "<title>Index of " + request_path + "</title>\n";
+	html += "<style>\n";
+	html += "body { font-family: 'Fira Code', 'Consolas', monospace; background-color: #1e1d1b; color: #e8c37d; margin: 0; padding: 40px; }\n";
+	html += "h1 { color: #f5a933; text-shadow: 0 0 10px rgba(245, 169, 51, 0.3); text-transform: uppercase; border-bottom: 1px solid #5e4d31; padding-bottom: 15px; font-size: 1.8rem; }\n";
+	html += "ul { list-style-type: none; padding: 0; margin-top: 20px; }\n";
+	html += "li { margin: 8px 0; }\n";
+	
+	html += "a { color: #e8c37d; text-decoration: none; padding: 8px 15px; background: #262421; border: 1px solid #4a3e2a; border-radius: 4px; display: inline-block; min-width: 300px; font-weight: bold; transition: all 0.2s; }\n";
+	html += "a:hover { background: #f5a933; color: #1e1d1b; border-color: #f5a933; box-shadow: 0 0 10px rgba(245, 169, 51, 0.4); }\n";
+	
+	html += "hr { border: 0; border-top: 1px dashed #5e4d31; margin-top: 30px; }\n";
+	html += "p { color: #d1b890; font-size: 0.9rem; }\n";
+	html += ".cursor { display: inline-block; width: 10px; height: 1.2rem; background-color: #f5a933; vertical-align: text-bottom; animation: blink 1s step-end infinite; }\n";
+	html += "@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }\n";
+	html += "</style>\n</head>\n<body>\n";
+	
+	// Dynamic Header with blinking cursor
+	html += "<h1>> INDEX: " + request_path + " <span class=\"cursor\"></span></h1>\n<ul>\n";
 
 	struct dirent	*entry;
 	while ((entry = readdir(dir)) != NULL)
 	{
 		name = entry->d_name;
 
+		// Skip the current directory dot
 		if (name == ".")
 			continue;
 
-		html += "<li><a href=\"" + name + "\">" + name + "</a></li>";
+		// Generate the clickable link item
+		html += "<li><a href=\"" + name + "\">" + name + "</a></li>\n";
 	}
 
-	html += "</ul><hr></body></html>";
+	html += "</ul>\n<hr>\n<p>[ webserv/1.0 - autoindex module ]</p>\n</body>\n</html>";
 
 	closedir(dir);
 	return html;
@@ -414,32 +442,34 @@ std::string	Response ::_normalizePath(std::string path)
 	return result.empty() ? "/" : result;
 }
 
-void	Response::_parseCGIOutput(std::string &cgi_output)
+void Response::_parseCGIOutput(std::string &cgi_output)
 {
-	size_t pos = cgi_output.find("\r\n\r\n");
+	size_t		pos = cgi_output.find("\r\n\r\n");
+	std::string	headers_part;
+	size_t		ct_pos;
+	size_t		end_line;
+	std::string	ct_value;
+	size_t		first;
+
 	if (pos != std::string::npos)
 	{
-		std::string headers_part = cgi_output.substr(0, pos);
-		
+		headers_part = cgi_output.substr(0, pos);
 		_body = cgi_output.substr(pos + 4);
 
-		std::stringstream ss(headers_part);
-		std::string line;
-		while (std::getline(ss, line) && line != "\r")
+		ct_pos = headers_part.find("Content-Type:");
+		if (ct_pos != std::string::npos)
 		{
-			size_t colon = line.find(':');
-			if (colon != std::string::npos)
-			{
-				std::string key = line.substr(0, colon);
-				std::string value = line.substr(colon + 1);
-				// Un petit trim pour la valeur
-				size_t first = value.find_first_not_of(" \r");
-				if (first != std::string::npos)
-					value = value.substr(first, value.find_last_not_of(" \r") - first + 1);
-				_headers[key] = value;
-			}
+			end_line = headers_part.find("\r\n", ct_pos);
+			ct_value = headers_part.substr(ct_pos + 13, end_line - (ct_pos + 13));
+			
+			first = ct_value.find_first_not_of(" ");
+			if (first != std::string::npos)
+				_headers["Content-Type"] = ct_value.substr(first);
 		}
 	}
 	else
+	{
 		_body = cgi_output;
+		_headers["Content-Type"] = "text/html; charset=utf-8";
+	}
 }

@@ -19,11 +19,14 @@ class Client
 		std::string		raw_request_buffer; // Ce que le moteur lit du socket
 		Request			request;
 		Response		response;
+		struct timeval	last_activ;
 
 		Client(int client_fd);
 		Client(const Client &other);
 		~Client();
-		
+	
+		void	reset();
+	
 		Client& operator=(const Client &src);
 };
 

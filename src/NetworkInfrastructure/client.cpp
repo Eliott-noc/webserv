@@ -5,11 +5,16 @@ Client::Client(int client_fd) : fd(client_fd), request(client_fd){
 }
 
 Client::Client(const Client &other) : request(other.fd){
-
+	*this = other;
 }
 
 Client::~Client(){
 	
+}
+
+void Client::reset() {
+	this->request = Request(this->fd);
+	this->response = Response();
 }
 
 Client& Client::operator=(const Client &src){

@@ -20,6 +20,7 @@ Location &Location::operator=(const Location &other)
 		_methods = other._methods;
 		_index = other._index;
 		_auto_index = other._auto_index;
+		_isAutoIndexSet = other._isAutoIndexSet;
 		_client_max_body_size = other._client_max_body_size;
 		_return_code = other._return_code;
 		_return_url = other._return_url;
@@ -63,7 +64,7 @@ std::vector<std::string> Location::getIndex() const
 	return _index;
 }
 
-size_t	Location::getClientMaxBodySize() const
+unsigned long	Location::getClientMaxBodySize() const
 {
 	return _client_max_body_size;
 }
@@ -138,7 +139,7 @@ bool Location::isAutoIndexSet() const
 	return _isAutoIndexSet;
 }
 
-void	Location::setClientMaxBodySize(const size_t &client_max_body_size)
+void	Location::setClientMaxBodySize(const unsigned long &client_max_body_size)
 {
 	_client_max_body_size = client_max_body_size;
 }

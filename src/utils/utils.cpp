@@ -202,7 +202,8 @@ int	isLocKeyword(const std::string &str)
 	if (str == "autoindex" || str == "allow_methods" || str == "root"
 		|| str == "index" || str == "return" || str == "upload_dir"
 		|| str == "upload_store" || str == "alias" || str == "cgi"
-		|| str == "cgi_ext" || str == "cgi_path" || str == "error_page")
+		|| str == "cgi_ext" || str == "cgi_path" || str == "error_page"
+		|| str == "client_max_body_size")
 		return 1;
 
 	return 0;

@@ -25,7 +25,7 @@ class ServerConfig
 		int							_return_code;
 		std::string					_return_url;
 		std::vector<std::string>	_server_names;
-		size_t						_client_max_body_size;
+		unsigned long				_client_max_body_size;
 		std::map<int, std::string>	_error_pages;
 		std::vector<Location>		_locations;
 
@@ -45,7 +45,7 @@ class ServerConfig
 	int							getReturnCode() const;
 	std::string					getReturnUrl() const;
 	std::vector<std::string>	getServerNames() const;
-	size_t						getClientMaxBodySize() const;
+	unsigned long				getClientMaxBodySize() const;
 	std::map<int, std::string>	getErrorPages() const;
 	std::vector<Location>		getLocations() const;
 
@@ -56,7 +56,7 @@ class ServerConfig
 	void						setAutoIndex(const bool &auto_index);
 	void						setRet(int &ret_code, const std::string &ret_url);
 	void						setServerNames(const std::string &server_name);
-	void						setClientMaxBodySize(const size_t &error_pages);
+	void						setClientMaxBodySize(const unsigned long &error_pages);
 	void						setErrorPages(const std::map<int, std::string> &error_pages);
 	void						setLocations(const std::vector<Location> &locations);
 

@@ -83,7 +83,7 @@ void	setArgCgiPath(Location &location, const std::vector<std::string> &args)
 
 	const std::string &path = args[1];
 
-	if (path.empty() || path[0] != '/')
+	if (path.empty())
 		throw std::runtime_error("Error: cgi_path must be an absolute path");
 	location.setCgiPath(path);
 }
@@ -105,7 +105,7 @@ void	setArgUploadStore(Location &location, const std::vector<std::string> &args)
 
 	const std::string &upload = args[1];
 
-	if (upload.empty() || upload[0] != '/')
+	if (upload.empty())
 		throw std::runtime_error("Error: upload_store must be an absolute path");
 	location.setUploadStore(upload);
 }

@@ -46,7 +46,7 @@ Response	&Response::operator=(const Response &other)
 void	Response::makeResponse(Request &req, ServerConfig &config)
 {
 	std::string	clean_path = _normalizePath(req.getPath());
-	std::string root;
+	std::string	root;
 	std::string	full_path;
 	CGIHandler	cgi;
 	std::string	cgi_output;
@@ -56,12 +56,24 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		buildErrorPage(400, config, NULL);
 		return;
 	}
-	
+	_headers["Date"] = getHttpDate();
+	_headers["Server"] = "webserv/1.0";
 	const Location	*loc = config.getLocationForPath(clean_path);
+	Location		defaultLoc; 
 	if (!loc)
 	{
-		buildErrorPage(404, config, NULL);
-		return;
+		defaultLoc.setPath("/"); 
+		defaultLoc.setRoot(config.getRoot());
+		
+		std::vector<std::string>	serverIndexes = config.getIndex();
+		for (size_t i = 0; i < serverIndexes.size(); ++i)
+			defaultLoc.setIndex(serverIndexes[i]);
+
+		defaultLoc.setAutoIndex(config.getAutoIndex());
+		
+		defaultLoc.addMethod("GET");
+
+		loc = &defaultLoc;
 	}
 
 	if (loc->getReturnCode() != 0)
@@ -72,9 +84,17 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		return ;
 	}
 
-	if (!_isMethodAllowed(req.getMethod(), loc->getMethods()))
+	std::string	method_to_check = req.getMethod();
+
+	if (!_isMethodAllowed(method_to_check, loc->getMethods()))
 	{
 		buildErrorPage(405, config, loc);
+		return;
+	}
+
+	if (req.getContentLength() > loc->getClientMaxBodySize())
+	{
+		buildErrorPage(413, config, loc);
 		return;
 	}
 
@@ -90,7 +110,10 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 			buildErrorPage(500, config, loc);
 			return;
 		}
-
+		if (cgi_output == "timeout"){
+			buildErrorPage(504, config, loc);
+			return;
+		}
 		_parseCGIOutput(cgi_output);
 
 		std::stringstream	ss_len;
@@ -100,22 +123,18 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 		_headers["content-length"] = ss_len.str();
 
 		_generateResponse(200);
+
 		return;
 	}
-
 	if (req.getMethod() == "GET")
 		_handleGet(req, config, *loc, full_path);
 	else if (req.getMethod() == "POST")
 		_handlePost(req, config, *loc, full_path);
 	else if (req.getMethod() == "DELETE")
 		_handleDelete(config, *loc, full_path);
-}
 
-/*
- * WHAT : Cherche une page HTML personnalisée dans la config, sinon génère un HTML par défaut.
- * WHY : Garantit que le client reçoit toujours une information claire (404, 500, etc.) 
- * au format HTTP valide, même si le serveur rencontre une erreur.
- */
+	// std::cout << "[DEBUG] CODE DE STATUT RENVOYÉ : " << _status_code << std::endl;
+}
 
 void Response::buildErrorPage(int code, ServerConfig &config, const Location *loc)
 {
@@ -125,20 +144,26 @@ void Response::buildErrorPage(int code, ServerConfig &config, const Location *lo
 
 	std::string messageError = _getMessageError(code);
 
-	_body = "<html><head><title>" + messageError + "</title></head>";
-	_body += "<body><center><h1>" + messageError + "</h1></center>";
-	_body += "<hr><center>webserv/1.0</center></body></html>";
+	
+	_body = "<!DOCTYPE html>\n<html>\n<head>\n<title>" + messageError + "</title>\n";
+	_body += "<style>\n";
+	_body += "body { font-family: 'Fira Code', 'Consolas', monospace; background-color: #1e1d1b; color: #e8c37d; text-align: center; padding-top: 15vh; }\n";
+	_body += "h1 { color: #f5a933; text-shadow: 0 0 10px rgba(245, 169, 51, 0.3); text-transform: uppercase; letter-spacing: 2px; }\n";
+	_body += "hr { border: 0; border-top: 1px dashed #5e4d31; width: 50%; max-width: 400px; margin: 20px auto; }\n";
+	_body += "p { color: #d1b890; font-size: 0.9rem; }\n";
+	_body += "</style>\n</head>\n<body>\n";
+	
+	_body += "<h1>" + messageError + " <span class=\"cursor\"></span></h1>\n";
+	_body += "<hr>\n<p>[ webserv/1.0 - system exception ]</p>\n";
+	_body += "</body>\n</html>";
 
 	if (loc != NULL)
-	{
 		_checkConfig(config, loc, code);
-	}
-
+ 
 	_headers["Content-Type"] = "text/html";
 	std::stringstream ss_len;
 	ss_len << _body.length();
 	_headers["Content-Length"] = ss_len.str();
-	_headers["Server"] = "webserv/1.0";
 
 	_generateResponse(code);
 }
@@ -170,7 +195,7 @@ void	Response::sendResponse(int socket_fd)
 	{
 		if (_header_buffer.empty())
 			return;
-		ret = send(socket_fd, _header_buffer.c_str(), _header_buffer.size(), 0);
+		ret = send(socket_fd, _header_buffer.c_str(), _header_buffer.size(), MSG_NOSIGNAL);
 		if (ret <= 0)
 			return;
 		_headers_sent = true;
@@ -182,7 +207,7 @@ void	Response::sendResponse(int socket_fd)
 
 	if (_file_fd == -1 && !_body.empty())
 	{
-		ret = send(socket_fd, _body.c_str(), _body.size(), 0);
+		ret = send(socket_fd, _body.c_str(), _body.size(), MSG_NOSIGNAL);
 		if (ret < 0)
 			return;
 		_is_finished = true;
@@ -197,7 +222,7 @@ void	Response::sendResponse(int socket_fd)
 
 		if (bytes_read > 0)
 		{
-			ret = send(socket_fd, buffer, bytes_read, 0);
+			ret = send(socket_fd, buffer, bytes_read, MSG_NOSIGNAL);
 			if (ret > 0)
 				_total_sent += ret;
 		}
@@ -214,4 +239,14 @@ void	Response::sendResponse(int socket_fd)
 bool Response::isFinished() const
 {
 	return _is_finished;
+}
+
+std::string Response::getHttpDate() {
+	char buffer[100];
+	time_t now = time(NULL);
+
+	struct tm* tm_info = gmtime(&now);
+
+	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", tm_info);	
+	return std::string(buffer);
 }

@@ -1,7 +1,7 @@
 #include "../../inc/serverConfig.hpp"
 
 ServerConfig::ServerConfig()
-	: _auto_index(false), _client_max_body_size(0)
+	: _auto_index(false), _client_max_body_size(1048576)
 {
 
 }
@@ -21,12 +21,12 @@ ServerConfig	&ServerConfig::operator=(const ServerConfig &other)
 		_root = other._root;
 		_index = other._index;
 		_auto_index = other._auto_index;
+		_return_code = other._return_code;
+		_return_url = other._return_url;
 		_server_names = other._server_names;
 		_client_max_body_size = other._client_max_body_size;
 		_error_pages = other._error_pages;
 		_locations = other._locations;
-		_return_code = other._return_code;
-		_return_url = other._return_url;
 	}
 	return *this;
 }
@@ -83,7 +83,7 @@ std::vector<std::string>	ServerConfig::getServerNames() const
 	return _server_names;
 }
 
-size_t	ServerConfig::getClientMaxBodySize() const
+unsigned long	ServerConfig::getClientMaxBodySize() const
 {
 	return _client_max_body_size;
 }
@@ -128,7 +128,7 @@ void	ServerConfig::setServerNames(const std::string &server_name)
 	_server_names.push_back(server_name);
 }
 
-void	ServerConfig::setClientMaxBodySize(const size_t &client_max_body_size)
+void	ServerConfig::setClientMaxBodySize(const unsigned long &client_max_body_size)
 {
 	_client_max_body_size = client_max_body_size;
 }
