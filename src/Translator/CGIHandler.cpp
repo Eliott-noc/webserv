@@ -27,31 +27,39 @@ CGIHandler	&CGIHandler::operator=(const CGIHandler &other)
  * RETURN: "" si erreur, sinon l'output du prog execute.
 */
 
-std::string	CGIHandler::execute(Request &req, std::string script_path, Location loc)
+void CGIHandler::launch(Request &req, std::string script_path, Location loc, int &out_pipe_fd, pid_t &out_pid)
 {
-	char	*args[3];
-	int		pipe_out[2];
-	int		pid;
+	char		*args[3];
+	int			pipe_out[2];
+	std::string	interpreter;
 
 	_setupEnv(req, script_path);
 	_convertEnvMapToArray();
 
-	std::string interpreter = loc.getCGIPath();
-	
-	args[0] = (char *)interpreter.c_str(); 
+	interpreter = loc.getCGIPath();
+	args[0] = (char *)interpreter.c_str();
 	args[1] = (char *)script_path.c_str();
 	args[2] = NULL;
 
 	if (pipe(pipe_out) == -1)
-		return (_freeEnvArray(), "");
+		throw std::runtime_error("pipe failed");
 
-	pid = fork();
+	pid_t pid = fork();
+
 	if (pid == -1)
-		return (close(pipe_out[0]), close(pipe_out[1]), _freeEnvArray(), "");
-
+	{
+		close(pipe_out[0]);
+		close(pipe_out[1]);
+		throw std::runtime_error("fork failed");
+	}
 	if (pid == 0)
 		_childProcess(req, args, pipe_out);
-	return _parentProcess(pipe_out, pid);
+
+	close(pipe_out[1]);
+	fcntl(pipe_out[0], F_SETFL, O_NONBLOCK);
+
+	out_pipe_fd = pipe_out[0];
+	out_pid = pid;
 }
 
 /*
@@ -162,70 +170,4 @@ void	CGIHandler::_childProcess(Request &req, char *args[3], int pipe_out[2])
 	execve(args[0], args, _envArray);
 	perror("execve failed");
 	exit(1);
-}
-
-/*
- * WHAT : Gestion du processus père (le serveur).
- * WHY  : Lit le résultat du script via le pipe, attend la fin du processus pour 
- * éviter les processus "zombies" et libère la mémoire allouée pour l'env.
- * RETURN: "timeout" si timeout, "" si erreur dans enfant, et le resultat du script
- * si tout est bon.
-*/
-
-std::string CGIHandler::_parentProcess(int pipe_out[2], int pid)
-{
-	std::string		result;
-	char			buffer[4096];
-	int				status;
-	struct timeval	start_time, current_time;
-	
-	close(pipe_out[1]);
-	
-	fcntl(pipe_out[0], F_SETFL, O_NONBLOCK);
-
-	gettimeofday(&start_time, NULL);
-
-	bool	timed_out = false;
-
-	while (true)
-	{
-		int	wait_ret = waitpid(pid, &status, WNOHANG);
-		
-		if (wait_ret == pid)
-			break;
-		
-		gettimeofday(&current_time, NULL);
-
-		long	elapsed = (current_time.tv_sec - start_time.tv_sec);
-
-		if (elapsed > 2)
-		{
-			timed_out = true;
-			kill(pid, SIGKILL);
-			break;
-		}
-
-		int	bytes_read = read(pipe_out[0], buffer, 4096);
-		if (bytes_read > 0)
-			result.append(buffer, bytes_read);
-
-		usleep(10000);
-	}
-
-	int	bytes_read;
-	while ((bytes_read = read(pipe_out[0], buffer, 4096)) > 0)
-		result.append(buffer, bytes_read);
-
-	close(pipe_out[0]);
-
-	if (timed_out)
-	{
-		std::cerr << "[CGI] Timeout reached, process killed." << std::endl;
-		return "timeout";
-	}
-
-	if (WIFSIGNALED(status) || (WIFEXITED(status) && WEXITSTATUS(status) != 0))
-		return "";
-
-	return result;
 }

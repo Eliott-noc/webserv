@@ -14,26 +14,24 @@ ne ralentisse les autres clients.
 
 class CGIHandler
 {
-	private:
-		std::map<std::string, std::string>	_env;
-		char**								_envArray;
-		std::string							_scriptPath;
+private:
+	std::map<std::string, std::string>	_env;
+	char**								_envArray;
+	std::string							_scriptPath;
 
-	public:
-		CGIHandler();
-		CGIHandler(const CGIHandler &other);
-		~CGIHandler();
+public:
+	CGIHandler();
+	CGIHandler(const CGIHandler &other);
+	~CGIHandler();
+	CGIHandler	&operator=(const CGIHandler &other);
 
-		CGIHandler	&operator=(const CGIHandler &other);
+	void	launch(Request &req, std::string script_path, Location loc, int &out_pipe_fd, pid_t &out_pid);
 
-		std::string	execute(Request &req, std::string script_path, Location loc);
-
-	private:
-		void		_setupEnv(Request &req, std::string script_path);
-		void		_convertEnvMapToArray();
-		void		_freeEnvArray();
-		void		_childProcess(Request &req, char *args[3], int pipe_out[2]);
-		std::string	_parentProcess(int pipe_out[2], int pid);
+private:
+	void	_setupEnv(Request &req, std::string script_path);
+	void	_convertEnvMapToArray();
+	void	_freeEnvArray();
+	void	_childProcess(Request &req, char *args[3], int pipe_out[2]);
 };
 
 #endif

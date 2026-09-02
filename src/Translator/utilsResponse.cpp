@@ -4,7 +4,7 @@
  * WHAT : Vérifie si la methode est autoriser (GET, POST, ou DELETE).
  * WHY : utils
  * RETURN : 1 si c'est autorise, sinon 0
- */
+*/
 
 bool	Response::_isMethodAllowed(std::string method, std::vector<std::string> const &allowedMethods)
 {
@@ -23,7 +23,7 @@ bool	Response::_isMethodAllowed(std::string method, std::vector<std::string> con
  * WHY : Permet à l'administrateur du serveur de proposer un design propre pour ses 
  * erreurs au lieu d'utiliser le HTML de base que j'ai fais.
  * RETURN 1 si il existe une page dans serverConfig pour l'erreur n, sinon 0: 
- */
+*/
 
 bool Response::_checkConfig(ServerConfig &config, const Location *loc, int code)
 {
@@ -64,7 +64,7 @@ bool Response::_checkConfig(ServerConfig &config, const Location *loc, int code)
 /*
  * WHAT : Construit le message d'erreur (ex: 404 + not found)
  * WHY : utils
- */
+*/
 
 std::string	Response::_getMessageError(int code)
 {
@@ -78,7 +78,7 @@ std::string	Response::_getMessageError(int code)
  * lancer l'Autoindex.
  * WHY : Fonction utiliser si la methode est GET (verifie si le chemin est un fichier ou
  * dossier, et on fonction de ca, il generera une reponse).
- */
+*/
 
 void	Response::_handleGet(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
@@ -159,7 +159,7 @@ void	Response::_handleGet(Request &req, ServerConfig &config, const Location &lo
  * WHAT : Déplace le fichier temporaire de la Request vers sa destination finale (rename).
  * WHY : L'utilisation de 'rename' est atomique et instantanée, ce qui est 
  * tres secur et rapide comparer a une copie manuelle pour les fichiers de plusieurs Go.
- */
+*/
 
 void	Response::_handlePost(Request &req, ServerConfig &config, const Location &loc, std::string full_path)
 {
@@ -167,19 +167,17 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 	std::string	uploadDir = loc.getUploadStore();
 	std::string	fileName;
 	std::string	savePath;
-	std::string	dirPath;
 	int			exists;
 
-	dirPath = full_path.substr(0, full_path.find_last_of('/'));
-	if (stat(dirPath.c_str(), &s) != 0) 
+	if (uploadDir.empty())
 	{
-		buildErrorPage(404, config, &loc);
+		buildErrorPage(403, config, &loc);
 		return;
 	}
 
-	if (uploadDir.empty()) 
+	if (stat(uploadDir.c_str(), &s) != 0 || !S_ISDIR(s.st_mode))
 	{
-		buildErrorPage(403, config, &loc);
+		buildErrorPage(404, config, &loc);
 		return;
 	}
 
@@ -205,7 +203,7 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
 
 	_body = "<h1>Action reussie !</h1>";
 	_headers["content-type"] = "text/html";
-	
+
 	if (exists)
 		_generateResponse(200);
 	else
@@ -216,7 +214,7 @@ void	Response::_handlePost(Request &req, ServerConfig &config, const Location &l
  * WHAT : Supprime un fichier du serveur.
  * WHY : Implémente la méthode HTTP DELETE. Vérifie d'abord que la cible n'est pas 
  * un dossier pour éviter les suppressions accidentelles et massives.
- */
+*/
 
 void	Response::_handleDelete(ServerConfig &config, const Location &loc, std::string full_path)
 {
@@ -247,7 +245,7 @@ void	Response::_handleDelete(ServerConfig &config, const Location &loc, std::str
  * WHAT : Détermine le type de contenu (MIME) en fonction de l'extension du fichier.
  * WHY : Indispensable pour que le navigateur sache s'il doit afficher une image, 
  * lancer une vidéo ou interpréter du texte HTML.
- */
+*/
 
 std::string	Response::_getMimeType(std::string path)
 {
@@ -283,7 +281,7 @@ std::string	Response::_getMimeType(std::string path)
 /*
  * WHAT : Convertit un code numérique (ex: 404) en message texte (ex: Not Found).
  * WHY : Le protocole HTTP impose d'envoyer la description du code dans la Status Line.
- */
+*/
 
 std::string	Response::_getStatusMessage(int code)
 {
@@ -313,7 +311,7 @@ std::string	Response::_getStatusMessage(int code)
  * WHAT : Assemble la ligne de statut et tous les headers dans le buffer d'en-tête.
  * WHY : Prépare la "première partie" de la réponse. En mode streaming, on doit
  * separer les headers du contenu pour pouvoir les envoyer en premier.
- */
+*/
 
 void	Response::_generateResponse(int code)
 {
@@ -333,7 +331,7 @@ void	Response::_generateResponse(int code)
  * WHAT : Produit une page HTML listant les fichiers d'un dossier.
  * WHY : Fonctionnalité "Directory Listing" requise par le sujet. Permet la navigation 
  * dans les fichiers quand aucun fichier index n'est présent.
- */
+*/
 
 std::string	Response::_generateAutoIndex(std::string full_path, std::string request_path)
 {
@@ -407,7 +405,7 @@ bool	Response::_isCGI(std::string const &path, const Location &loc)
  * des fichiers sensibles, comme par exemple notre mot de passe, ou notre code.
  * RETURN : Error si erreur, ou une simplification de path (au lieux de :
  * /image/chat.png/../../image, on a : /image)
- */
+*/
 
 std::string	Response ::_normalizePath(std::string path)
 {

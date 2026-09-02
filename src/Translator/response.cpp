@@ -6,7 +6,12 @@ Response::Response() :
 	_file_size(0),
 	_total_sent(0),
 	_headers_sent(0),
-	_is_finished(0) {}
+	_is_finished(0),
+	_is_error(0),
+	_cgi_pending(false),
+	_cgi_fd(-1),
+	_cgi_pid(-1),
+	_cgi_config(NULL) {}
 
 Response::Response(const Response &other)
 {
@@ -19,7 +24,7 @@ Response::~Response()
 		close(_file_fd);
 }
 
-Response	&Response::operator=(const Response &other)
+Response &Response::operator=(const Response &other)
 {
 	if (this != &other)
 	{
@@ -32,6 +37,14 @@ Response	&Response::operator=(const Response &other)
 		_total_sent = other._total_sent;
 		_headers_sent = other._headers_sent;
 		_is_finished = other._is_finished;
+		_is_error = other._is_error;
+		_cgi_pending = other._cgi_pending;
+		_cgi_fd = other._cgi_fd;
+		_cgi_pid = other._cgi_pid;
+		_cgi_buffer = other._cgi_buffer;
+		_cgi_start = other._cgi_start;
+		_cgi_config = other._cgi_config;
+		_cgi_loc = other._cgi_loc;
 	}
 	return *this;
 }
@@ -80,6 +93,7 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 	{
 		_status_code = loc->getReturnCode();
 		_headers["Location"] = loc->getReturnUrl();
+		_headers["Content-Length"] = "0";
 		_generateResponse(_status_code);
 		return ;
 	}
@@ -103,28 +117,8 @@ void	Response::makeResponse(Request &req, ServerConfig &config)
 
 	if (_isCGI(full_path, *loc))
 	{
-		cgi_output = cgi.execute(req, full_path, *loc);
-		
-		if (cgi_output.empty())
-		{
-			buildErrorPage(500, config, loc);
-			return;
-		}
-		if (cgi_output == "timeout"){
-			buildErrorPage(504, config, loc);
-			return;
-		}
-		_parseCGIOutput(cgi_output);
-
-		std::stringstream	ss_len;
-
-		ss_len << _body.length();
-
-		_headers["content-length"] = ss_len.str();
-
-		_generateResponse(200);
-
-		return;
+		startCGI(req, full_path, *loc, config);
+		return; // rien d'autre à faire maintenant, ServerManager gère la suite
 	}
 	if (req.getMethod() == "GET")
 		_handleGet(req, config, *loc, full_path);
@@ -196,10 +190,13 @@ void	Response::sendResponse(int socket_fd)
 		if (_header_buffer.empty())
 			return;
 		ret = send(socket_fd, _header_buffer.c_str(), _header_buffer.size(), MSG_NOSIGNAL);
-		if (ret <= 0)
+		if (ret <= 0){
+			_is_error = true;
+			_is_finished = true;
 			return;
+		}
 		_headers_sent = true;
-		
+
 		if (_file_fd == -1 && _body.empty())
 			_is_finished = true;
 		return;
@@ -208,8 +205,11 @@ void	Response::sendResponse(int socket_fd)
 	if (_file_fd == -1 && !_body.empty())
 	{
 		ret = send(socket_fd, _body.c_str(), _body.size(), MSG_NOSIGNAL);
-		if (ret < 0)
+		if (ret <= 0){
+			_is_error = true;
+			_is_finished = true;
 			return;
+		}
 		_is_finished = true;
 		_body.clear();
 		return;
@@ -223,10 +223,14 @@ void	Response::sendResponse(int socket_fd)
 		if (bytes_read > 0)
 		{
 			ret = send(socket_fd, buffer, bytes_read, MSG_NOSIGNAL);
-			if (ret > 0)
-				_total_sent += ret;
+			if (ret <= 0){
+				_is_error = true;
+				_is_finished = true;
+				return;
+			}
+			_total_sent += ret;
 		}
-		
+
 		if (bytes_read <= 0 || _total_sent >= _file_size)
 		{
 			_is_finished = true;
@@ -234,6 +238,11 @@ void	Response::sendResponse(int socket_fd)
 			_file_fd = -1;
 		}
 	}
+}
+
+bool Response::isError() const
+{
+	return _is_error;
 }
 
 bool Response::isFinished() const
@@ -249,4 +258,95 @@ std::string Response::getHttpDate() {
 
 	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", tm_info);	
 	return std::string(buffer);
+}
+
+bool Response::isCGIPending() const
+{
+	return _cgi_pending;
+}
+
+int Response::getCGIFd() const
+{
+	return _cgi_fd;
+}
+
+pid_t Response::getCGIPid() const
+{
+	return _cgi_pid;
+}
+
+void Response::startCGI(Request &req, std::string full_path, const Location &loc, ServerConfig &config)
+{
+	CGIHandler cgi;
+	int   fd;
+	pid_t pid;
+
+	cgi.launch(req, full_path, loc, fd, pid);
+
+	_cgi_pending = true;
+	_cgi_fd = fd;
+	_cgi_pid = pid;
+	_cgi_buffer.clear();
+	_cgi_config = &config;
+	_cgi_loc = loc;
+	gettimeofday(&_cgi_start, NULL);
+}
+
+void Response::feedCGIChunk(const std::string &chunk)
+{
+	_cgi_buffer += chunk;
+}
+
+void Response::finishCGI()
+{
+	if (_cgi_fd != -1)
+	{
+		close(_cgi_fd);
+		_cgi_fd = -1;
+	}
+	_cgi_pending = false;
+
+	if (_cgi_buffer.empty())
+	{
+		if (_cgi_config)
+			buildErrorPage(500, *_cgi_config, &_cgi_loc);
+		else
+		{
+			_status_code = 500;
+			_body = "<h1>500 Internal Server Error</h1>";
+			_headers.clear();
+			_headers["Content-Type"] = "text/html";
+			std::stringstream ss_len;
+			ss_len << _body.length();
+			_headers["Content-Length"] = ss_len.str();
+			_generateResponse(500);
+		}
+		return;
+	}
+
+	_parseCGIOutput(_cgi_buffer);
+	std::stringstream ss_len;
+	ss_len << _body.length();
+	_headers["content-length"] = ss_len.str();
+	_generateResponse(200);
+}
+
+bool Response::checkCGITimeout()
+{
+	if (!_cgi_pending)
+		return false;
+
+	struct timeval now;
+	gettimeofday(&now, NULL);
+	double elapsed = (now.tv_sec - _cgi_start.tv_sec) + (now.tv_usec - _cgi_start.tv_usec) / 1000000.0;
+
+	return (elapsed > 3.0);
+}
+
+void Response::abortCGI()
+{
+	_cgi_pending = false;
+	_cgi_fd = -1;
+	_cgi_pid = -1;
+	_cgi_buffer.clear();
 }

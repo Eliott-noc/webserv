@@ -4,7 +4,7 @@
 #define Y "\033[33m"
 #define C "\033[36m"
 #define RESET "\033[0m"
-#define TIMEOUT_CLIENT 3.0
+#define TIMEOUT_CLIENT 4.0
 
 ServerManager::ServerManager(std::vector<ServerConfig> configs) : _configs(configs){
 	std::cout << G << "[INFO] ServerManager initialized" << RESET << std::endl;
@@ -118,7 +118,7 @@ void ServerManager::run(){
 		if (ready < 0){
 			err_code = errno;
 			if (err_code == EINTR) {
-				std::cout << Y <<  "[DEBUG] poll() interrupted by signal (EINTR). Resuming..." << RESET << std::endl;
+				std::cout << Y << "[DEBUG] poll() interrupted by signal (EINTR). Resuming..." << RESET << std::endl;
 				continue;
 			}
 			std::cerr << R << "[FATAL] poll() error!" << RESET << std::endl;
@@ -130,6 +130,40 @@ void ServerManager::run(){
 			for (size_t i = 0; i < nfds; i++){
 				if (checked == ready)
 					break;
+				int current_fd = _pollfds[i].fd;
+
+				std::map<int,int>::iterator cgiIt = _cgiToClient.find(current_fd);
+				if (cgiIt != _cgiToClient.end()){
+					if (_pollfds[i].revents & (POLLIN | POLLHUP | POLLERR)){
+						checked++;
+						int client_fd = cgiIt->second;
+						Client* client = _clients[client_fd];
+						char buf[4096];
+						ssize_t n = read(current_fd, buf, sizeof(buf));
+
+						if (n > 0){
+							client->response.feedCGIChunk(std::string(buf, n));
+						}
+						else {
+							int wstatus;
+							waitpid(client->response.getCGIPid(), &wstatus, 0);
+							client->response.finishCGI();
+							_cgiToClient.erase(cgiIt);
+							_removeFd(i);
+							nfds--;
+							i--;
+
+							for (size_t k = 0; k < _pollfds.size(); k++){
+								if (_pollfds[k].fd == client_fd){
+									_pollfds[k].events = POLLOUT;
+									break;
+								}
+							}
+						}
+					}
+					continue;
+				}
+
 				if (_pollfds[i].revents & POLLIN){
 					checked++;
 					if (i < _listeningCount){
@@ -165,7 +199,7 @@ void ServerManager::run(){
 							gettimeofday(&(client->last_activ), NULL);
 							std::string chunk(buffer, count);
 							int parse_status = client->request.parse(chunk, body_limit);
-							
+
 							if (parse_status == 1) {
 								continue;
 							}
@@ -176,10 +210,22 @@ void ServerManager::run(){
 								}
 								else {
 									std::cerr << Y << "[WARN] Parsing error detected (code: " << parse_status << ") on FD " << client_fd << ". Generating error page..." << RESET << std::endl;
-									std::vector<Location> temp_loc = client->config->getLocations();
 									client->response.buildErrorPage(parse_status, *(client->config), NULL);
 								}
-								_pollfds[i].events = POLLOUT;
+
+								if (client->response.isCGIPending()){
+									pollfd cgi_poll;
+									cgi_poll.fd = client->response.getCGIFd();
+									cgi_poll.events = POLLIN;
+									cgi_poll.revents = 0;
+									_pollfds.push_back(cgi_poll);
+									_cgiToClient[cgi_poll.fd] = client_fd;
+									nfds = _pollfds.size();
+									_pollfds[i].events = 0;
+								}
+								else{
+									_pollfds[i].events = POLLOUT;
+								}
 							}
 						}
 					}
@@ -189,7 +235,12 @@ void ServerManager::run(){
 					int client_fd = _pollfds[i].fd;
 					Client* client = _clients[client_fd];
 					client->response.sendResponse(client_fd);
-					if (client->response.isFinished()){
+					if (client->response.isError()){
+						_removeClient(i);
+						nfds--;
+						i--;
+					}
+					else if (client->response.isFinished()){
 						std::cout << G << "[INFO] Response successfully sent to client on FD: " << client_fd << RESET << std::endl;
 						gettimeofday(&(client->last_activ), NULL);
 						if (client->request.getKeepAlive() == false){
@@ -203,7 +254,17 @@ void ServerManager::run(){
 								int parse_status = client->request.parse("", client->config->getClientMaxBodySize());
 								if (parse_status == 200){
 									client->response.makeResponse(client->request, *(client->config));
-									_pollfds[i].events = POLLOUT;
+									if (client->response.isCGIPending()){
+										pollfd cgi_poll;
+										cgi_poll.fd = client->response.getCGIFd();
+										cgi_poll.events = POLLIN;
+										cgi_poll.revents = 0;
+										_pollfds.push_back(cgi_poll);
+										_cgiToClient[cgi_poll.fd] = client_fd;
+										_pollfds[i].events = 0;
+									}
+									else
+										_pollfds[i].events = POLLOUT;
 								}
 								else if (parse_status == 1){
 									_pollfds[i].events = POLLIN;
@@ -228,14 +289,44 @@ void ServerManager::run(){
 				}
 			}
 		}
+
 		for (size_t i = _listeningCount; i < _pollfds.size(); i++){
-			int client_fd = _pollfds[i].fd;
-			Client* checked_client = _clients[client_fd];
-			if (checked_client){
-				if (_checkTimeouts(*checked_client) == 1){
-					_removeClient(i);
-					i--;
+			int fd = _pollfds[i].fd;
+
+			if (_cgiToClient.find(fd) != _cgiToClient.end())
+				continue;
+
+			Client* checked_client = _clients[fd];
+			if (!checked_client)
+				continue;
+
+			if (checked_client->response.isCGIPending() && checked_client->response.checkCGITimeout()){
+				std::cerr << Y << "[WARN] CGI timeout for client FD: " << fd << RESET << std::endl;
+		
+				pid_t pid = checked_client->response.getCGIPid();
+				kill(pid, SIGKILL);
+				int wstatus;
+				waitpid(pid, &wstatus, 0);
+			
+				int cgi_fd = checked_client->response.getCGIFd();
+				close(cgi_fd);
+				for (size_t k = 0; k < _pollfds.size(); k++){
+					if (_pollfds[k].fd == cgi_fd){
+						_removeFd(k);
+						break;
+					}
 				}
+				_cgiToClient.erase(cgi_fd);
+			
+				checked_client->response.abortCGI();
+				checked_client->response.buildErrorPage(504, *(checked_client->config), NULL);
+				_pollfds[i].events = POLLOUT;
+				continue;
+			}
+
+			if (_checkTimeouts(*checked_client) == 1){
+				_removeClient(i);
+				i--;
 			}
 		}
 	}
@@ -281,23 +372,41 @@ void ServerManager::_removeClient(size_t idx){
 
 	int fd_to_remove = _pollfds[idx].fd;
 	std::cout << G << "[INFO] Closing and removing client connection associated with FD: " << fd_to_remove << RESET << std::endl;
-	
-	close(fd_to_remove);
+
 	std::map<int, Client*>::iterator it = _clients.find(fd_to_remove);
+	if (it != _clients.end() && it->second->response.isCGIPending()){
+		kill(it->second->response.getCGIPid(), SIGKILL);
+		int wstatus;
+		waitpid(it->second->response.getCGIPid(), &wstatus, 0);
+
+		int cgi_fd = it->second->response.getCGIFd();
+		close(cgi_fd);
+		for (size_t k = 0; k < _pollfds.size(); k++){
+			if (_pollfds[k].fd == cgi_fd){
+				_removeFd(k);
+				break;
+			}
+		}
+		_cgiToClient.erase(cgi_fd);
+	}
+
+	close(fd_to_remove);
 	if (it != _clients.end()){
-		// std::cout << Y << "[DEBUG] Deleting client memory allocation associated with FD: " << fd_to_remove << RESET << std::endl;
 		delete it->second;
 		_clients.erase(it);
 	}
-	
-	if (idx < _pollfds.size() - 1){
-		// std::cout << Y << "[DEBUG] Swapping deleted index " << idx << " (fd: " << fd_to_remove 
-		// 		<< ") with last element at index " << (_pollfds.size() - 1) 
-				// << " (fd: " << _pollfds.back().fd << ")" << RESET << std::endl;
+
+	if (idx < _pollfds.size() - 1)
 		_pollfds[idx] = _pollfds.back();
-	}
 	_pollfds.pop_back();
-	// std::cout << Y << "[DEBUG] Client removal completed. Active monitored socket count is now: " << _pollfds.size() << RESET << std::endl;
+}
+
+void ServerManager::_removeFd(size_t idx){
+	if (idx >= _pollfds.size())
+		return;
+	if (idx < _pollfds.size() - 1)
+		_pollfds[idx] = _pollfds.back();
+	_pollfds.pop_back();
 }
 
 int	ServerManager::_checkTimeouts(Client& client){
