@@ -19,18 +19,20 @@ class ServerManager
 		std::vector<ServerConfig>		_configs;
 		std::vector<struct pollfd>		_pollfds;
 		std::map<int, ServerConfig*>	_listenSockets;
-		std::map<int, Client*>			_clients; // Liste des clients actifs
+		std::map<int, Client*>			_clients;
+		std::map<int, int>				_cgiToClient;
 
 	public:
 		ServerManager(std::vector<ServerConfig> configs);
 		~ServerManager();
 
-		void	initServers();	// Création des sockets listen
-		void	run();			// La boucle poll()
+		void	initServers();
+		void	run();
 		
 	private:
 		int		_acceptNewConnection(int server_fd);
 		void	_removeClient(size_t idx);
+		void	_removeFd(size_t idx);  
 		int		_checkTimeouts(Client& client);
 };
 

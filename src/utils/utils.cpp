@@ -127,21 +127,16 @@ size_t parseSize(const std::string& str)
 	if (!checkInt(number))
 		throw std::runtime_error("Invalid body size");
 
-	return std::atoi(number.c_str()) * multiplier;
+	return std::strtol(number.c_str(), NULL, 10) * multiplier;
 }
 
 
 int	checkDuplicateListen(const std::vector<Listen> &listen_block)
 {
-	for (size_t i = 0; i < listen_block.size(); i++)
-	{
-		if (i + 1 < listen_block.size() - 1)
-		{
-			for (size_t j = i + 1; j < listen_block.size(); j++)
-			{
-				if ((listen_block[i]._host == listen_block[j]._host) && (listen_block[i]._port == listen_block[j]._port))
-					return 1;
-			}
+	for (size_t i = 0; i < listen_block.size(); i++){
+		for (size_t j = i + 1; j < listen_block.size(); j++){
+			if ((listen_block[i]._host == listen_block[j]._host) && (listen_block[i]._port == listen_block[j]._port))
+				return 1;
 		}
 	}
 	return 0;
