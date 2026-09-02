@@ -234,11 +234,6 @@ bool Response::isFinished() const
 	return _is_finished;
 }
 
-bool Response::isError() const
-{
-	return _is_error;
-}
-
 std::string Response::getHttpDate() {
 	char buffer[100];
 	time_t now = time(NULL);
