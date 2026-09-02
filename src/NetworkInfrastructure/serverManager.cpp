@@ -83,7 +83,7 @@ void ServerManager::initServers(){
 			}
 			freeaddrinfo(res);
 
-			if (listen(listen_fd, 5) < 0){
+			if (listen(listen_fd, 511) < 0){
 				err_code = errno;
 				std::cerr << R << "[ERROR] listen() command failed on socket fd: " << listen_fd << RESET << std::endl;
 				printPortErr(err_code, port);
@@ -390,6 +390,7 @@ void ServerManager::_removeClient(size_t idx){
 		_cgiToClient.erase(cgi_fd);
 	}
 
+	shutdown(fd_to_remove, SHUT_WR);
 	close(fd_to_remove);
 	if (it != _clients.end()){
 		delete it->second;
