@@ -20,7 +20,7 @@ ServerManager::~ServerManager(){
 }
 
 void ServerManager::initServers(){
-	std::cout << G << "[INFO] Initializing server sockets..." << RESET << std::endl;
+	// std::cout << G << "[INFO] Initializing server sockets..." << RESET << std::endl;
 	for (size_t i = 0; i < _configs.size(); i++){
 		int err_code;
 		const std::vector<Listen>& listens = _configs[i].getListens();
