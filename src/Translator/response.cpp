@@ -324,7 +324,7 @@ bool Response::checkCGITimeout()
 	gettimeofday(&now, NULL);
 	double elapsed = (now.tv_sec - _cgi_start.tv_sec) + (now.tv_usec - _cgi_start.tv_usec) / 1000000.0;
 
-	return (elapsed > 3.0);
+	return (elapsed > 9.0);
 }
 
 void Response::abortCGI()

@@ -4,7 +4,7 @@
 #define Y "\033[33m"
 #define C "\033[36m"
 #define RESET "\033[0m"
-#define TIMEOUT_CLIENT 4.0
+#define TIMEOUT_CLIENT 10.0
 
 ServerManager::ServerManager(std::vector<ServerConfig> configs) : _configs(configs){
 	std::cout << G << "[INFO] ServerManager initialized" << RESET << std::endl;
@@ -146,7 +146,7 @@ void ServerManager::run(){
 						}
 						else {
 							int wstatus;
-							waitpid(client->response.getCGIPid(), &wstatus, 0);
+							waitpid(client->response.getCGIPid(), &wstatus, WNOHANG);
 							client->response.finishCGI();
 							_cgiToClient.erase(cgiIt);
 							_removeFd(i);
@@ -306,7 +306,7 @@ void ServerManager::run(){
 				pid_t pid = checked_client->response.getCGIPid();
 				kill(pid, SIGKILL);
 				int wstatus;
-				waitpid(pid, &wstatus, 0);
+				waitpid(pid, &wstatus, WNOHANG);
 			
 				int cgi_fd = checked_client->response.getCGIFd();
 				close(cgi_fd);
@@ -377,7 +377,7 @@ void ServerManager::_removeClient(size_t idx){
 	if (it != _clients.end() && it->second->response.isCGIPending()){
 		kill(it->second->response.getCGIPid(), SIGKILL);
 		int wstatus;
-		waitpid(it->second->response.getCGIPid(), &wstatus, 0);
+		waitpid(it->second->response.getCGIPid(), &wstatus, WNOHANG);
 
 		int cgi_fd = it->second->response.getCGIFd();
 		close(cgi_fd);
